@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import sys
 
+from heapq import heappush, heappop, heapify
 import networkx as nx
+import time
 
 __all__ = ["treewidth_min_degree", "treewidth_min_fill_in"]
 
@@ -69,12 +71,13 @@ def min_fill_in_heuristic(G):
 # Calculates tree width decomposition using the passed heuristic
 # Returns tuple: (treewidth: int, decomposition: Graph)
 def treewidth_decomp(G, heuristic):
+    G = G.copy()
+
     # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
     node_stack = []
 
     elim_node = heuristic(G)
     while elim_node is not None:
-
         # Connect all neighbours with each other
         neighbors = set(G.neighbors(elim_node))
         for n in neighbors:
@@ -88,6 +91,81 @@ def treewidth_decomp(G, heuristic):
 
         # get next node to be removed according to heuristic
         elim_node = heuristic(G)
+
+    # The abort condition is met. Put all nodes into one bag.
+    decomp = nx.Graph()
+    new_bag = frozenset(G.nodes)
+    decomp.add_node(new_bag)
+
+    current_treewidth = len(new_bag) - 1
+
+    while node_stack:
+        # get node and its neighbors from the stack
+        (curr_node, neighbors) = node_stack.pop()
+
+        # find a bag the neighbors are in
+        old_bag = None
+        for bag in decomp.nodes:
+            if neighbors <= bag:
+                old_bag = bag
+                break
+
+        # Create new node for decomposition
+        neighbors.add(curr_node)
+        neighbors = frozenset(neighbors)
+
+        # Update treewidth
+        current_treewidth = max(current_treewidth, len(neighbors)-1)
+
+        # Add edge to decomposition (implicitly also adds the new node)
+        decomp.add_edge(old_bag, neighbors)
+    return current_treewidth, decomp
+
+# Calculates tree width decomposition according to the minimum degree heuristic
+# Returns tuple: (treewidth: int, decomposition: Graph)
+def treewidth_decomp_min_degree(G):
+    G = G.copy()
+
+    # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
+    node_stack = []
+
+    push = heappush
+    pop = heappop
+    # degreeq is heapq with 2-tuples (degree,node)
+    degreeq = []
+
+    # build heap with initial degrees
+    for (n, degree) in G.degree:
+        degreeq.append((degree, n))
+    heapify(degreeq)
+
+    while degreeq:
+        # get the next (minimum degree) node
+        (min_degree, elim_node) = pop(degreeq)
+        if not G.has_node(elim_node) or G.degree[elim_node] != min_degree:
+            # Outdated entry in degreeq
+            continue
+        elif min_degree == G.number_of_nodes() - 1:
+            # Fully connected: Abort condition
+            break
+
+        # Connect all neighbours with each other
+        neighbors = set(G.neighbors(elim_node))
+        changed_degree = set(G.neighbors(elim_node))
+        for n in neighbors:
+            for m in neighbors:
+                if (n != m) and not G.has_edge(n, m):
+                    G.add_edge(n, m)
+                    changed_degree.add(n)
+                    changed_degree.add(m)
+
+        # remove node from graph and push on stack (including its neighbors)
+        G.remove_node(elim_node)
+        node_stack.append((elim_node, neighbors))
+
+        # insert changed degrees into degreeq
+        for n in changed_degree:
+            push(degreeq, (G.degree[n], n))
 
     # The abort condition is met. Put all nodes into one bag.
     decomp = nx.Graph()
@@ -117,3 +195,23 @@ def treewidth_decomp(G, heuristic):
         decomp.add_edge(old_bag, neighbors)
 
     return current_treewidth, decomp
+
+
+if __name__ == '__main__':
+    # Test on graph from page 2 of "Discovering Treewidth" (Hans L. Bodlaender)
+    """
+    G = nx.Graph()
+    G.add_edges_from([('a', 'b'), ('b', 'c'), ('b', 'd'),
+                      ('c', 'e'), ('c', 'f'), ('d', 'f'),
+                      ('d', 'g'), ('e', 'f'), ('f', 'g')])
+    """
+    G = nx.fast_gnp_random_graph(2000, 0.01, directed=False)
+    start = time.time()
+    (tw, twdecomp) = treewidth_decomp_min_degree(G)
+    end = time.time()
+    print tw, end - start
+
+    start = time.time()
+    (tw, twdecomp) = treewidth_decomp(G,min_degree_heuristic)
+    end = time.time()
+    print tw, end - start
