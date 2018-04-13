@@ -182,9 +182,8 @@ def treewidth_decomp(G, heuristic):
         # If this node was the first in a created clique to get deleted the created bag is the old_bag from this node
         if curr_node in old_bag_notify:
             for old_neighbor_node in old_bag_notify[curr_node]:
-                if old_neighbor_node not in old_bag_connection:
-                    # curr_node is the first of the neighbors of old_neighbor_node to get deleted
-                    old_bag_connection[old_neighbor_node] = new_bag
+                # set (possibly override) the bag old_neighbor_node should connect to
+                old_bag_connection[old_neighbor_node] = new_bag
 
         # Add edge to decomposition (implicitly also adds the new node)
         decomp.add_edge(old_bag, new_bag)
