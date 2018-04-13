@@ -69,6 +69,9 @@ def min_fill_in_heuristic(G):
 # Calculates tree width decomposition using the passed heuristic
 # Returns tuple: (treewidth: int, decomposition: Graph)
 def treewidth_decomp(G, heuristic):
+    # copy so the original graph is not modified
+    G = G.copy()
+
     # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
     node_stack = []
 
