@@ -82,7 +82,7 @@ def treewidth_decomp(G, heuristic):
         neighbors = set(G.neighbors(elim_node))
         for n in neighbors:
             for m in neighbors:
-                if (n != m):
+                if (n != m) and not G.has_edge(n, m):
                     G.add_edge(n, m)
 
         # remove node from graph and push on stack (including its neighbors)
