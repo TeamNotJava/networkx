@@ -84,16 +84,17 @@ def treewidth_decomp(G, heuristic):
 
         # remove node from graph and push on stack (including its neighbors)
         G.remove_node(elim_node)
-        node_stack.append((elim_node, neighbors));
+        node_stack.append((elim_node, neighbors))
 
         # get next node to be removed according to heuristic
         elim_node = heuristic(G)
 
     # The abort condition is met. Put all nodes into one bag.
     decomp = nx.Graph()
-    decomp.add_node(frozenset(G.nodes))
+    new_bag = frozenset(G.nodes)
+    decomp.add_node(new_bag)
 
-    current_treewidth = -1
+    current_treewidth = len(new_bag) - 1
 
     while node_stack:
         # get node and its neighbors from the stack
