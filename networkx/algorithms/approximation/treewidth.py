@@ -117,6 +117,7 @@ def tree_decomp_unopt(G, heuristic):
     timings.append(time.time())
     return decomp, timings
 
+
 # Calculates tree width decomposition using the passed heuristic
 # Returns tuple: (treewidth: int, decomposition: Graph)
 def treewidth_decomp(G, heuristic):
@@ -124,28 +125,24 @@ def treewidth_decomp(G, heuristic):
     G = G.copy()
     # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
     node_stack = []
-    timings = []
 
-    # Node -> List[Nodes] A new bag can easily c
+    # Maps a node n to a lists of nodes l
+    # Later when bag(n) is created every bag(node in l) might need to connect to bag(n)
     old_bag_notify = {}
 
     elim_node = heuristic(G)
     while elim_node is not None:
 
         # Connect all neighbours with each other
-        neighbors = list(G.neighbors(elim_node))
-        for i in range(len(neighbors)-1):
-            for j in range(i+1, len(neighbors)):
-                G.add_edge(neighbors[i], neighbors[j])
+        neighbors = list(G[elim_node])
+        for i, node_1 in enumerate(neighbors[:-1]):  # Iterate neighbors excluding last element
+            for node_2 in neighbors[i+1:]:  # Iterate neighbors after node_1
+                if not G.has_edge(node_1, node_2):
+                    G.add_edge(node_1, node_2)
 
-        timings.append(time.time())
         # Some neighbor will create the bag that elim_node later needs to connect to
         for node in neighbors:
-            if node in old_bag_notify:
-                old_bag_notify[node].append(elim_node)
-            else:
-                old_bag_notify[node] = [elim_node]
-        timings.append(time.time())
+            old_bag_notify.setdefault(node,[]).append(elim_node)
 
         # remove node from graph and push on stack (including its neighbors)
         G.remove_node(elim_node)
@@ -154,76 +151,36 @@ def treewidth_decomp(G, heuristic):
         # get next node to be removed according to heuristic
         elim_node = heuristic(G)
 
-    timings.append(time.time())
     # The abort condition is met. Put all nodes into one bag.
     decomp = nx.Graph()
-    new_bag = frozenset(G.nodes)
-    decomp.add_node(new_bag)
+    first_bag = frozenset(G.nodes)
+    decomp.add_node(first_bag)
 
-    # Bag -> Bag A new bag can check here for the old bag
-    old_bag_connection = {node_stack[-1][0]: new_bag}
+    treewidth = len(first_bag) - 1
+
+    # Maps node n to the bag to which bag(n) needs to connect
+    old_bag_connection = {}
+    for node in G.nodes:
+        old_bag_connection[node] = first_bag
 
     while node_stack:
         # get node and its neighbors from the stack
         (curr_node, neighbors) = node_stack.pop()
 
-        # find a bag the neighbors are in
-        old_bag = None
-        if curr_node in old_bag_connection:
-            old_bag = old_bag_connection[curr_node]
-        else:
-            # The bag is a from a different component
-            old_bag = next(iter(decomp.nodes))
+        # find a bag the neighbors are in (or default to the first created bag)
+        old_bag = old_bag_connection.get(curr_node, first_bag)
 
         # Create new node for decomposition
         neighbors.append(curr_node)
         new_bag = frozenset(neighbors)
+        # Update treewidth
+        treewidth = max(treewidth, len(new_bag)-1)
 
         # If this node was the first in a created clique to get deleted the created bag is the old_bag from this node
-        if curr_node in old_bag_notify:
-            for old_neighbor_node in old_bag_notify[curr_node]:
-                # set (possibly override) the bag old_neighbor_node should connect to
-                old_bag_connection[old_neighbor_node] = new_bag
+        for old_neighbor_node in old_bag_notify.get(curr_node,[]):
+            # set (possibly override) the bag of old_neighbor_node should connect to
+            old_bag_connection[old_neighbor_node] = new_bag
 
         # Add edge to decomposition (implicitly also adds the new node)
         decomp.add_edge(old_bag, new_bag)
-    timings.append(time.time())
-    return decomp, timings
-
-
-def time_calc(timings):
-    time = 0.0
-    for i in range(len(timings)):
-        if i%2==0:
-            time -= timings[i]
-        else:
-            time += timings[i]
-    return time
-
-
-if __name__ == '__main__':
-    # Test on graph from page 2 of "Discovering Treewidth" (Hans L. Bodlaender)
-    """
-    G = nx.Graph()
-    G.add_edges_from([('a', 'b'), ('b', 'c'), ('b', 'd'),
-                      ('c', 'e'), ('c', 'f'), ('d', 'f'),
-                      ('d', 'g'), ('e', 'f'), ('f', 'g')])
-
-    """
-    G = nx.fast_gnp_random_graph(200, 0.01, directed=False)
-    decomp, timings1 = treewidth_decomp(G,min_degree_heuristic)
-    decomp, timings2 = tree_decomp_unopt(G,min_degree_heuristic)
-
-    timeOpt = time_calc(timings1)
-    timeUnOpt = time_calc(timings2)
-    diff = timeUnOpt - timeOpt
-    print("Optimized: {} Unoptimized: {} Difference: {}".format(timeOpt, timeUnOpt, diff))
-    """
-    Output: 
-
-    fgd fcd
-    fcd fce
-    fcd bcd
-    bcd ab
-    Treewidth:  2
-    """
+    return treewidth, decomp
