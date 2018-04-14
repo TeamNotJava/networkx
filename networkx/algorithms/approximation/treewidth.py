@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import sys
+import sys,timeit
 
 import networkx as nx
 import time
@@ -65,57 +65,6 @@ def min_fill_in_heuristic(G):
         return None
     else:
         return candidate_node
-
-
-# version without recursion and copying, rest is still the same as in tree_decomp
-def tree_decomp_unopt(G, heuristic):
-    # Copy graph because the algorithm modifies it
-    G = G.copy()
-    # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
-    node_stack = []
-    timings = []
-    elim_node = heuristic(G)
-    while elim_node is not None:
-
-        # Connect all neighbours with each other
-        neighbors = set(G.neighbors(elim_node))
-        for n in neighbors:
-            for m in neighbors:
-                if (n != m):
-                    G.add_edge(n, m)
-
-        # remove node from graph and push on stack (including its neighbors)
-        G.remove_node(elim_node)
-        node_stack.append((elim_node, neighbors))
-        timings.append(time.time())
-        timings.append(time.time())
-
-        # get next node to be removed according to heuristic
-        elim_node = heuristic(G)
-
-    timings.append(time.time())
-    # The abort condition is met. Put all nodes into one bag.
-    decomp = nx.Graph()
-    decomp.add_node(frozenset(G.nodes))
-
-    while node_stack:
-        # get node and its neighbors from the stack
-        (curr_node, neighbors) = node_stack.pop()
-        # find a bag the neighbors are in
-        old_bag = None
-        for bag in decomp.nodes:
-            if neighbors <= bag:
-                old_bag = bag
-                break
-
-        # Create new node for decomposition
-        neighbors.add(curr_node)
-        neighbors = frozenset(neighbors)
-
-        # Add edge to decomposition (implicitly also adds the new node)
-        decomp.add_edge(old_bag, neighbors)
-    timings.append(time.time())
-    return decomp, timings
 
 
 # Calculates tree width decomposition using the passed heuristic
@@ -191,3 +140,67 @@ def treewidth_decomp(G, heuristic):
         # Add edge to decomposition (implicitly also adds the new node)
         decomp.add_edge(old_bag, new_bag)
     return treewidth, decomp
+
+
+# Calculates tree width decomposition using the passed heuristic
+# Returns tuple: (treewidth: int, decomposition: Graph)
+def treewidth_decomp_dominik(G, heuristic):
+    # Copy graph because the algorithm modifies it
+    G = G.copy()
+    # stack where new bags and one neighbor is pushed in the order they are selected by the heuristic
+    node_stack = []
+
+    elim_node = heuristic(G)
+    while elim_node is not None:
+
+        # Connect all neighbours with each other
+        neighbors = list(G[elim_node])
+        for i, node_1 in enumerate(neighbors[:-1]):  # Iterate neighbors excluding last element
+            for node_2 in neighbors[i+1:]:  # Iterate neighbors after node_1
+                if not G.has_edge(node_1, node_2):
+                    G.add_edge(node_1, node_2)
+
+        # remove node from graph and push on stack (including its neighbors)
+        G.remove_node(elim_node)
+        selected_neighbor = None
+        if neighbors:
+            # Just select any neighbor (keep None, if no neighbors exist)
+            selected_neighbor = neighbors[0]
+        # Create the new bag
+        neighbors.append(elim_node)
+        new_bag = frozenset(neighbors)
+
+        node_stack.append((new_bag, selected_neighbor ))
+
+        # get next node to be removed according to heuristic
+        elim_node = heuristic(G)
+
+    # The abort condition is met. Put all nodes into one bag.
+    first_bag = frozenset(G.nodes)
+    decomp = nx.Graph()
+    decomp.add_node(first_bag)
+
+    treewidth = len(first_bag) - 1
+
+    for i,(bag1,neighbor ) in enumerate(node_stack):
+        treewidth = max(treewidth, len(bag1)-1)
+        found_bag = False
+        if neighbor != None:
+            # Search for neighbor in the following bags
+            for bag2 in node_stack[i+1:]:
+                if neighbor in bag2:
+                    decomp.add_edge(bag1,bag2)
+                    found_bag = True
+                    break
+        if not found_bag:
+            # The first_bag is not included in the node_stack so it can't be found
+            # Also in case neighbor equals None (the node is a separate component) we can connect to first_bag
+            decomp.add_edge(bag1,first_bag)
+
+    return treewidth, decomp
+
+if __name__ == '__main__':
+    G = nx.fast_gnp_random_graph(500,0.01)
+    NUM_EXEC = 100
+    print(timeit.timeit('tw(G,heur)', globals={'G': G, 'tw': treewidth_decomp_dominik, 'heur': min_degree_heuristic},number=NUM_EXEC))
+    print(timeit.timeit('tw(G,heur)',globals={'G':G,'tw':treewidth_decomp,'heur':min_degree_heuristic},number=NUM_EXEC))
