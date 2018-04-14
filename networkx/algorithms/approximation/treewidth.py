@@ -197,6 +197,101 @@ def treewidth_decomp_min_degree(G):
     return current_treewidth, decomp
 
 
+# Calculates tree width decomposition according to the minimum degree heuristic
+# Returns tuple: (treewidth: int, decomposition: Graph)
+def treewidth_decomp_min_degree_faster(G):
+    #G = G.copy()
+    graph = {}
+    for u in G:
+        graph[u] = set()
+        for v in G[u]:
+            graph[u].add(v)
+
+
+    # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
+    node_stack = []
+
+    push = heappush
+    pop = heappop
+    # degreeq is heapq with 2-tuples (degree,node)
+    degreeq = []
+
+    # build heap with initial degrees
+    #for (n, degree) in G.degree:
+    #    degreeq.append((degree, n))
+    for n in graph:
+        degreeq.append((len(graph[n]), n))
+    heapify(degreeq)
+
+    while degreeq:
+        # get the next (minimum degree) node
+        (min_degree, elim_node) = pop(degreeq)
+        #if not G.has_node(elim_node) or G.degree[elim_node] != min_degree:
+        if not elim_node in graph or len(graph[elim_node]) != min_degree:
+            # Outdated entry in degreeq
+            continue
+        #elif min_degree == G.number_of_nodes() - 1:
+        elif min_degree == len(graph) - 1:
+            # Fully connected: Abort condition
+            break
+
+        # Connect all neighbours with each other
+        #neighbors = set(G.neighbors(elim_node))
+        neighbors = graph[elim_node]
+        changed_degree = neighbors
+        for n in neighbors:
+            for m in neighbors:
+                #if (n != m) and not G.has_edge(n, m):
+                if n != m and not m in graph[n]:
+                    #G.add_edge(n, m)
+                    graph[n].add(m)
+                    graph[m].add(n)
+                    changed_degree.add(n)
+                    changed_degree.add(m)
+
+        # remove node from graph and push on stack (including its neighbors)
+        #G.remove_node(elim_node)
+        for u in graph:
+            if elim_node in graph[u]:
+                graph[u].remove(elim_node)
+        graph.pop(elim_node, None)
+        node_stack.append((elim_node, neighbors))
+
+        # insert changed degrees into degreeq
+        for n in changed_degree:
+            #push(degreeq, (G.degree[n], n))
+            push(degreeq, (len(graph[n]), n))
+
+    # The abort condition is met. Put all nodes into one bag.
+    decomp = nx.Graph()
+    #new_bag = frozenset(G.nodes)
+    new_bag = frozenset(graph.keys())
+    decomp.add_node(new_bag)
+
+    current_treewidth = len(new_bag) - 1
+
+    while node_stack:
+        # get node and its neighbors from the stack
+        (curr_node, neighbors) = node_stack.pop()
+        # find a bag the neighbors are in
+        old_bag = None
+        for bag in decomp.nodes:
+            if neighbors <= bag:
+                old_bag = bag
+                break
+
+        # Create new node for decomposition
+        neighbors.add(curr_node)
+        neighbors = frozenset(neighbors)
+
+        # Update treewidth
+        current_treewidth = max(current_treewidth, len(neighbors)-1)
+
+        # Add edge to decomposition (implicitly also adds the new node)
+        decomp.add_edge(old_bag, neighbors)
+
+    return current_treewidth, decomp
+
 if __name__ == '__main__':
     # Test on graph from page 2 of "Discovering Treewidth" (Hans L. Bodlaender)
     """
@@ -206,6 +301,12 @@ if __name__ == '__main__':
                       ('d', 'g'), ('e', 'f'), ('f', 'g')])
     """
     G = nx.fast_gnp_random_graph(2000, 0.01, directed=False)
+
+    start = time.time()
+    (tw, twdecomp) = treewidth_decomp_min_degree_faster(G)
+    end = time.time()
+    print tw, end - start
+
     start = time.time()
     (tw, twdecomp) = treewidth_decomp_min_degree(G)
     end = time.time()
