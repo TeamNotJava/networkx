@@ -142,7 +142,10 @@ def treewidth_decomp(G, heuristic):
 
         # Some neighbor will create the bag that elim_node later needs to connect to
         for node in neighbors:
-            old_bag_notify.setdefault(node,[]).append(elim_node)
+            if node in old_bag_notify:
+                old_bag_notify[node].append(elim_node)
+            else:
+                old_bag_notify[node] = [elim_node]
 
         # remove node from graph and push on stack (including its neighbors)
         G.remove_node(elim_node)
@@ -168,7 +171,10 @@ def treewidth_decomp(G, heuristic):
         (curr_node, neighbors) = node_stack.pop()
 
         # find a bag the neighbors are in (or default to the first created bag)
-        old_bag = old_bag_connection.get(curr_node, first_bag)
+        if curr_node in old_bag_connection:
+            old_bag = old_bag_connection[curr_node]
+        else:
+            old_bag = first_bag
 
         # Create new node for decomposition
         neighbors.append(curr_node)
@@ -177,9 +183,10 @@ def treewidth_decomp(G, heuristic):
         treewidth = max(treewidth, len(new_bag)-1)
 
         # If this node was the first in a created clique to get deleted the created bag is the old_bag from this node
-        for old_neighbor_node in old_bag_notify.get(curr_node,[]):
-            # set (possibly override) the bag of old_neighbor_node should connect to
-            old_bag_connection[old_neighbor_node] = new_bag
+        if curr_node in old_bag_notify:
+            for old_neighbor_node in old_bag_notify[curr_node]:
+                # set (possibly override) the bag of old_neighbor_node should connect to
+                old_bag_connection[old_neighbor_node] = new_bag
 
         # Add edge to decomposition (implicitly also adds the new node)
         decomp.add_edge(old_bag, new_bag)
