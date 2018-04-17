@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 
-import networkx as nx
+from networkx import Graph
 
 __all__ = ["treewidth_min_degree", "treewidth_min_fill_in"]
 
@@ -9,7 +9,7 @@ __all__ = ["treewidth_min_degree", "treewidth_min_fill_in"]
 
 # Returns a tuple: (treewidth: int, decomposition: Graph)
 def treewidth_min_degree(G):
-    return treewidth_decomp(G, min_degree_heuristic)
+    return treewidth_decomp(G, min_degree_node_heuristic)
 
 
 # Returns a tuple: (treewidth: int, decomposition: Graph)
@@ -17,32 +17,84 @@ def treewidth_min_fill_in(G):
     return treewidth_decomp(G, min_fill_in_heuristic)
 
 
-# Returns the node that needs to be removed next or None (if the abort condition is met)
-def min_degree_heuristic(G):
+def min_degree_node_heuristic(G: Graph):
+    """Returns the node from the graph with minimum degree.
+
+        Parameters
+        ----------
+        G : Graph
+
+        Returns
+        -------
+        min_degree_node : string, integers or hashable Python object (except None)
+            The node from the graph with lowest degree. If the graph is fully connected
+            then the function returns None.
+
+        Notes
+        -----
+        This algorithm computes the node with lowest number of edges in the graph 'G'.
+        The running time of the algorithm is O(V) and it uses constant
+        additional memory.
+
+        References
+        ----------
+        .. [1] K. Wang, Z. Lu, and J. Hicks
+               *Treewidth*.
+               http://web.eecs.utk.edu/~cphillip/cs594_spring2015_projects/treewidth.pdf
+
+        """
+
     min_degree = sys.maxsize
-    min_node = None
+    min_degree_node = None
     for (node, degree) in G.degree:
         if degree < min_degree:
             if degree <= 1:
                 # Return early
                 return node
-            min_node = node
+            min_degree_node = node
             min_degree = degree
 
     if min_degree == G.number_of_nodes() - 1:
         # Fully connected: Abort condition
         return None
     else:
-        return min_node
+        return min_degree_node
 
 
-# Returns the node with minimum degree or None (if the abort condition is met)
-# sort nodes according to degree and prune early while iterating neighbor pairs
+
 def min_fill_in_heuristic_faster(G):
+    """Returns the node from the graph, where the number of edges added  when
+    turning the neighbourhood of the chosen node into clique is small as possible.
+
+            Parameters
+            ----------
+            G : Graph
+
+            Returns
+            -------
+            min_fill_node : string, integers or hashable Python object (except None)
+                The node from the graph, for which, when it is deleted from the graph and
+                its neighbourhood is turned into clique, the number of edges added is
+                small as possible.
+
+            Notes
+            -----
+            This algorithm computes the node with 'min fill in' in the graph 'G'.
+            The running time of the algorithm is O(V*V*V) and it uses constant
+            additional memory.
+
+            References
+            ----------
+            .. [1] K. Wang, Z. Lu, and J. Hicks
+                   *Treewidth*.
+                   http://web.eecs.utk.edu/~cphillip/cs594_spring2015_projects/treewidth.pdf
+
+            """
+
     if len(G) == 0:
         return None
 
-    candidate_node = None
+    min_fill_in_node = None
 
     min_fill_in = sys.maxsize
 
@@ -75,9 +127,9 @@ def min_fill_in_heuristic_faster(G):
             if num_fill_in == 0:
                 return node
             min_fill_in = num_fill_in
-            candidate_node = node
+            min_fill_in_node = node
 
-    return candidate_node
+    return min_fill_in_node
 
 # Returns the node with minimum degree or None (if the abort condition is met)
 def min_fill_in_heuristic(G):
@@ -136,7 +188,7 @@ def treewidth_decomp(G, heuristic):
         elim_node = heuristic(G)
 
     # The abort condition is met. Put all nodes into one bag.
-    decomp = nx.Graph()
+    decomp = Graph()
     new_bag = frozenset(G.nodes)
     decomp.add_node(new_bag)
 
