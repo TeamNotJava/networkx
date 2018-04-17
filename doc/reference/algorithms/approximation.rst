@@ -91,7 +91,7 @@ Steiner Tree
 
 
 Treewidth
-------------
+---------
 .. automodule:: networkx.algorithms.approximation.treewidth
 .. autosummary::
    :toctree: generated/

@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+"""Functions for computing treewidth decomposition.
+   
+   Treewidth of an undirected graph is a number associated with the graph. It can be defined as the size of the largest vertex set (bag) in a tree decomposition of the graph minus one. 
+
+`Wikipedia: Treewidth <https://en.wikipedia.org/wiki/Treewidth>`_
+
+   The notions of treewidth and tree decomposition have gained their attractiveness partly because many graph and network problems that are intractable (e.g., NP-hard) on arbitrary graphs become efficiently solvable (e.g., with a linear time algorithm) when the treewidth of the input graphs is bounded by a constant.
+
+    Hans L. Bodlaender and Arie M. C. A. Koster. 2010. "Treewidth computations I.Upper bounds". Inf. Comput. 208, 3 (March 2010),259-275. DOI=http://dx.doi.org/10.1016/j.ic.2009.03.008 
+
+    Hand L. Bodlaender. "Discovering Treewidth". institute of information and computing sciences, utrecht university. technical report UU-CS-2005-018. www.cs.uu.nl
+
+"""
 import sys
 
 import networkx as nx
@@ -7,18 +20,55 @@ __all__ = ["treewidth_min_degree", "treewidth_min_fill_in"]
 
 
 
+
 # Returns a tuple: (treewidth: int, decomposition: Graph)
 def treewidth_min_degree(G):
+    """ Returns a treewidth decomposition using the Minimum Degree heuristic.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    Returns
+    -------
+    Treewidth decomposition : (int, Graph) tuple
+          2-tuple with treewidth and the corresponding decomposed tree (NetworkX graph).
+    """
     return treewidth_decomp(G, min_degree_heuristic)
 
 
 # Returns a tuple: (treewidth: int, decomposition: Graph)
 def treewidth_min_fill_in(G):
+    """ Returns a treewidth decomposition using the Minimum Fill-in heuristic.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    Returns
+    -------
+    Treewidth decomposition : (int, Graph) tuple
+        2-tuple with treewidth and the corresponding decomposed tree (NetworkX graph).
+    """
     return treewidth_decomp(G, min_fill_in_heuristic)
 
 
 # Returns the node that needs to be removed next or None (if the abort condition is met)
 def min_degree_heuristic(G):
+    """ Returns the node that needs to be removed next or None according to the Minimum Degree heuristic that selects the vertex with the minimum number of unselected neighbours.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    Returns
+    -------
+    Node : NetworkX graph
+         
+    References
+    ----------
+    .. [2] Hand L. Bodlaender. "Discovering Treewidth". institute of information and computing sciences, utrecht university. technical report UU-CS-2005-018. www.cs.uu.nl
+    """
     min_degree = sys.maxsize
     min_node = None
     for (node, degree) in G.degree:
@@ -38,6 +88,20 @@ def min_degree_heuristic(G):
 
 # Returns the node with minimum degree or None (if the abort condition is met)
 def min_fill_in_heuristic(G):
+    """Returns the node with minimum degree or None according to the Minimum Fill-in heuristic that selects a vertex which geves the minimum number of added fill-in edges for the current step.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    Returns
+    -------
+    Node : NetworkX graph
+
+    References
+    ----------
+    .. [2] Hand L. Bodlaender. "Discovering Treewidth". institute of information and computing sciences, utrecht university. technical report UU-CS-2005-018. www.cs.uu.nl
+    """
     candidate_node = None
     # Still keep track of min_degree to abort earlier
     min_degree = sys.maxsize
@@ -69,6 +133,18 @@ def min_fill_in_heuristic(G):
 # Calculates tree width decomposition using the passed heuristic
 # Returns tuple: (treewidth: int, decomposition: Graph)
 def treewidth_decomp(G, heuristic):
+    """Returns a treewidth decomposition using the passed heuristic.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+    heuristic : function
+
+    Returns
+    -------
+    Treewidth decomposition : (int, Graph) tuple
+        2-tuple with treewidth and the corresponding decomposed tree (NetworkX graph).
+    """
     # copy so the original graph is not modified
     G = G.copy()
 
