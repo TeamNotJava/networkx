@@ -229,9 +229,11 @@ def treewidth_decomp_min_fill_in_pq_impl(G):
     # degreeq is heapq with 2-tuples (degree,node)
     min_fill_in_pq = []
 
-    # build heap with initial degrees
+    min_degree = sys.maxsize
+
+    # build heap with initial min fill ins
     min_fill_in_state = {}
-    for n in G.nodes:
+    for (n, degree) in G.degree:
         neighbors = set(G.neighbors(n))
         current_fill_in = 0
         for u in G.neighbors(n):
@@ -240,6 +242,8 @@ def treewidth_decomp_min_fill_in_pq_impl(G):
                     current_fill_in += 1
         min_fill_in_pq.append((current_fill_in, n))
         min_fill_in_state[n] = current_fill_in
+        min_degree = min(min_degree, degree)
+
     heapify(min_fill_in_pq)
 
 
@@ -249,7 +253,7 @@ def treewidth_decomp_min_fill_in_pq_impl(G):
         if not elim_node in G.nodes or min_fill_in_state[elim_node] != min_fill_in:
             # Outdated entry in min_fill_in_pq
             continue
-        elif min_fill_in == G.number_of_nodes() - 1:
+        elif min_degree == G.number_of_nodes() - 1:
             # Fully connected: Abort condition
             break
 
@@ -290,6 +294,11 @@ def treewidth_decomp_min_fill_in_pq_impl(G):
 
             push(min_fill_in_pq, (recalc_min_fil_in, n))
             min_fill_in_state[n] = recalc_min_fil_in
+
+        # Recalculate the min degree for early abort check
+        min_degree = sys.maxsize
+        for (n, degree) in G.degree:
+            min_degree = min(min_degree, degree)
 
     # The abort condition is met. Put all nodes into one bag.
     decomp = nx.Graph()
