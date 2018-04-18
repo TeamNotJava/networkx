@@ -52,10 +52,10 @@ class TestTreewidthMinDegree(object):
 
     def setUp(self):
         """Setup for different kinds of trees"""
-        self.fullyConnected = nx.Graph()
-        self.fullyConnected.add_edge(1, 2)
-        self.fullyConnected.add_edge(2, 3)
-        self.fullyConnected.add_edge(1, 3)
+        self.complete = nx.Graph()
+        self.complete.add_edge(1, 2)
+        self.complete.add_edge(2, 3)
+        self.complete.add_edge(1, 3)
 
         self.smallTree = nx.Graph()
         self.smallTree.add_edge(1, 3)
@@ -95,7 +95,7 @@ class TestTreewidthMinDegree(object):
 
     def test_heuristic_abort(self):
         """Test if min_degree_heuristic returns None for fully connected graph"""
-        assert_is_none(min_degree_heuristic(self.fullyConnected), None)
+        assert_is_none(min_degree_heuristic(self.complete), None)
 
     def test_heuristic_first_step(self):
         """Test first step of min_degree_heuristic"""
@@ -112,19 +112,32 @@ class TestTreewidthMinFillIn(object):
 
     def setUp(self):
         """Setup for different kinds of trees"""
-        self.fullyConnected = nx.Graph()
-        self.fullyConnected.add_edge(1, 2)
-        self.fullyConnected.add_edge(2, 3)
-        self.fullyConnected.add_edge(1, 3)
+        self.complete = nx.Graph()
+        self.complete.add_edge(1, 2)
+        self.complete.add_edge(2, 3)
+        self.complete.add_edge(1, 3)
 
         self.smallTree = nx.Graph()
-        self.smallTree.add_edge(1, 3)
-        self.smallTree.add_edge(4, 3)
+        self.smallTree.add_edge(1, 2)
         self.smallTree.add_edge(2, 3)
-        self.smallTree.add_edge(3, 5)
+        self.smallTree.add_edge(3, 4)
+        self.smallTree.add_edge(1, 4)
+        self.smallTree.add_edge(2, 4)
+        self.smallTree.add_edge(4, 5)
         self.smallTree.add_edge(5, 6)
         self.smallTree.add_edge(5, 7)
         self.smallTree.add_edge(6, 7)
+
+        self.smallTree2 = nx.Graph()
+        self.smallTree2.add_edge(1, 2)
+        self.smallTree2.add_edge(1, 3)
+        self.smallTree2.add_edge(3, 4)
+        self.smallTree2.add_edge(2, 4)
+        self.smallTree2.add_edge(3, 5)
+        self.smallTree2.add_edge(4, 5)
+        self.smallTree2.add_edge(3, 6)
+        self.smallTree2.add_edge(5, 6)
+
 
     def test_tree_decomposition(self):
         """Test if the returned decomposition is a valid decomposition for a selection 
@@ -151,9 +164,9 @@ class TestTreewidthMinFillIn(object):
 
     def test_heuristic_abort(self):
         """Test if min_fill_in returns None for fully connected graph"""
-        assert_is_none(min_fill_in_heuristic(self.fullyConnected), None)
+        assert_is_none(min_fill_in_heuristic(self.complete), None)
 
     def test_heuristic_first_step(self):
         """Test first step of _heumin_fill_in_heuristic"""
 
-        assert_equals(min_fill_in_heuristic(self.smallTree), 1)
+        assert_equals(min_fill_in_heuristic(self.smallTree2), 6)
