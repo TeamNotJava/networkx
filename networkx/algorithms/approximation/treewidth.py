@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
+from heapq import heapify, heappush, heappop
 
-from networkx import Graph
+import networkx as nx
 
 __all__ = ["treewidth_min_degree", "treewidth_min_fill_in"]
 
@@ -9,7 +10,7 @@ __all__ = ["treewidth_min_degree", "treewidth_min_fill_in"]
 
 # Returns a tuple: (treewidth: int, decomposition: Graph)
 def treewidth_min_degree(G):
-    return treewidth_decomp(G, min_degree_node_heuristic)
+    return treewidth_decomp(G, min_degree_heuristic)
 
 
 # Returns a tuple: (treewidth: int, decomposition: Graph)
@@ -17,7 +18,7 @@ def treewidth_min_fill_in(G):
     return treewidth_decomp(G, min_fill_in_heuristic)
 
 
-def min_degree_node_heuristic(G: Graph):
+def min_degree_heuristic(G: nx.Graph):
     """Returns the node from the graph with minimum degree.
 
         Parameters
@@ -172,7 +173,6 @@ def treewidth_decomp(G, heuristic):
 
     elim_node = heuristic(G)
     while elim_node is not None:
-
         # Connect all neighbours with each other
         neighbors = set(G.neighbors(elim_node))
         for n in neighbors:
@@ -188,7 +188,111 @@ def treewidth_decomp(G, heuristic):
         elim_node = heuristic(G)
 
     # The abort condition is met. Put all nodes into one bag.
-    decomp = Graph()
+    decomp = nx.Graph()
+    new_bag = frozenset(G.nodes)
+    decomp.add_node(new_bag)
+
+    current_treewidth = len(new_bag) - 1
+
+    while node_stack:
+        # get node and its neighbors from the stack
+        (curr_node, neighbors) = node_stack.pop()
+
+        # find a bag the neighbors are in
+        old_bag = None
+        for bag in decomp.nodes:
+            if neighbors <= bag:
+                old_bag = bag
+                break
+
+        # Create new node for decomposition
+        neighbors.add(curr_node)
+        neighbors = frozenset(neighbors)
+
+        # Update treewidth
+        current_treewidth = max(current_treewidth, len(neighbors)-1)
+
+        # Add edge to decomposition (implicitly also adds the new node)
+        decomp.add_edge(old_bag, neighbors)
+
+    return current_treewidth, decomp
+
+
+def treewidth_decomp_min_fill_in_pq_impl(G):
+    G = G.copy()
+
+    # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
+    node_stack = []
+
+    push = heappush
+    pop = heappop
+    # degreeq is heapq with 2-tuples (degree,node)
+    min_fill_in_pq = []
+
+    # build heap with initial degrees
+    min_fill_in_state = {}
+    for n in G.nodes:
+        neighbors = set(G.neighbors(n))
+        current_fill_in = 0
+        for u in G.neighbors(n):
+            for v in neighbors:
+                if u != v and not G.has_edge(u, v):
+                    current_fill_in += 1
+        min_fill_in_pq.append((current_fill_in, n))
+        min_fill_in_state[n] = current_fill_in
+    heapify(min_fill_in_pq)
+
+
+    while min_fill_in_pq:
+        # get the next (min_fill_in) node
+        (min_fill_in, elim_node) = pop(min_fill_in_pq)
+        if not elim_node in G.nodes or min_fill_in_state[elim_node] != min_fill_in:
+            # Outdated entry in min_fill_in_pq
+            continue
+        elif min_fill_in == G.number_of_nodes() - 1:
+            # Fully connected: Abort condition
+            break
+
+        # Connect all neighbours with each other
+        neighbors = set(G.neighbors(elim_node))
+        nodes_for_recalculation = set(G.neighbors(elim_node))
+        for n in neighbors:
+            for m in neighbors:
+                if n != m and not G.has_edge(n, m):
+                    G.add_edge(n, m)
+
+        # remove node from graph and push on stack (including its neighbors)
+        G.remove_node(elim_node)
+        node_stack.append((elim_node, neighbors))
+
+        # From the nodes which are on 2 steps from the eliminated node, for recalculation took the nodes
+        # which has edges to at least 2 of the direct neighbours of the eliminated node. Since if it has edge
+        # only to one of the neighbours the min fill in cannot change.
+        neighbours_of_neighbours = {}
+        for n in nodes_for_recalculation:
+            query_node_neighbours = set(G.neighbors(n))
+            for u in query_node_neighbours:
+                if u in neighbours_of_neighbours: neighbours_of_neighbours[u] = neighbours_of_neighbours[u] + 1
+                else: neighbours_of_neighbours[u] = 1
+
+        for node, number_of_first_order_nodes_connected in neighbours_of_neighbours.items():
+            if number_of_first_order_nodes_connected >= 2:
+                nodes_for_recalculation.add(node)
+
+        # Recalculate min fill in for the nodes and insert them in the pq.
+        for n in nodes_for_recalculation:
+            query_node_neighbours = G.neighbors(n)
+            recalc_min_fil_in = 0
+            for u in query_node_neighbours:
+                for v in query_node_neighbours:
+                    if u != v and not G.has_edge(u, v):
+                        recalc_min_fil_in += 1
+
+            push(min_fill_in_pq, (recalc_min_fil_in, n))
+            min_fill_in_state[n] = recalc_min_fil_in
+
+    # The abort condition is met. Put all nodes into one bag.
+    decomp = nx.Graph()
     new_bag = frozenset(G.nodes)
     decomp.add_node(new_bag)
 
