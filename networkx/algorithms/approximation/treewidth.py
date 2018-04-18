@@ -291,28 +291,3 @@ def treewidth_decomp_min_degree_faster(G):
         decomp.add_edge(old_bag, neighbors)
 
     return current_treewidth, decomp
-
-if __name__ == '__main__':
-    # Test on graph from page 2 of "Discovering Treewidth" (Hans L. Bodlaender)
-    """
-    G = nx.Graph()
-    G.add_edges_from([('a', 'b'), ('b', 'c'), ('b', 'd'),
-                      ('c', 'e'), ('c', 'f'), ('d', 'f'),
-                      ('d', 'g'), ('e', 'f'), ('f', 'g')])
-    """
-    G = nx.fast_gnp_random_graph(2000, 0.01, directed=False)
-
-    start = time.time()
-    (tw, twdecomp) = treewidth_decomp_min_degree_faster(G)
-    end = time.time()
-    print tw, end - start
-
-    start = time.time()
-    (tw, twdecomp) = treewidth_decomp_min_degree(G)
-    end = time.time()
-    print tw, end - start
-
-    start = time.time()
-    (tw, twdecomp) = treewidth_decomp(G,min_degree_heuristic)
-    end = time.time()
-    print tw, end - start
