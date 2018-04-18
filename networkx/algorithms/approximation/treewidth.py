@@ -3,7 +3,6 @@ import sys
 
 from heapq import heappush, heappop, heapify
 import networkx as nx
-import time
 
 __all__ = ["treewidth_min_degree", "treewidth_min_fill_in"]
 
@@ -19,12 +18,12 @@ def treewidth_min_fill_in(G):
     return treewidth_decomp(G, min_fill_in_heuristic)
 
 
-def min_degree_node_heuristic(G: Graph):
+def min_degree_heuristic(G):
     """Returns the node from the graph with minimum degree.
 
         Parameters
         ----------
-        G : Graph
+        G : nx.Graph
 
         Returns
         -------
