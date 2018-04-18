@@ -18,7 +18,9 @@ import networkx as nx
 from networkx.utils import not_implemented_for
 from heapq import heappush, heappop, heapify
 
-__all__ = ["treewidth_min_degree", "treewidth_min_fill_in"]
+__all__ = ["treewidth_min_degree", "treewidth_min_fill_in",
+        "treewidth_decomposition1_min_fill_in",
+        "treewidth_decomposition1_min_degree"]
 
 
 @not_implemented_for('directed')
@@ -175,7 +177,7 @@ class MinFillInHeuristic:
 
         return min_fill_in_node
 
-def min_fill_in_heuristic_faster(G):
+def min_fill_in_heuristic1(G):
     """Returns the node from the graph, where the number of edges added  when
     turning the neighbourhood of the chosen node into clique is small as possible.
             Parameters
@@ -207,7 +209,7 @@ def min_fill_in_heuristic_faster(G):
     min_fill_in = sys.maxsize
 
     # create sorted list of (degree, node)
-    degree_list = [(degree, node) for (node, degree) in G.degree]
+    degree_list = [(len(G[node]), node) for node in G]
     degree_list.sort()
 
     # abort condition
@@ -219,10 +221,11 @@ def min_fill_in_heuristic_faster(G):
         min_degree = min(min_degree, degree)
         num_fill_in = 0
         # Convert to list in order to access by index
-        neighbors = list(G.neighbors(node))
+        neighbors = list(G[node])
         for i in range(len(neighbors) - 1):
             for j in range(i + 1, len(neighbors)):
-                if not G.has_edge(neighbors[i], neighbors[j]):
+                #if not G.has_edge(neighbors[i], neighbors[j]):
+                if not neighbors[j] in G[neighbors[i]]:
                     num_fill_in += 1
                     # prune if this can't be min-fill-in node anymore
                     if num_fill_in >= min_fill_in:
@@ -255,49 +258,31 @@ def treewidth_decomposition1_min_fill_in(G):
     # Later when bag(n) is created every bag(node in l) might need to connect to bag(n)
     old_bag_notify = {}
 
-    push = heappush
-    pop = heappop
-    # degreeq is heapq with 2-tuples (degree,node)
-    degreeq = []
-
-    # build heap with initial degrees
-    # for (n, degree) in G.degree:
-    #    degreeq.append((degree, n))
-    for n in graph:
-        degreeq.append((len(graph[n]), n))
-    heapify(degreeq)
-
-    while degreeq:
-        # get the next (minimum degree) node
-        (min_degree, elim_node) = pop(degreeq)
-        # if not G.has_node(elim_node) or G.degree[elim_node] != min_degree:
-        if not elim_node in graph or len(graph[elim_node]) != min_degree:
-            # Outdated entry in degreeq
-            continue
-        # elif min_degree == G.number_of_nodes() - 1:
-        elif min_degree == len(graph) - 1:
-            # Fully connected: Abort condition
-            break
+    elim_node = min_fill_in_heuristic1(graph)
+    while elim_node is not None:
 
         # Connect all neighbours with each other
-        # neighbors = set(G.neighbors(elim_node))
+        #neighbors = set(G.neighbors(elim_node))
         neighbors = graph[elim_node]
-        changed_degree = neighbors
         for n in neighbors:
             for m in neighbors:
-                # if (n != m) and not G.has_edge(n, m):
+                #if n != m and not G.has_edge(n, m):
+                #    G.add_edge(n, m)
                 if n != m and not m in graph[n]:
-                    # G.add_edge(n, m)
                     graph[n].add(m)
                     graph[m].add(n)
 
+
         # remove node from graph and push on stack (including its neighbors)
-        # G.remove_node(elim_node)
+        #G.remove_node(elim_node)
         for u in graph:
             if elim_node in graph[u]:
                 graph[u].remove(elim_node)
         graph.pop(elim_node, None)
         node_stack.append((elim_node, neighbors))
+
+        # get next node to be removed according to heuristic
+        elim_node = min_fill_in_heuristic1(graph)
 
         # BAGSEARCH: Some neighbor will create the bag that elim_node later needs to connect to
         for node in neighbors:
@@ -305,11 +290,6 @@ def treewidth_decomposition1_min_fill_in(G):
                 old_bag_notify[node].append(elim_node)
             else:
                 old_bag_notify[node] = [elim_node]
-
-        # insert changed degrees into degreeq
-        for n in changed_degree:
-            # push(degreeq, (G.degree[n], n))
-            push(degreeq, (len(graph[n]), n))
 
     # The abort condition is met. Put all nodes into one bag.
     decomp = nx.Graph()
@@ -334,7 +314,8 @@ def treewidth_decomposition1_min_fill_in(G):
             old_bag = first_bag
 
         # Create new node for decomposition
-        neighbors.append(curr_node)
+        #neighbors.append(curr_node)
+        neighbors.add(curr_node)
         new_bag = frozenset(neighbors)
         # Update treewidth
         treewidth = max(treewidth, len(new_bag) - 1)
@@ -443,7 +424,8 @@ def treewidth_decomposition1_min_degree(G):
             old_bag = first_bag
 
         # Create new node for decomposition
-        neighbors.append(curr_node)
+        #neighbors.append(curr_node)
+        neighbors.add(curr_node)
         new_bag = frozenset(neighbors)
         # Update treewidth
         treewidth = max(treewidth, len(new_bag) - 1)
