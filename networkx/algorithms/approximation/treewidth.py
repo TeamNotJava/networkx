@@ -180,26 +180,26 @@ class MinFillInHeuristic:
 def min_fill_in_heuristic1(G):
     """Returns the node from the graph, where the number of edges added  when
     turning the neighbourhood of the chosen node into clique is small as possible.
-            Parameters
-            ----------
-            G : Graph
-            Returns
-            -------
-            min_fill_node : string, integers or hashable Python object (except None)
-                The node from the graph, for which, when it is deleted from the graph and
-                its neighbourhood is turned into clique, the number of edges added is
-                small as possible.
-            Notes
-            -----
-            This algorithm computes the node with 'min fill in' in the graph 'G'.
-            The running time of the algorithm is O(V*V*V) and it uses constant
-            additional memory.
-            References
-            ----------
-            .. [1] K. Wang, Z. Lu, and J. Hicks
-                   *Treewidth*.
-                   http://web.eecs.utk.edu/~cphillip/cs594_spring2015_projects/treewidth.pdf
-            """
+    Parameters
+    ----------
+    G : Graph
+    Returns
+    -------
+    min_fill_node : string, integers or hashable Python object (except None)
+        The node from the graph, for which, when it is deleted from the graph and
+        its neighbourhood is turned into clique, the number of edges added is
+        small as possible.
+    Notes
+    -----
+    This algorithm computes the node with 'min fill in' in the graph 'G'.
+    The running time of the algorithm is O(V*V*V) and it uses constant
+    additional memory.
+    References
+    ----------
+    .. [1] K. Wang, Z. Lu, and J. Hicks
+           *Treewidth*.
+           http://web.eecs.utk.edu/~cphillip/cs594_spring2015_projects/treewidth.pdf
+    """
 
     if len(G) == 0:
         return None
@@ -224,7 +224,6 @@ def min_fill_in_heuristic1(G):
         neighbors = list(G[node])
         for i in range(len(neighbors) - 1):
             for j in range(i + 1, len(neighbors)):
-                #if not G.has_edge(neighbors[i], neighbors[j]):
                 if not neighbors[j] in G[neighbors[i]]:
                     num_fill_in += 1
                     # prune if this can't be min-fill-in node anymore
@@ -244,12 +243,13 @@ def min_fill_in_heuristic1(G):
 
 
 def treewidth_decomposition1_min_fill_in(G):
-    # G = G.copy()
+    # make dict-of-sets structure
     graph = {}
     for u in G:
         graph[u] = set()
         for v in G[u]:
-            graph[u].add(v)
+            if u != v: # ignore self-loop
+                graph[u].add(v)
 
     # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
     node_stack = []
@@ -262,23 +262,20 @@ def treewidth_decomposition1_min_fill_in(G):
     while elim_node is not None:
 
         # Connect all neighbours with each other
-        #neighbors = set(G.neighbors(elim_node))
         neighbors = graph[elim_node]
         for n in neighbors:
             for m in neighbors:
-                #if n != m and not G.has_edge(n, m):
-                #    G.add_edge(n, m)
                 if n != m and not m in graph[n]:
                     graph[n].add(m)
                     graph[m].add(n)
 
 
         # remove node from graph and push on stack (including its neighbors)
-        #G.remove_node(elim_node)
         for u in graph:
             if elim_node in graph[u]:
                 graph[u].remove(elim_node)
         graph.pop(elim_node, None)
+
         node_stack.append((elim_node, neighbors))
 
         # get next node to be removed according to heuristic
@@ -314,7 +311,6 @@ def treewidth_decomposition1_min_fill_in(G):
             old_bag = first_bag
 
         # Create new node for decomposition
-        #neighbors.append(curr_node)
         neighbors.add(curr_node)
         new_bag = frozenset(neighbors)
         # Update treewidth
@@ -331,12 +327,13 @@ def treewidth_decomposition1_min_fill_in(G):
     return treewidth, decomp
 
 def treewidth_decomposition1_min_degree(G):
-    # G = G.copy()
+    # make dict-of-sets structure
     graph = {}
     for u in G:
         graph[u] = set()
         for v in G[u]:
-            graph[u].add(v)
+            if u != v: # ignore self-loop
+                graph[u].add(v)
 
     # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
     node_stack = []
@@ -351,8 +348,6 @@ def treewidth_decomposition1_min_degree(G):
     degreeq = []
 
     # build heap with initial degrees
-    # for (n, degree) in G.degree:
-    #    degreeq.append((degree, n))
     for n in graph:
         degreeq.append((len(graph[n]), n))
     heapify(degreeq)
@@ -360,33 +355,28 @@ def treewidth_decomposition1_min_degree(G):
     while degreeq:
         # get the next (minimum degree) node
         (min_degree, elim_node) = pop(degreeq)
-        # if not G.has_node(elim_node) or G.degree[elim_node] != min_degree:
         if not elim_node in graph or len(graph[elim_node]) != min_degree:
             # Outdated entry in degreeq
             continue
-        # elif min_degree == G.number_of_nodes() - 1:
         elif min_degree == len(graph) - 1:
             # Fully connected: Abort condition
             break
 
         # Connect all neighbours with each other
-        # neighbors = set(G.neighbors(elim_node))
         neighbors = graph[elim_node]
         changed_degree = neighbors
         for n in neighbors:
             for m in neighbors:
-                # if (n != m) and not G.has_edge(n, m):
                 if n != m and not m in graph[n]:
-                    # G.add_edge(n, m)
                     graph[n].add(m)
                     graph[m].add(n)
 
         # remove node from graph and push on stack (including its neighbors)
-        # G.remove_node(elim_node)
         for u in graph:
             if elim_node in graph[u]:
                 graph[u].remove(elim_node)
         graph.pop(elim_node, None)
+
         node_stack.append((elim_node, neighbors))
 
         # BAGSEARCH: Some neighbor will create the bag that elim_node later needs to connect to
@@ -398,7 +388,6 @@ def treewidth_decomposition1_min_degree(G):
 
         # insert changed degrees into degreeq
         for n in changed_degree:
-            # push(degreeq, (G.degree[n], n))
             push(degreeq, (len(graph[n]), n))
 
     # The abort condition is met. Put all nodes into one bag.
@@ -424,7 +413,6 @@ def treewidth_decomposition1_min_degree(G):
             old_bag = first_bag
 
         # Create new node for decomposition
-        #neighbors.append(curr_node)
         neighbors.add(curr_node)
         new_bag = frozenset(neighbors)
         # Update treewidth
