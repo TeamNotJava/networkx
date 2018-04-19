@@ -584,44 +584,44 @@ def treewidth_decomposition4_min_degree(G, heuristic):
         for n in changed_degree:
             push(degreeq, (G.degree[n], n))
 
-        # The abort condition is met. Put all nodes into one bag.
-        decomp = nx.Graph()
-        first_bag = frozenset(G.nodes)
-        decomp.add_node(first_bag)
+    # The abort condition is met. Put all nodes into one bag.
+    decomp = nx.Graph()
+    first_bag = frozenset(G.nodes)
+    decomp.add_node(first_bag)
 
-        treewidth = len(first_bag) - 1
+    treewidth = len(first_bag) - 1
 
-        # Maps node n to the bag to which bag(n) needs to connect
-        old_bag_connection = {}
-        for node in G.nodes:
-            old_bag_connection[node] = first_bag
+    # Maps node n to the bag to which bag(n) needs to connect
+    old_bag_connection = {}
+    for node in G.nodes:
+        old_bag_connection[node] = first_bag
 
-        while node_stack:
-            # get node and its neighbors from the stack
-            (curr_node, neighbors) = node_stack.pop()
+    while node_stack:
+        # get node and its neighbors from the stack
+        (curr_node, neighbors) = node_stack.pop()
 
-            # find a bag the neighbors are in (or default to the first created bag)
-            if curr_node in old_bag_connection:
-                old_bag = old_bag_connection[curr_node]
-            else:
-                old_bag = first_bag
+        # find a bag the neighbors are in (or default to the first created bag)
+        if curr_node in old_bag_connection:
+            old_bag = old_bag_connection[curr_node]
+        else:
+            old_bag = first_bag
 
-            # Create new node for decomposition
-            neighbors.add(curr_node)
-            new_bag = frozenset(neighbors)
-            # Update treewidth
-            treewidth = max(treewidth, len(new_bag) - 1)
+        # Create new node for decomposition
+        neighbors.add(curr_node)
+        new_bag = frozenset(neighbors)
+        # Update treewidth
+        treewidth = max(treewidth, len(new_bag) - 1)
 
-            # If this node was the first in a created clique to get deleted the created bag is the old_bag from this node
-            if curr_node in old_bag_notify:
-                for old_neighbor_node in old_bag_notify[curr_node]:
-                    # set (possibly override) the bag of old_neighbor_node should connect to
-                    old_bag_connection[old_neighbor_node] = new_bag
+        # If this node was the first in a created clique to get deleted the created bag is the old_bag from this node
+        if curr_node in old_bag_notify:
+            for old_neighbor_node in old_bag_notify[curr_node]:
+                # set (possibly override) the bag of old_neighbor_node should connect to
+                old_bag_connection[old_neighbor_node] = new_bag
 
-            # Add edge to decomposition (implicitly also adds the new node)
-            decomp.add_edge(old_bag, new_bag)
+        # Add edge to decomposition (implicitly also adds the new node)
+        decomp.add_edge(old_bag, new_bag)
 
-        return treewidth, decomp
+    return treewidth, decomp
 
 def treewidth_decomposition4_min_fill_in(G, heuristic):
     # Copy graph because the algorithm modifies it
