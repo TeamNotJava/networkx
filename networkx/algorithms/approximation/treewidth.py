@@ -392,7 +392,7 @@ def treewidth_decomposition1_min_degree(G):
 
     # The abort condition is met. Put all nodes into one bag.
     decomp = nx.Graph()
-    first_bag = frozenset(G.nodes)
+    first_bag = frozenset(graph.keys())
     decomp.add_node(first_bag)
 
     treewidth = len(first_bag) - 1
@@ -426,6 +426,7 @@ def treewidth_decomposition1_min_degree(G):
 
         # Add edge to decomposition (implicitly also adds the new node)
         decomp.add_edge(old_bag, new_bag)
+
     return treewidth, decomp
 
 
@@ -484,7 +485,7 @@ def treewidth_decomposition2_min_degree(G):
 
     # The abort condition is met. Put all nodes into one bag.
     decomp = nx.Graph()
-    first_bag = frozenset(G.nodes)
+    first_bag = frozenset(graph.keys())
     decomp.add_node(first_bag)
 
     treewidth = len(first_bag) - 1
@@ -546,7 +547,7 @@ def treewidth_decomposition2_min_fill_in(G):
 
     # The abort condition is met. Put all nodes into one bag.
     decomp = nx.Graph()
-    first_bag = frozenset(G.nodes)
+    first_bag = frozenset(graph.keys())
     decomp.add_node(first_bag)
 
     treewidth = len(first_bag) - 1
@@ -664,6 +665,7 @@ def treewidth_decomposition4_min_degree(G, heuristic):
 
             # Add edge to decomposition (implicitly also adds the new node)
             decomp.add_edge(old_bag, new_bag)
+
         return treewidth, decomp
 
 def treewidth_decomposition4_min_fill_in(G, heuristic):
