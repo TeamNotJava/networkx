@@ -17,9 +17,14 @@ import sys
 import networkx as nx
 from heapq import heappush, heappop, heapify
 
-__all__ = ["treewidth_min_degree", "treewidth_min_fill_in",
-        "treewidth_decomposition1_min_fill_in",
-        "treewidth_decomposition1_min_degree"]
+__all__ = ["treewidth_decomposition1_min_fill_in",
+            "treewidth_decomposition1_min_degree",
+            "treewidth_decomposition2_min_degree",
+            "treewidth_decomposition2_min_fill_in",
+            "treewidth_decomposition3_min_degree",
+            "treewidth_decomposition3_min_fill_in",
+            "treewidth_decomposition4_min_degree",
+            "treewidth_decomposition4_min_fill_in"]
 
 
 
@@ -527,8 +532,113 @@ def treewidth_decomposition2_min_fill_in(G):
         decomp.add_edge(old_bag, new_bag)
     return treewidth, decomp
 
-def treewidth_decomposition3(G, heuristic):
-    pass
+def min_degree_heuristic3(G):
+    min_degree = sys.maxsize
+    min_node = None
+    for node in G:
+        degree = len(G[node])
+        if degree < min_degree:
+            if degree <= 1:
+                # Return early
+                return node
+            min_node = node
+            min_degree = degree
+
+    if min_degree == len(G) - 1:
+        # Fully connected: Abort condition
+        return None
+    else:
+        return min_node
+
+def treewidth_decomposition3_min_degree(G):
+    # make dict-of-sets structure
+    graph = {}
+    for u in G:
+        graph[u] = set()
+        for v in G[u]:
+            if u != v: # ignore self-loop
+                graph[u].add(v)
+
+    # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
+    node_stack = []
+
+    # Maps a node n to a lists of nodes l
+    # Later when bag(n) is created every bag(node in l) might need to connect to bag(n)
+    old_bag_notify = {}
+
+
+    elim_node = min_degree_heuristic3(graph)
+    while elim_node is not None:
+
+        # Connect all neighbours with each other
+        neighbors = graph[elim_node]
+        for n in neighbors:
+            for m in neighbors:
+                if n != m and not m in graph[n]:
+                    graph[n].add(m)
+                    graph[m].add(n)
+
+        # remove node from graph and push on stack (including its neighbors)
+        for u in graph:
+            if elim_node in graph[u]:
+                graph[u].remove(elim_node)
+        graph.pop(elim_node, None)
+
+        node_stack.append((elim_node, neighbors))
+
+        # BAGSEARCH: Some neighbor will create the bag that elim_node later needs to connect to
+        for node in neighbors:
+            if node in old_bag_notify:
+                old_bag_notify[node].append(elim_node)
+            else:
+                old_bag_notify[node] = [elim_node]
+
+        # get next node to be removed according to heuristic
+        elim_node = min_degree_heuristic3(graph)
+
+
+    # The abort condition is met. Put all nodes into one bag.
+    decomp = nx.Graph()
+    first_bag = frozenset(graph.keys())
+    decomp.add_node(first_bag)
+
+    treewidth = len(first_bag) - 1
+
+    # Maps node n to the bag to which bag(n) needs to connect
+    old_bag_connection = {}
+    for node in graph:
+        old_bag_connection[node] = first_bag
+
+    while node_stack:
+        # get node and its neighbors from the stack
+        (curr_node, neighbors) = node_stack.pop()
+
+        # find a bag the neighbors are in (or default to the first created bag)
+        if curr_node in old_bag_connection:
+            old_bag = old_bag_connection[curr_node]
+        else:
+            old_bag = first_bag
+
+        # Create new node for decomposition
+        neighbors.add(curr_node)
+        new_bag = frozenset(neighbors)
+        # Update treewidth
+        treewidth = max(treewidth, len(new_bag) - 1)
+
+        # If this node was the first in a created clique to get deleted the created bag is the old_bag from this node
+        if curr_node in old_bag_notify:
+            for old_neighbor_node in old_bag_notify[curr_node]:
+                # set (possibly override) the bag of old_neighbor_node should connect to
+                old_bag_connection[old_neighbor_node] = new_bag
+
+        # Add edge to decomposition (implicitly also adds the new node)
+        decomp.add_edge(old_bag, new_bag)
+
+    return treewidth, decomp
+
+def treewidth_decomposition3_min_fill_in(G):
+    # min-fill-in version 3 is equal to version 1
+    return treewidth_decomposition1_min_fill_in(G)
 
 def treewidth_decomposition4_min_degree(G, heuristic):
     # Johannes Bagsearch / Priority queue (min_deg) / Normal Graph
