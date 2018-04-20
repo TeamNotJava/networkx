@@ -25,7 +25,10 @@ __all__ = ["treewidth_decomposition1_min_fill_in",
             "treewidth_decomposition3_min_degree",
             "treewidth_decomposition3_min_fill_in",
             "treewidth_decomposition4_min_degree",
-            "treewidth_decomposition4_min_fill_in"]
+            "treewidth_decomposition4_min_fill_in",
+            "treewidth_decomposition5",
+            "min_fill_in_heuristic",
+            "min_degree_heuristic"]
 
 
 @not_implemented_for('directed')
@@ -685,7 +688,7 @@ def treewidth_decomposition3_min_fill_in(G):
     # min-fill-in version 3 is equal to version 1
     return treewidth_decomposition1_min_fill_in(G)
 
-def treewidth_decomposition4_min_degree(G, heuristic):
+def treewidth_decomposition4_min_degree(G):
     # Johannes Bagsearch / Priority queue (min_deg) / Normal Graph
     G = G.copy()
 
@@ -778,7 +781,7 @@ def treewidth_decomposition4_min_degree(G, heuristic):
 
     return treewidth, decomp
 
-def treewidth_decomposition4_min_fill_in(G, heuristic):
+def treewidth_decomposition4_min_fill_in(G):
     # Copy graph because the algorithm modifies it
     G = G.copy()
     # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
