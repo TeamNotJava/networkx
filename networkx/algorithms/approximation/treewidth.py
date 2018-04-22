@@ -234,11 +234,11 @@ def treewidth_decomp_min_fill_in_pq_impl(G):
     # build heap with initial min fill ins
     min_fill_in_state = {}
     for (n, degree) in G.degree:
-        neighbors = set(G.neighbors(n))
+        neighbors = list(G.neighbors(n))
         current_fill_in = 0
-        for u in G.neighbors(n):
-            for v in neighbors:
-                if u != v and not G.has_edge(u, v):
+        for i in range(len(neighbors) - 1):
+            for j in range(i + 1, len(neighbors)):
+                if not G.has_edge(neighbors[i], neighbors[j]):
                     current_fill_in += 1
         min_fill_in_pq.append((current_fill_in, n))
         min_fill_in_state[n] = current_fill_in
@@ -267,6 +267,7 @@ def treewidth_decomp_min_fill_in_pq_impl(G):
 
         # remove node from graph and push on stack (including its neighbors)
         G.remove_node(elim_node)
+        min_fill_in_state[elim_node] = -1
         node_stack.append((elim_node, neighbors))
 
         # From the nodes which are on 2 steps from the eliminated node, for recalculation took the nodes
@@ -274,10 +275,12 @@ def treewidth_decomp_min_fill_in_pq_impl(G):
         # only to one of the neighbours the min fill in cannot change.
         neighbours_of_neighbours = {}
         for n in nodes_for_recalculation:
-            query_node_neighbours = set(G.neighbors(n))
+            query_node_neighbours = (G.neighbors(n))
             for u in query_node_neighbours:
-                if u in neighbours_of_neighbours: neighbours_of_neighbours[u] = neighbours_of_neighbours[u] + 1
-                else: neighbours_of_neighbours[u] = 1
+                if u in neighbours_of_neighbours:
+                    neighbours_of_neighbours[u] = neighbours_of_neighbours[u] + 1
+                else:
+                    neighbours_of_neighbours[u] = 1
 
         for node, number_of_first_order_nodes_connected in neighbours_of_neighbours.items():
             if number_of_first_order_nodes_connected >= 2:
@@ -285,15 +288,16 @@ def treewidth_decomp_min_fill_in_pq_impl(G):
 
         # Recalculate min fill in for the nodes and insert them in the pq.
         for n in nodes_for_recalculation:
-            query_node_neighbours = G.neighbors(n)
+            query_node_neighbours = list(G.neighbors(n))
             recalc_min_fil_in = 0
-            for u in query_node_neighbours:
-                for v in query_node_neighbours:
-                    if u != v and not G.has_edge(u, v):
+            for i in range(len(query_node_neighbours) - 1):
+                for j in range(i + 1, len(query_node_neighbours)):
+                    if not G.has_edge(query_node_neighbours[i], query_node_neighbours[j]):
                         recalc_min_fil_in += 1
 
-            push(min_fill_in_pq, (recalc_min_fil_in, n))
-            min_fill_in_state[n] = recalc_min_fil_in
+            if min_fill_in_state[n] != recalc_min_fil_in:
+                push(min_fill_in_pq, (recalc_min_fil_in, n))
+                min_fill_in_state[n] = recalc_min_fil_in
 
         # Recalculate the min degree for early abort check
         min_degree = sys.maxsize
