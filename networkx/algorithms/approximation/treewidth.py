@@ -257,5 +257,4 @@ def treewidth_decomp(G, heuristic_class):
         # Add edge to decomposition (implicitly also adds the new node)
         decomp.add_edge(old_bag, new_bag)
 
-    print(treewidth, decomp.edges)
     return treewidth, decomp
