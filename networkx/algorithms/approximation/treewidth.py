@@ -21,7 +21,6 @@ from heapq import heappush, heappop, heapify
 __all__ = ["treewidth_min_degree", "treewidth_min_fill_in"]
 
 
-# Returns a tuple: (treewidth: int, decomposition: Graph)
 @not_implemented_for('directed')
 @not_implemented_for('multigraph')
 def treewidth_min_degree(G):
@@ -39,7 +38,6 @@ def treewidth_min_degree(G):
     return treewidth_decomp(G, MinDegreeHeuristic)
 
 
-# Returns a tuple: (treewidth: int, decomposition: Graph)
 @not_implemented_for('directed')
 @not_implemented_for('multigraph')
 def treewidth_min_fill_in(G):
@@ -75,8 +73,8 @@ class MinDegreeHeuristic:
     def __iter__(self):
         return self
 
-    # Implement next method for backwards compatibility with python 2
     def next(self):
+        """Implement next method for backwards compatibility with python 2"""
         return self.__next__()
 
     def __next__(self):
@@ -133,8 +131,8 @@ class MinFillInHeuristic:
     def __iter__(self):
         return self
 
-    # Implement next method for backwards compatibility with python 2
     def next(self):
+        """Implement next method for backwards compatibility with python 2"""
         return self.__next__()
 
     def __next__(self):
@@ -162,14 +160,14 @@ class MinFillInHeuristic:
                 for j in range(i + 1, len(nbrs)):
                     if nbrs[j] not in self._graph[nbrs[i]]:
                         num_fill_in += 1
-                        # prune if this can't be min-fill-in node anymore
+                        # break inner loop if this can't be min-fill-in node anymore
                         if num_fill_in >= min_fill_in:
                             break
-                else:
-                    continue  # executed if no break
-                break
 
-            if num_fill_in < min_fill_in:
+                if num_fill_in >= min_fill_in: # break outer loop
+                    break
+
+            if num_fill_in < min_fill_in: # Update min-fill-in node
                 if num_fill_in == 0:
                     return node
                 min_fill_in = num_fill_in
@@ -178,8 +176,6 @@ class MinFillInHeuristic:
         return min_fill_in_node
 
 
-# Calculates tree width decomposition using the passed heuristic
-# Returns tuple: (treewidth: int, decomposition: Graph)
 def treewidth_decomp(G, heuristic_class):
     """Returns a treewidth decomposition using the passed heuristic.
 
@@ -205,7 +201,7 @@ def treewidth_decomp(G, heuristic_class):
     # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
     node_stack = []
 
-    # instanciate a heuristic_iterator
+    # instantiate a heuristic_iterator
     heuristic_iterator = heuristic_class(graph)
 
     for elim_node in heuristic_iterator:
@@ -215,7 +211,6 @@ def treewidth_decomp(G, heuristic_class):
             for v in nbrs:
                 if u != v and v not in graph[u]:
                     graph[u].add(v)
-                    graph[v].add(u)
 
         # push node and its current neighbors on stack
         node_stack.append((elim_node, nbrs))
