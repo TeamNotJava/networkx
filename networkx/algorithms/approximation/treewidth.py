@@ -18,6 +18,7 @@ import networkx as nx
 from networkx.utils import not_implemented_for
 from heapq import heappush, heappop, heapify
 
+<<<<<<< HEAD
 __all__ = ["treewidth_decomposition1_min_fill_in",
             "treewidth_decomposition1_min_degree",
             "treewidth_decomposition2_min_degree",
@@ -29,6 +30,9 @@ __all__ = ["treewidth_decomposition1_min_fill_in",
             "treewidth_decomposition5",
             "min_fill_in_heuristic",
             "min_degree_heuristic"]
+=======
+__all__ = ["treewidth_min_degree", "treewidth_min_fill_in"]
+>>>>>>> treewidth-heuristic
 
 
 @not_implemented_for('directed')
@@ -185,6 +189,7 @@ class MinFillInHeuristic:
 
         return min_fill_in_node
 
+<<<<<<< HEAD
 def min_fill_in_heuristic1(G):
     """Returns the node from the graph, where the number of edges added  when
     turning the neighbourhood of the chosen node into clique is small as possible.
@@ -990,6 +995,8 @@ def treewidth_decomposition4_min_fill_in(G):
         decomp.add_edge(old_bag, new_bag)
     
     return treewidth, decomp
+=======
+>>>>>>> treewidth-heuristic
 
 def treewidth_decomp(G, heuristic_class):
     """Returns a treewidth decomposition using the passed heuristic.
