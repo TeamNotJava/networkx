@@ -88,7 +88,7 @@ class MinDegreeHeuristic:
         while self._degreeq:
             # get the next (minimum degree) node
             (min_degree, elim_node) = heappop(self._degreeq)
-            if not elim_node in self._graph or len(self._graph[elim_node]) != min_degree:
+            if elim_node not in self._graph or len(self._graph[elim_node]) != min_degree:
                 # Outdated entry in degreeq
                 continue
             elif min_degree == len(self._graph) - 1:
@@ -157,10 +157,10 @@ class MinFillInHeuristic:
         for (degree, node) in degree_list:
             num_fill_in = 0
             # Convert to list in order to access by index
-            neighbors = list(self._graph[node])
-            for i in range(len(neighbors) - 1):
-                for j in range(i + 1, len(neighbors)):
-                    if not neighbors[j] in self._graph[neighbors[i]]:
+            nbrs = list(self._graph[node])
+            for i in range(len(nbrs) - 1):
+                for j in range(i + 1, len(nbrs)):
+                    if nbrs[j] not in self._graph[nbrs[i]]:
                         num_fill_in += 1
                         # prune if this can't be min-fill-in node anymore
                         if num_fill_in >= min_fill_in:
@@ -210,15 +210,15 @@ def treewidth_decomp(G, heuristic_class):
 
     for elim_node in heuristic_iterator:
         # Connect all neighbours with each other
-        neighbors = graph[elim_node]
-        for n in neighbors:
-            for m in neighbors:
-                if n != m and not m in graph[n]:
-                    graph[n].add(m)
-                    graph[m].add(n)
+        nbrs = graph[elim_node]
+        for u in nbrs:
+            for v in nbrs:
+                if u != v and v not in graph[u]:
+                    graph[u].add(v)
+                    graph[v].add(u)
 
         # push node and its current neighbors on stack
-        node_stack.append((elim_node, neighbors))
+        node_stack.append((elim_node, nbrs))
 
         # remove node from graph
         for u in graph:
@@ -235,12 +235,12 @@ def treewidth_decomp(G, heuristic_class):
 
     while node_stack:
         # get node and its neighbors from the stack
-        (curr_node, neighbors) = node_stack.pop()
+        (curr_node, nbrs) = node_stack.pop()
 
         # find a bag the neighbors are in
         old_bag = None
         for bag in decomp.nodes:
-            if neighbors <= bag:
+            if nbrs <= bag:
                 old_bag = bag
                 break
         if old_bag == None:
@@ -248,8 +248,8 @@ def treewidth_decomp(G, heuristic_class):
             old_bag = first_bag
 
         # Create new node for decomposition
-        neighbors.add(curr_node)
-        new_bag = frozenset(neighbors)
+        nbrs.add(curr_node)
+        new_bag = frozenset(nbrs)
 
         # Update treewidth
         treewidth = max(treewidth, len(new_bag) - 1)
