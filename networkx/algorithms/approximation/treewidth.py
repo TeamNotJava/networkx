@@ -155,7 +155,6 @@ class MinFillInHeuristic:
             raise StopIteration
 
         for (degree, node) in degree_list:
-            min_degree = min(min_degree, degree)
             num_fill_in = 0
             # Convert to list in order to access by index
             neighbors = list(self._graph[node])
@@ -258,4 +257,5 @@ def treewidth_decomp(G, heuristic_class):
         # Add edge to decomposition (implicitly also adds the new node)
         decomp.add_edge(old_bag, new_bag)
 
+    print(treewidth, decomp.edges)
     return treewidth, decomp
