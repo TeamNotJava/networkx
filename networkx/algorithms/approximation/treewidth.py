@@ -15,14 +15,15 @@
 import sys
 
 import networkx as nx
+from networkx.utils import not_implemented_for
 from heapq import heappush, heappop, heapify
 
 __all__ = ["treewidth_min_degree", "treewidth_min_fill_in"]
 
 
-
-
 # Returns a tuple: (treewidth: int, decomposition: Graph)
+@not_implemented_for('directed')
+@not_implemented_for('multigraph')
 def treewidth_min_degree(G):
     """ Returns a treewidth decomposition using the Minimum Degree heuristic.
 
@@ -39,6 +40,8 @@ def treewidth_min_degree(G):
 
 
 # Returns a tuple: (treewidth: int, decomposition: Graph)
+@not_implemented_for('directed')
+@not_implemented_for('multigraph')
 def treewidth_min_fill_in(G):
     """ Returns a treewidth decomposition using the Minimum Fill-in heuristic.
 
