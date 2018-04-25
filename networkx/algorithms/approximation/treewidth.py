@@ -1,29 +1,52 @@
 # -*- coding: utf-8 -*-
 """Functions for computing treewidth decomposition.
    
-   Treewidth of an undirected graph is a number associated with the graph. It can be defined as the size of the largest vertex set (bag) in a tree decomposition of the graph minus one. 
+Treewidth of an undirected graph is a number associated with the graph.
+It can be defined as the size of the largest vertex set (bag) in a tree
+decomposition of the graph minus one.
 
 `Wikipedia: Treewidth <https://en.wikipedia.org/wiki/Treewidth>`_
 
-   The notions of treewidth and tree decomposition have gained their attractiveness partly because many graph and network problems that are intractable (e.g., NP-hard) on arbitrary graphs become efficiently solvable (e.g., with a linear time algorithm) when the treewidth of the input graphs is bounded by a constant [1]_ [2]_.
+The notions of treewidth and tree decomposition have gained their
+attractiveness partly because many graph and network problems that are
+intractable (e.g., NP-hard) on arbitrary graphs become efficiently
+solvable (e.g., with a linear time algorithm) when the treewidth of the
+input graphs is bounded by a constant [1]_ [2]_.
+
+There are two classes which contain implementations of different heuristics for
+computing tree decomposition: :class:`MinDegreeHeuristic` and 
+:class:`MinFillInHeuristic`.
    
-   There are two classes which contain implementations of different heuristics for computing tree decomposition: :class:`MinDegreeHeuristic` and :class:`MinFillInHeuristic`.
-   
-   :class:`MinDegreeHeuristic`
-       Returns a treewidth decomposition using the Minimum Degree heuristic. The heuristic chooses the nodes according to their degree (number of neighours), i.e., first the node with the lowest degree is chosen, then the graph is updated and the correspondig node is removed. Next, a new node with the lowest degree is chosen, and so on.
+:class:`MinDegreeHeuristic`
+    Returns a treewidth decomposition using the Minimum Degree heuristic.
+    The heuristic chooses the nodes according to their degree
+    (number of neighours), i.e., first the node with the lowest degree is
+    chosen, then the graph is updated and the correspondig node is
+    removed. Next, a new node with the lowest degree is chosen,
+    and so on.
    
         
-   :class:`MinFillInHeuristic`
-       Returns the node from the graph, where the number of edges added  when turning the neighbourhood of the chosen node into clique is as small as possible. This algorithm chooses the nodes using the Minimum Fill-In heuristic. The running time of the algorithm is :math:`O(V^3)` and it uses additional constant memory [3]_.
+:class:`MinFillInHeuristic`
+    Returns the node from the graph, where the number of edges added  when
+    turning the neighbourhood of the chosen node into clique is as small as
+    possible. This algorithm chooses the nodes using the Minimum Fill-In
+    heuristic. The running time of the algorithm is :math:`O(V^3)` and it uses
+    additional constant memory [3]_.
        
    
-   .. [1] Hans L. Bodlaender and Arie M. C. A. Koster. 2010. "Treewidth computations I.Upper bounds". Inf. Comput. 208, 3 (March 2010),259-275. http://dx.doi.org/10.1016/j.ic.2009.03.008
+.. [1] Hans L. Bodlaender and Arie M. C. A. Koster. 2010. "Treewidth computations
+      I.Upper bounds". Inf. Comput. 208, 3 (March 2010),259-275.
+      http://dx.doi.org/10.1016/j.ic.2009.03.008
 
-   .. [2] Hand L. Bodlaender. "Discovering Treewidth". institute of information and computing sciences, utrecht university. technical report UU-CS-2005-018. http://www.cs.uu.nl
+.. [2] Hand L. Bodlaender. "Discovering Treewidth". Institute of Information and
+      Computing Sciences, Utrecht University. Technical Report UU-CS-2005-018.
+      http://www.cs.uu.nl
    
-   .. [3] K. Wang, Z. Lu, and J. Hicks *Treewidth*. http://web.eecs.utk.edu/~cphillip/cs594_spring2015_projects/treewidth.pdf
+.. [3] K. Wang, Z. Lu, and J. Hicks *Treewidth*.
+      http://web.eecs.utk.edu/~cphillip/cs594_spring2015_projects/treewidth.pdf
 
 """
+
 import sys
 
 import networkx as nx
@@ -36,7 +59,10 @@ __all__ = ["treewidth_min_degree", "treewidth_min_fill_in"]
 @not_implemented_for('directed')
 @not_implemented_for('multigraph')
 def treewidth_min_degree(G):
-    """ Returns a treewidth decomposition using the Minimum Degree heuristic. The heuristic chooses the nodes according to their degree, i.e., first the node with the lowest degree is chosen, then the graph is updated and the correspondig node is removed. Next, a new node with the lowest degree is chosen, and so on.
+    """ Returns a treewidth decomposition using the Minimum Degree heuristic. The
+        heuristic chooses the nodes according to their degree, i.e., first the node
+        with the lowest degree is chosen, then the graph is updated and the correspondig
+        node is removed. Next, a new node with the lowest degree is chosen, and so on.
 
     Parameters
     ----------
@@ -53,8 +79,9 @@ def treewidth_min_degree(G):
 @not_implemented_for('directed')
 @not_implemented_for('multigraph')
 def treewidth_min_fill_in(G):
-    """ Returns a treewidth decomposition using the Minimum Fill-in heuristic. The heuristic chooses a node from the graph, where the number of edges added  when
-        turning the neighbourhood of the chosen node into clique is small as possible.
+    """ Returns a treewidth decomposition using the Minimum Fill-in heuristic. The
+    heuristic chooses a node from the graph, where the number of edges added when
+    turning the neighbourhood of the chosen node into clique is small as possible.
 
     Parameters
     ----------
@@ -86,7 +113,7 @@ class MinDegreeHeuristic:
         return self
 
     def next(self):
-        """Implement next method for backwards compatibility with python 2."""
+        #Implement next method for backwards compatibility with python 2.
         return self.__next__()
 
     def __next__(self):
@@ -122,7 +149,7 @@ class MinFillInHeuristic:
         return self
 
     def next(self):
-        """Implement next method for backwards compatibility with python 2."""
+        #Implement next method for backwards compatibility with python 2.
         return self.__next__()
 
     def __next__(self):
