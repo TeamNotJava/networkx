@@ -142,7 +142,7 @@ class MinFillInHeuristic:
         if min_degree == len(self._graph) - 1:
             raise StopIteration
 
-        for (degree, node) in degree_list:
+        for (_, node) in degree_list:
             num_fill_in = 0
             # Convert to list in order to access by index
             nbrs = list(self._graph[node])
