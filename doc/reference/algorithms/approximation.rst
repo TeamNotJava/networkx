@@ -1,6 +1,6 @@
-****************************
+*****************************
 Approximations and Heuristics
-****************************
+*****************************
 
 .. automodule:: networkx.algorithms.approximation
 
@@ -98,6 +98,8 @@ Treewidth
 
    treewidth_min_degree
    treewidth_min_fill_in
+   MinDegreeHeuristic.next
+   MinFillInHeuristic.next
    treewidth_decomp
 
 
