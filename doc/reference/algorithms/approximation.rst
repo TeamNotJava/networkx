@@ -1,6 +1,6 @@
-*****************************
+****************************
 Approximations and Heuristics
-*****************************
+****************************
 
 .. automodule:: networkx.algorithms.approximation
 
@@ -98,7 +98,6 @@ Treewidth
 
    treewidth_min_degree
    treewidth_min_fill_in
-   treewidth_decomp
 
 
 Vertex Cover
