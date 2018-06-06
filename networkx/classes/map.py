@@ -23,7 +23,7 @@ from copy import deepcopy
 from collections import Mapping
 
 import networkx as nx
-from networkx.classes import Graph
+from networkx.classes import Graph, OrderedGraph
 from networkx.classes.coreviews import AtlasView, AdjacencyView
 from networkx.classes.reportviews import NodeView, EdgeView, DegreeView
 from networkx.exception import NetworkXError
@@ -86,7 +86,7 @@ class Map(OrderedGraph):
         Graph.__init__(self, incoming_graph_data, **attr)
         # todo: Handle self._map when incoming_graph_Data != None
 
-    def add_edge(self, u_of_edge, , v_of_edge, prev_edge_of_u=None, prev_edge_of_v=None, **attr):
+    def add_edge(self, u_of_edge, v_of_edge, prev_edge_of_u=None, prev_edge_of_v=None, **attr):
         """Add an edge between u and v.
 
         The nodes u and v will be automatically added if they are
@@ -124,12 +124,12 @@ class Map(OrderedGraph):
         The following all add the edge e=(1, 2) to graph G:
 
         >>> G = nx.Map()
-        >>> G.add_edge(1, None, 2, None)           # explicit two-node form
-        >>> G.add_edge(1, None, 3, None)           # explicit two-node form
-        >>> G.add_edge(2, None, 3, None)           # explicit two-node form
-        >>> G.add_edge(4, None, 1, 3)           # explicit two-node form
-        >>> G.add_edge(4, None, 2, 1)           # explicit two-node form
-        >>> G.add_edge(4, None, 3, 2)           # explicit two-node form
+        >>> G.add_edge(1, 2)           # explicit two-node form
+        >>> G.add_edge(2, 3)           # explicit two-node form
+        >>> G.add_edge(3, 1)           # explicit two-node form
+        >>> G.add_edge(1, 4, 2)           # explicit two-node form
+        >>> G.add_edge(2, 4, 3, 1)           # explicit two-node form
+        >>> G.add_edge(3, 4, 1, 2)           # explicit two-node form
         """
         u, v = u_of_edge, v_of_edge
         # add nodes
@@ -502,3 +502,37 @@ class Map(OrderedGraph):
         #                  for u, nbrs in self._adj.items()
         #                  for v, d in nbrs.items())
         # return G
+    def get_next_edge(self, u, v):
+        """Returns the next edge in clockwise order based on the source of the edge
+
+        Params
+        ------
+        u, v :
+            A Edge between u and v
+        """
+        if u in self._node:
+            if v in self._adj[u]:
+                if v in self._map[u]:
+                    pos = self._map[u].index(v)
+                    return (u, self._map[u][(pos + 1) % len(self._map[u])])
+            raise nx.exception.NodeNotFound("Edge ({0}, {1}) not found".format(u, v))
+        else:
+            raise nx.exception.NodeNotFound("Node {0} not found".format(u))
+    
+    def get_prev_edge(self, u, v):
+        """Returns the prev edge in clockwise order based on the source of the edge
+
+        Params
+        ------
+        u, v :
+            A Edge between u and v
+        """
+        if u in self._node:
+            if v in self._adj[u]:
+                if v in self._map[u]:
+                    pos = self._map[u].index(v)
+                    return (u, self._map[u][(pos - 1) % len(self._map[u])])
+            raise nx.exception.NodeNotFound("Edge ({0}, {1}) not found".format(u, v))
+        else:
+            raise nx.exception.NodeNotFound("Node {0} not found".format(u))
+
