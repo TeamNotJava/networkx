@@ -156,7 +156,6 @@ def min_fill_in_heuristic(graph):
 
     for (_, node) in degree_list:
         num_fill_in = 0
-
         nbrs = graph[node]
         for nbr in nbrs:
             # count how many nodes in nbrs current nbr is not connected to
@@ -173,6 +172,7 @@ def min_fill_in_heuristic(graph):
                 return node
             min_fill_in = num_fill_in
             min_fill_in_node = node
+
 
     return min_fill_in_node
 
@@ -192,8 +192,8 @@ def treewidth_decomp(G, heuristic=min_fill_in_heuristic):
     """
     
     # make dict-of-sets structure
-
     graph = {n:set(G[n]) - set([n]) for n in G}
+
 
     # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
     node_stack = []
