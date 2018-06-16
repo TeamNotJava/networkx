@@ -15,7 +15,7 @@ input graphs is bounded by a constant [1]_ [2]_.
 
 There are two classes which contain implementations of different heuristics for
 computing tree decomposition: :class:`MinDegreeHeuristic` and 
-:class:`MinFillInHeuristic`.
+:class:` min_fill_in_heuristic`.
    
 :class:`MinDegreeHeuristic`
     Returns a treewidth decomposition using the Minimum Degree heuristic.
@@ -26,7 +26,7 @@ computing tree decomposition: :class:`MinDegreeHeuristic` and
     and so on.
    
         
-:class:`MinFillInHeuristic`
+:class:` min_fill_in_heuristic`
     Returns the node from the graph, where the number of edges added  when
     turning the neighbourhood of the chosen node into clique is as small as
     possible. This algorithm chooses the nodes using the Minimum Fill-In
@@ -52,6 +52,7 @@ import sys
 import networkx as nx
 from networkx.utils import not_implemented_for
 from heapq import heappush, heappop, heapify
+import itertools
 
 __all__ = ["treewidth_min_degree", "treewidth_min_fill_in"]
 
@@ -94,7 +95,7 @@ def treewidth_min_fill_in(G):
     Treewidth decomposition : (int, Graph) tuple
         2-tuple with treewidth and the corresponding decomposed tree (NetworkX graph).
     """
-    return treewidth_decomp(G, minFillInHeuristic)
+    return treewidth_decomp(G,  min_fill_in_heuristic)
 
 
 class MinDegreeHeuristic:
@@ -136,7 +137,7 @@ class MinDegreeHeuristic:
 
 
 
-def minFillInHeuristic(graph):
+def min_fill_in_heuristic(graph):
     if len(graph) == 0:
         return None
 
@@ -155,18 +156,17 @@ def minFillInHeuristic(graph):
 
     for (_, node) in degree_list:
         num_fill_in = 0
-        # Convert to list in order to access by index
-        nbrs = list(graph[node])
-        for i in range(len(nbrs) - 1):
-            for j in range(i + 1, len(nbrs)):
-                if nbrs[j] not in graph[nbrs[i]]:
-                    num_fill_in += 1
-                    # break inner loop if this can't be min-fill-in node anymore
-                    if num_fill_in >= min_fill_in:
-                        break
 
-            if num_fill_in >= min_fill_in: # break outer loop
+        nbrs = graph[node]
+        for nbr in nbrs:
+            # count how many nodes in nbrs current nbr is not connected to
+            # - 1 for the node itself
+            num_fill_in += len(nbrs - graph[nbr]) - 1
+            if num_fill_in >= 2 * min_fill_in:
                 break
+
+        # divide by 2 because of double counting
+        num_fill_in /= 2
 
         if num_fill_in < min_fill_in: # Update min-fill-in node
             if num_fill_in == 0:
@@ -177,7 +177,7 @@ def minFillInHeuristic(graph):
     return min_fill_in_node
 
 
-def treewidth_decomp(G, heuristic=minFillInHeuristic):
+def treewidth_decomp(G, heuristic=min_fill_in_heuristic):
     """Returns a treewidth decomposition using the passed heuristic.
 
     Parameters
@@ -192,6 +192,7 @@ def treewidth_decomp(G, heuristic=minFillInHeuristic):
     """
     
     # make dict-of-sets structure
+
     graph = {n:set(G[n]) - set([n]) for n in G}
 
     # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
@@ -203,10 +204,9 @@ def treewidth_decomp(G, heuristic=minFillInHeuristic):
     while not elim_node is None:
         # Connect all neighbours with each other
         nbrs = graph[elim_node]
-        for u in nbrs:
-            for v in nbrs:
-                if u != v and v not in graph[u]:
-                    graph[u].add(v)
+        for u, v in itertools.permutations(nbrs, 2):
+            if v not in graph[u]:
+                graph[u].add(v)
 
         # push node and its current neighbors on stack
         node_stack.append((elim_node, nbrs))

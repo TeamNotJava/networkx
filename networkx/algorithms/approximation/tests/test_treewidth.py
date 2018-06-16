@@ -9,7 +9,7 @@ from nose.tools import assert_equals, assert_is_none
 from nose.tools import ok_
 from networkx.algorithms.approximation import treewidth_min_degree
 from networkx.algorithms.approximation import treewidth_min_fill_in
-from networkx.algorithms.approximation.treewidth import minFillInHeuristic
+from networkx.algorithms.approximation.treewidth import  min_fill_in_heuristic
 from networkx.algorithms.approximation.treewidth import MinDegreeHeuristic
 """Unit tests for the :mod:`networkx.algorithms.approximation.treewidth`
 module.
@@ -239,7 +239,7 @@ class TestTreewidthMinFillIn(object):
             for v in self.complete[u]:
                 if u != v:  # ignore self-loop
                     graph[u].add(v)
-        nextNode=minFillInHeuristic(graph)
+        nextNode= min_fill_in_heuristic(graph)
         if nextNode is None:
             pass
         else:
@@ -259,7 +259,7 @@ class TestTreewidthMinFillIn(object):
 
 
         print("Graph {}:".format(graph))
-        elim_node = minFillInHeuristic(graph)
+        elim_node =  min_fill_in_heuristic(graph)
         steps = []
 
         while not(elim_node is None):
@@ -276,7 +276,7 @@ class TestTreewidthMinFillIn(object):
                     graph[u].remove(elim_node)
             graph.pop(elim_node, None)
             print("Graph {}:".format(graph))
-            elim_node=minFillInHeuristic(graph)
+            elim_node= min_fill_in_heuristic(graph)
 
         #Check only the first 2 elements for equality
         assert_equals(steps[:2], [6, 5])
