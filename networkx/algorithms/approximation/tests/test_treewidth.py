@@ -9,7 +9,7 @@ from nose.tools import assert_equals, assert_is_none
 from nose.tools import ok_
 from networkx.algorithms.approximation import treewidth_min_degree
 from networkx.algorithms.approximation import treewidth_min_fill_in
-from networkx.algorithms.approximation.treewidth import MinFillInHeuristic
+from networkx.algorithms.approximation.treewidth import minFillInHeuristic
 from networkx.algorithms.approximation.treewidth import MinDegreeHeuristic
 """Unit tests for the :mod:`networkx.algorithms.approximation.treewidth`
 module.
@@ -130,12 +130,17 @@ class TestTreewidthMinDegree(object):
                 if u != v:  # ignore self-loop
                     graph[u].add(v)
 
-        iterator = MinDegreeHeuristic(graph)
-        try:
-            print("Removing {}:".format(next(iterator)))
-            assert False
-        except StopIteration:
+        deg_heuristic = MinDegreeHeuristic(graph)
+        node=deg_heuristic.best_node(graph)
+        if node is None:
             pass
+        else:
+            assert False
+        # try:
+        #     print("Removing {}:".format(next(iterator)))
+        #     assert False
+        # except StopIteration:
+        #     pass
 
     def test_heuristic_first_steps(self):
         """Test first steps of min_degree heuristic"""
@@ -145,11 +150,12 @@ class TestTreewidthMinDegree(object):
             for v in self.deterministicGraph[u]:
                 if u != v:  # ignore self-loop
                     graph[u].add(v)
-        iterator = MinDegreeHeuristic(graph)
+
+        deg_heuristic=MinDegreeHeuristic(graph)
+        elim_node= deg_heuristic.best_node(graph)
         print("Graph {}:".format(graph))
-        
         steps = []
-        for elim_node in iterator:
+        while not(elim_node is None):
             print("Removing {}:".format(elim_node))
             steps.append(elim_node)
             neighbors = graph[elim_node]
@@ -163,6 +169,7 @@ class TestTreewidthMinDegree(object):
                     graph[u].remove(elim_node)
             graph.pop(elim_node, None)
             print("Graph {}:".format(graph))
+            elim_node= deg_heuristic.best_node(graph)
 
         # Check only the first 5 elements for equality
         assert_equals(steps[:5], [0, 1, 2, 3, 4])
@@ -232,12 +239,12 @@ class TestTreewidthMinFillIn(object):
             for v in self.complete[u]:
                 if u != v:  # ignore self-loop
                     graph[u].add(v)
-        iterator = MinFillInHeuristic(graph)
-        try:
-            print("Removing {}:".format(next(iterator)))
-            assert False
-        except StopIteration:
+        nextNode=minFillInHeuristic(graph)
+        if nextNode is None:
             pass
+        else:
+           assert False
+
 
     def test_heuristic_first_steps(self):
         """Test first steps of min_fill_in heuristic"""
@@ -248,12 +255,14 @@ class TestTreewidthMinFillIn(object):
             for v in self.deterministicGraph[u]:
                 if u != v:  # ignore self-loop
                     graph[u].add(v)
-        iterator = MinFillInHeuristic(graph)
+
+
+
         print("Graph {}:".format(graph))
-
-
+        elim_node = minFillInHeuristic(graph)
         steps = []
-        for elim_node in iterator:
+
+        while not(elim_node is None):
             print("Removing {}:".format(elim_node))
             steps.append(elim_node)
             neighbors = graph[elim_node]
@@ -267,6 +276,7 @@ class TestTreewidthMinFillIn(object):
                     graph[u].remove(elim_node)
             graph.pop(elim_node, None)
             print("Graph {}:".format(graph))
+            elim_node=minFillInHeuristic(graph)
 
-        # Check only the first 2 elements for equality
+        #Check only the first 2 elements for equality
         assert_equals(steps[:2], [6, 5])

@@ -73,7 +73,9 @@ def treewidth_min_degree(G):
     Treewidth decomposition : (int, Graph) tuple
           2-tuple with treewidth and the corresponding decomposed tree (NetworkX graph).
     """
-    return treewidth_decomp(G, MinDegreeHeuristic)
+
+    deg_heuristic = MinDegreeHeuristic(G)
+    return treewidth_decomp(G, lambda graph: deg_heuristic.best_node(graph))
 
 
 @not_implemented_for('directed')
@@ -92,7 +94,7 @@ def treewidth_min_fill_in(G):
     Treewidth decomposition : (int, Graph) tuple
         2-tuple with treewidth and the corresponding decomposed tree (NetworkX graph).
     """
-    return treewidth_decomp(G, MinFillInHeuristic)
+    return treewidth_decomp(G, minFillInHeuristic)
 
 
 class MinDegreeHeuristic:
@@ -109,91 +111,73 @@ class MinDegreeHeuristic:
             self._degreeq.append((len(graph[n]), n))
         heapify(self._degreeq)
 
-    def __iter__(self):
-        return self
-
-    def next(self):
-        #Implement next method for backwards compatibility with python 2.
-        return self.__next__()
-
-    def __next__(self):
-        # Update nodes in self._update_nodes
+    def best_node(self,graph):
+         # Update nodes in self._update_nodes
         for n in self._update_nodes:
             # insert changed degrees into degreeq
-            heappush(self._degreeq, (len(self._graph[n]), n))
-
+            heappush(self._degreeq, (len(graph[n]), n))
         while self._degreeq:
             # get the next (minimum degree) node
             (min_degree, elim_node) = heappop(self._degreeq)
-            if elim_node not in self._graph or len(self._graph[elim_node]) != min_degree:
+            if elim_node not in graph or len(graph[elim_node]) != min_degree:
                 # Outdated entry in degreeq
                 continue
-            elif min_degree == len(self._graph) - 1:
+            elif min_degree == len(graph) - 1:
                 # Fully connected: Abort condition
-                raise StopIteration
+                return None
 
             # Remember to update nodes in the heap before getting the next node
-            self._update_nodes = self._graph[elim_node]
+            self._update_nodes = graph[elim_node]
             return elim_node
 
         # The heap is empty: Abort
-        raise StopIteration
+        return None
 
 
-class MinFillInHeuristic:
-
-    def __init__(self, graph):
-        self._graph = graph
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        #Implement next method for backwards compatibility with python 2.
-        return self.__next__()
-
-    def __next__(self):
-        if len(self._graph) == 0:
-            raise StopIteration
-
-        min_fill_in_node = None
-
-        min_fill_in = sys.maxsize
-
-        # create sorted list of (degree, node)
-        degree_list = [(len(self._graph[node]), node) for node in self._graph]
-        degree_list.sort()
-
-        # abort condition
-        min_degree = degree_list[0][0]
-        if min_degree == len(self._graph) - 1:
-            raise StopIteration
-
-        for (_, node) in degree_list:
-            num_fill_in = 0
-            # Convert to list in order to access by index
-            nbrs = list(self._graph[node])
-            for i in range(len(nbrs) - 1):
-                for j in range(i + 1, len(nbrs)):
-                    if nbrs[j] not in self._graph[nbrs[i]]:
-                        num_fill_in += 1
-                        # break inner loop if this can't be min-fill-in node anymore
-                        if num_fill_in >= min_fill_in:
-                            break
-
-                if num_fill_in >= min_fill_in: # break outer loop
-                    break
-
-            if num_fill_in < min_fill_in: # Update min-fill-in node
-                if num_fill_in == 0:
-                    return node
-                min_fill_in = num_fill_in
-                min_fill_in_node = node
-
-        return min_fill_in_node
 
 
-def treewidth_decomp(G, heuristic_class):
+def minFillInHeuristic(graph):
+    if len(graph) == 0:
+        return None
+
+    min_fill_in_node = None
+
+    min_fill_in = sys.maxsize
+
+    # create sorted list of (degree, node)
+    degree_list = [(len(graph[node]), node) for node in graph]
+    degree_list.sort()
+
+    # abort condition
+    min_degree = degree_list[0][0]
+    if min_degree == len(graph) - 1:
+        return None
+
+    for (_, node) in degree_list:
+        num_fill_in = 0
+        # Convert to list in order to access by index
+        nbrs = list(graph[node])
+        for i in range(len(nbrs) - 1):
+            for j in range(i + 1, len(nbrs)):
+                if nbrs[j] not in graph[nbrs[i]]:
+                    num_fill_in += 1
+                    # break inner loop if this can't be min-fill-in node anymore
+                    if num_fill_in >= min_fill_in:
+                        break
+
+            if num_fill_in >= min_fill_in: # break outer loop
+                break
+
+        if num_fill_in < min_fill_in: # Update min-fill-in node
+            if num_fill_in == 0:
+                return node
+            min_fill_in = num_fill_in
+            min_fill_in_node = node
+
+    return min_fill_in_node
+
+
+def treewidth_decomp(G, heuristic=minFillInHeuristic):
     """Returns a treewidth decomposition using the passed heuristic.
 
     Parameters
@@ -208,20 +192,15 @@ def treewidth_decomp(G, heuristic_class):
     """
     
     # make dict-of-sets structure
-    graph = {}
-    for u in G:
-        graph[u] = set()
-        for v in G[u]:
-            if u != v:  # ignore self-loop
-                graph[u].add(v)
+    graph = {n:set(G[n]) - set([n]) for n in G}
 
     # stack where nodes and their neighbors are pushed in the order they are selected by the heuristic
     node_stack = []
 
     # instantiate a heuristic_iterator
-    heuristic_iterator = heuristic_class(graph)
-
-    for elim_node in heuristic_iterator:
+    #heuristic_iterator = heuristic_class(graph)
+    elim_node=heuristic(graph)
+    while not elim_node is None:
         # Connect all neighbours with each other
         nbrs = graph[elim_node]
         for u in nbrs:
@@ -237,7 +216,7 @@ def treewidth_decomp(G, heuristic_class):
             if elim_node in graph[u]:
                 graph[u].remove(elim_node)
         del graph[elim_node]
-
+        elim_node=heuristic(graph)
     # The abort condition is met. Put all nodes into one bag.
     decomp = nx.Graph()
     first_bag = frozenset(graph.keys())
