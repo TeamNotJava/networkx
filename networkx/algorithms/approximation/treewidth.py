@@ -15,17 +15,6 @@ input graphs is bounded by a constant [1]_ [2]_.
 
 There are two different functions for computing a tree decomposition: :func:`treewidth_min_degree`
 and :func:`treewidth_min_fill_in`.
-
-:func:`treewidth_min_degree`
-    Returns a treewidth decomposition using the Minimum Degree heuristic. The
-    heuristic chooses the nodes according to their degree, i.e., first the node
-    with the lowest degree is chosen, then the graph is updated and the corresponding
-    node is removed. Next, a new node with the lowest degree is chosen, and so on.
-
-:func:`treewidth_min_fill_in`.
-    Returns a treewidth decomposition using the Minimum Fill-in heuristic. The
-    heuristic chooses a node from the graph, where the number of edges added when
-    turning the neighbourhood of the chosen node into clique is as small as possible.
    
 .. [1] Hans L. Bodlaender and Arie M. C. A. Koster. 2010. "Treewidth computations
       I.Upper bounds". Inf. Comput. 208, 3 (March 2010),259-275.
