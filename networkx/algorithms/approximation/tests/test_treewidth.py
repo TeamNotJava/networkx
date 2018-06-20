@@ -44,7 +44,6 @@ def is_tree_decomp(graph, decomp):
 class TestTreewidthMinDegree(object):
     """Unit tests for the :mod:`networkx.algorithms.approximation.treewidth_min_degree`
     function.
-
     """
     def setUp(self):
         """Setup for different kinds of trees"""
@@ -127,6 +126,19 @@ class TestTreewidthMinDegree(object):
             pass
         else:
             assert False
+
+    def test_empty_graph(self):
+        """Test empty graph"""
+        G = nx.Graph()
+        _, _ = treewidth_min_degree(G)
+
+    def test_two_component_graph(self):
+        """Test empty graph"""
+        G = nx.Graph()
+        G.add_node(1)
+        G.add_node(2)
+        treewidth, _ = treewidth_min_degree(G)
+        assert_equals(treewidth, 0)
 
     def test_heuristic_first_steps(self):
         """Test first steps of min_degree heuristic"""
@@ -218,6 +230,19 @@ class TestTreewidthMinFillIn(object):
             pass
         else:
             assert False
+
+    def test_empty_graph(self):
+        """Test empty graph"""
+        G = nx.Graph()
+        _, _ = treewidth_min_fill_in(G)
+
+    def test_two_component_graph(self):
+        """Test empty graph"""
+        G = nx.Graph()
+        G.add_node(1)
+        G.add_node(2)
+        treewidth, _ = treewidth_min_fill_in(G)
+        assert_equals(treewidth, 0)
 
     def test_heuristic_first_steps(self):
         """Test first steps of min_fill_in heuristic"""
