@@ -6,33 +6,30 @@
 #    BSD license.
 """Unit tests for the :mod:`networkx.algorithms.approximation.treewidth` module."""
 import networkx as nx
-from nose.tools import assert_equals, assert_is_none
-from nose.tools import ok_
-from networkx.algorithms.approximation import treewidth_min_degree
-from networkx.algorithms.approximation import treewidth_min_fill_in
-from networkx.algorithms.approximation.treewidth import min_fill_in_heuristic
-from networkx.algorithms.approximation.treewidth import MinDegreeHeuristic
+from nose.tools import assert_equals, assert_is_none, ok_
+from networkx.algorithms.approximation import treewidth_min_degree, treewidth_min_fill_in
+from networkx.algorithms.approximation.treewidth import min_fill_in_heuristic, MinDegreeHeuristic
 import itertools
 
 
 def is_tree_decomp(graph, decomp):
     """Check if the given decomposition tree is a decomposition tree of the given graph"""
     for x in graph.nodes():
-        appearOnce = False
+        appear_once = False
         for bag in decomp.nodes():
             if x in bag:
-                appearOnce = True
+                appear_once = True
                 break
-        ok_(appearOnce)
+        ok_(appear_once)
 
     # Check if each connected pair of nodes appears at least once together in a bag
     for (x, y) in graph.edges():
-        appearTogether = False
+        appear_together = False
         for bag in decomp.nodes():
             if x in bag and y in bag:
-                appearTogether = True
+                appear_together = True
                 break
-        ok_(appearTogether)
+        ok_(appear_together)
 
     # Check if the nodes associated with vertex v form a connected subset of T
     for v in graph.nodes():
@@ -40,8 +37,8 @@ def is_tree_decomp(graph, decomp):
         for bag in decomp.nodes():
             if v in bag:
                 subset.append(bag)
-        subGraph = decomp.subgraph(subset)
-        ok_(nx.is_connected(subGraph))
+        sub_graph = decomp.subgraph(subset)
+        ok_(nx.is_connected(sub_graph))
 
 
 class TestTreewidthMinDegree(object):
@@ -226,7 +223,7 @@ class TestTreewidthMinFillIn(object):
         """Test first steps of min_fill_in heuristic"""
         graph = {n: set(self.deterministic_graph[n]) - set([n]) for n in self.deterministic_graph}
         print("Graph {}:".format(graph))
-        elim_node =  min_fill_in_heuristic(graph)
+        elim_node = min_fill_in_heuristic(graph)
         steps = []
 
         while elim_node is not None:

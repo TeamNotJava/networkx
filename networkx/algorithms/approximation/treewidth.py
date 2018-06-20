@@ -99,7 +99,7 @@ class MinDegreeHeuristic:
             self._degreeq.append((len(graph[n]), n))
         heapify(self._degreeq)
 
-    def best_node(self,graph):
+    def best_node(self, graph):
         # update nodes in self._update_nodes
         for n in self._update_nodes:
             # insert changed degrees into degreeq
@@ -163,7 +163,6 @@ def min_fill_in_heuristic(graph):
             min_fill_in = num_fill_in
             min_fill_in_node = node
 
-
     return min_fill_in_node
 
 
@@ -173,7 +172,7 @@ def treewidth_decomp(G, heuristic=min_fill_in_heuristic):
     Parameters
     ----------
     G : NetworkX graph
-    heuristic_class : iterator class
+    heuristic : heuristic function
 
     Returns
     -------
