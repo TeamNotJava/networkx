@@ -199,9 +199,9 @@ def treewidth_decomp(G, heuristic=min_fill_in_heuristic):
         node_stack.append((elim_node, nbrs))
 
         # remove node from graph
-        for u in graph:
-            if elim_node in graph[u]:
-                graph[u].remove(elim_node)
+        for u in graph[elim_node]:
+            graph[u].remove(elim_node)
+
         del graph[elim_node]
         elim_node = heuristic(graph)
 
