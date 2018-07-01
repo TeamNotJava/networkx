@@ -52,12 +52,21 @@ def combinatorial_embedding_to_pos(embedding):
     left_t_child[v3] = None
 
     for k in range(3, len(node_list)):
-        pass  # TODO: Implement
+        contour = get_contour(node_list, k, embedding)
+
+        # TODO: Continue Implementation
 
     # TODO: Finish Phase 1
 
     # 2. Phase
     accumulate_offsets(v1, 0, left_t_child, right_t_child, delta_x)
+
+
+def get_contour(node_list, k, embedding):
+    """ Returns the contour of the subgraph induced by the first k nodes
+    TODO: Write docstring
+    """
+    return [...]  # TODO: Implement
 
 
 def accumulate_offsets(vertex, delta, left_t_child, right_t_child, delta_x):
