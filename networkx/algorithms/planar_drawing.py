@@ -1,4 +1,5 @@
 import networkx as nx
+import namedtuple
 
 
 __all__ = ["combinatorial_embedding_to_pos"]
@@ -55,19 +56,22 @@ def combinatorial_embedding_to_pos(embedding):
     left_t_child[v3] = Nil
 
     for k in range(3, len(node_list)):
-        contour_neighbors, p, q = get_contour_neighbors(right_t_child,
-                                                        embedding, v1, vk)
-        wp, wp1 = contour_neighbors[0], contour_neighbors[1]
-        wq1, wq = contour_neighbors[-2], contour_neighbors[-1]
         vk = node_list[k]
+        contour_neighbor_data = get_contour_neighbors(right_t_child, embedding,
+                                                      delta_x, v1, vk)
+        wp = contour_neighbor_data.wp
+        wp1 = contour_neighbor_data.wp1
+        wq = contour_neighbor_data.wq
+        wq1 = contour_neighbor_data.wq1
+        p = contour_neighbor_data.p
+        q = contour_neighbor_data.q
+        delta_x_wp_wq = contour_neighbor_data.delta_x_wp_wq
 
         # Stretch gaps:
         delta_x[wp1] += 1
         delta_x[wq] += 1
 
         # Adjust offsets
-        delta_x_wp_wq = sum((delta_x[contour_neighbors[i]] for i in
-                             range(1, len(contour_neighbors))))
         delta_x[vk] = (-y_coordinate[wp] + delta_x_wp_wq + y_coordinate[wq])//2
         y_coordinate[vk] = (y_coordinate[wp] + delta_x_wp_wq +
                             y_coordinate[wq]) // 2
@@ -79,7 +83,7 @@ def combinatorial_embedding_to_pos(embedding):
         right_t_child[wp] = vk
         right_t_child[vk] = wq
         if p + 1 != q:
-            left_t_child[wp] = vk
+            left_t_child[vk] = wp1
             right_t_child[wq1] = Nil
         else:
             left_t_child[vk] = Nil
@@ -107,7 +111,7 @@ def get_canonical_ordering(embedding):
     return [...]  # TODO: Implement (should return list of nodes)
 
 
-def get_contour_neighbors(right_t_child, embedding, v1, vk):
+def get_contour_neighbors(right_t_child, embedding, delta_x, v1, vk):
     """Returns sorted neighbors of v_k that are in C_k-1 (w_p, ..., w_q)
 
     Consider the graph G_(k-1), which is the subgraph induced by node_list[0:k].
@@ -120,27 +124,45 @@ def get_contour_neighbors(right_t_child, embedding, v1, vk):
     Travers the tree T by the use of right_t_child only along the right to
     obtain the contour nodes.
     TODO: Check complexity of this implementation
-    TODO: Is this implementation actually correct?
+    TODO: Not sure if w_(p+1) and w_(q-1) must also be neighbors of v_k
+    TODO: Not sure if delta_x_wp_wq should only be computed over neighbors of v_k
     """
     contour_node = v1
     neighbor_set = set(embedding[vk])
-    contour_neighbors = []
     p, q = None, None
+    wp, wp1, wq1, wp = None, None, None, None
+    delta_x_wp_wq = 2  # +2 because the gaps are later stretched
+    delta_x_wp_wq_temp = 0
     idx = 0
+
     while True:
+        if p is not None:  # idx > p
+            delta_x_wp_wq_temp += delta_x[contour_node]
+
         if contour_node in neighbor_set:
-            # The contour node is a neighbor of v_k
-            contour_neighbors.append(contour_node)
-            q = idx  # q is the last index, update it every time
-            if p is None:
-                p = idx  # p is the first index, only set on first occurrence
+            if wp is None:
+                # The first contour_node that is a neighbor of vk
+                p = idx
+                wp = contour_node
+            # It might be the last contour_node that is a neighbor of vk
+            q = idx
+            wq = contour_node
+            wq1 = maybe_wq1  # Set to previously encountered contour_node
+
+            delta_x_wp_wq += delta_x_wp_wq_temp
+            delta_x_wp_wq_temp = 0
+
+        maybe_wq1 = contour_node
+        if idx + 1 == p:
+            wp1 = contour_node
+        # Get the next contour_node:
         idx += 1
         if contour_node in right_t_child and right_t_child[contour_node] is not Nil:
             contour_node = right_t_child[contour_node]
         else:
             break
 
-    return contour_neighbors, p, q
+    return ContourNeighborData(wp, wp1, wq1, wq, delta_x_wp_wq, p, q)
 
 
 def triangulate_embedding(embedding):
@@ -164,6 +186,11 @@ def accumulate_offsets(vertex, delta, left_t_child, right_t_child, delta_x):
                        left_t_child, right_t_child, delta_x)
     accumulate_offsets(right_t_child[vertex], delta_x[vertex],
                        left_t_child, right_t_child, delta_x)
+
+
+ContourNeighborData = namedtuple('ContourNeighborData',
+                                 ['wp', 'wp1', 'wq1', 'wp', 'delta_x_wp_wq',
+                                  'p', 'q'])
 
 
 class Nil:
