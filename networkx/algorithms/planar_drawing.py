@@ -53,7 +53,17 @@ def combinatorial_embedding_to_pos(embedding):
     left_t_child[v3] = Nil
 
     for k in range(3, len(node_list)):
-        contour = get_contour(node_list, k, embedding)
+        neighbours = get_canonical_neighbors(node_list, k, embedding)
+        wp, wp1, wq1, wq = neighbours[0], neighbours[1], neighbours[-2], neighbours[-1]
+        vk = node_list[k]
+
+        # Stretch gaps:
+        delta_x[wp1] += 1
+        delta_x[wq] += 1
+
+        # Adjust offset
+        delta_x_wp_wq = sum((delta_x[neighbours[i]] for i in
+                             range(1, len(neighbours))))
 
         # TODO: Continue Implementation
 
@@ -65,16 +75,29 @@ def combinatorial_embedding_to_pos(embedding):
 
 def get_canonical_ordering(embedding):
     """Returns a canonical ordering of the nodes
-    # TODO: Write docstring
+
+    # TODO: Maybe it might be of advantage to have not only the embedding but
+    # the whole graph in this function (because of the dict structure).
+
+    Parameters
+    ----------
+    embedding : dict
+
+    Returns
+    -------
+    node_list : list
+        All nodes in the canonical ordering
     """
     return [...]  # TODO: Implement (should return list of nodes)
 
 
-def get_contour(node_list, k, embedding):
-    """Returns the contour of the subgraph induced by the first k nodes
+def get_canonical_neighbors(node_list, k, embedding):
+    """Returns sorted neighbors of v_k that are in C_k-1 (w_p, ..., w_q)
     TODO: Write docstring
+
+    TODO: Is it more efficient to compute this once for all k?
     """
-    return [...]  # TODO: Implement (should return list of nodes)
+    return [...]  # TODO: Implement (should return a list of nodes)
 
 
 def accumulate_offsets(vertex, delta, left_t_child, right_t_child, delta_x):
