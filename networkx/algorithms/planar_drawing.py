@@ -178,7 +178,7 @@ def get_contour_neighbors(right_t_child, embedding, delta_x, v1, vk):
             wp1 = contour_node
         # Get the next contour_node:
         idx += 1
-        if contour_node in right_t_child and right_t_child[contour_node] is not Nil:
+        if right_t_child[contour_node] is not Nil:
             contour_node = right_t_child[contour_node]
         else:
             break
