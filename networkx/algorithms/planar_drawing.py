@@ -18,8 +18,9 @@ def combinatorial_embedding_to_pos(embedding):
     pos : dict
         Maps each node to a tuple that defines the (x, y) position
     """
-    # TODO: What to do if graph contains node that has value None?
-    # TODO: Special case for n < 4
+    if len(embedding) < 4:
+        pass
+        # TODO: Special case for n < 4
 
     # The following dics map a node to another node
     left_t_child = {}
@@ -29,7 +30,7 @@ def combinatorial_embedding_to_pos(embedding):
     delta_x = {}
     y_coordinate = {}
 
-    node_list = [...]  # TODO: Canonical Ordering
+    node_list = get_canonical_ordering(embedding)
 
     # 1. Phase
 
@@ -39,17 +40,17 @@ def combinatorial_embedding_to_pos(embedding):
     delta_x[v1] = 0
     y_coordinate[v1] = 0
     right_t_child[v1] = v3
-    left_t_child[v1] = None
+    left_t_child[v1] = Nil
 
     delta_x[v2] = 1
     y_coordinate[v2] = 0
-    right_t_child[v2] = None
-    left_t_child[v2] = None
+    right_t_child[v2] = Nil
+    left_t_child[v2] = Nil
 
     delta_x[v3] = 1
     y_coordinate[v3] = 1
     right_t_child[v3] = v2
-    left_t_child[v3] = None
+    left_t_child[v3] = Nil
 
     for k in range(3, len(node_list)):
         contour = get_contour(node_list, k, embedding)
@@ -62,18 +63,25 @@ def combinatorial_embedding_to_pos(embedding):
     accumulate_offsets(v1, 0, left_t_child, right_t_child, delta_x)
 
 
+def get_canonical_ordering(embedding):
+    """Returns a canonical ordering of the nodes
+    # TODO: Write docstring
+    """
+    return [...]  # TODO: Implement (should return list of nodes)
+
+
 def get_contour(node_list, k, embedding):
-    """ Returns the contour of the subgraph induced by the first k nodes
+    """Returns the contour of the subgraph induced by the first k nodes
     TODO: Write docstring
     """
-    return [...]  # TODO: Implement
+    return [...]  # TODO: Implement (should return list of nodes)
 
 
 def accumulate_offsets(vertex, delta, left_t_child, right_t_child, delta_x):
     """
     TODO: Write docstring
     """
-    if vertex is None:
+    if vertex is Nil:
         return
 
     delta_x[vertex] += delta
@@ -81,3 +89,11 @@ def accumulate_offsets(vertex, delta, left_t_child, right_t_child, delta_x):
                        left_t_child, right_t_child, delta_x)
     accumulate_offsets(right_t_child[vertex], delta_x[vertex],
                        left_t_child, right_t_child, delta_x)
+
+
+class Nil:
+    """A class to represent that a node is not present
+
+    We cannot use None, because None might be a node in the graph.
+    """
+    pass
