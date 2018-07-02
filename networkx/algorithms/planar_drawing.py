@@ -53,7 +53,7 @@ def combinatorial_embedding_to_pos(embedding):
     left_t_child[v3] = Nil
 
     for k in range(3, len(node_list)):
-        neighbours, (p, q) = get_canonical_neighbors(node_list, k, embedding)
+        neighbours, p, q = get_contour_neighbors(node_list, k, embedding)
         wp, wp1, wq1, wq = neighbours[0], neighbours[1], neighbours[-2], neighbours[-1]
         vk = node_list[k]
 
@@ -101,13 +101,20 @@ def get_canonical_ordering(embedding):
     return [...]  # TODO: Implement (should return list of nodes)
 
 
-def get_canonical_neighbors(node_list, k, embedding):
+def get_contour_neighbors(node_list, k, embedding):
     """Returns sorted neighbors of v_k that are in C_k-1 (w_p, ..., w_q)
-    TODO: Write docstring
 
+    Consider the graph G_(k-1), which is the subgraph induced by node_list[0:k].
+    We can obtain the contour of it using the embedding and numerate the nodes
+    according to their absolute x position: w_1, ..., w_m.
+    We return all neighbors of the node v_k=node_list[k] that are in this contour
+    and keep the order described above. We also return the indices p and q, such
+    that w_p is the first neighbor in the contour and w_q the last neighbour.
+
+    QUESTION: How do we know the absolute x position?
     TODO: Is it more efficient to compute this once for all k?
     """
-    return [...], (p, q)  # TODO: Implement (should return a list of nodes and a tuple (p, q))
+    return [...], p, q  # TODO: Implement (should return a list of nodes and a tuple (p, q))
 
 
 def accumulate_offsets(vertex, delta, left_t_child, right_t_child, delta_x):
