@@ -53,7 +53,7 @@ def combinatorial_embedding_to_pos(embedding):
     left_t_child[v3] = Nil
 
     for k in range(3, len(node_list)):
-        neighbours = get_canonical_neighbors(node_list, k, embedding)
+        neighbours, (p, q) = get_canonical_neighbors(node_list, k, embedding)
         wp, wp1, wq1, wq = neighbours[0], neighbours[1], neighbours[-2], neighbours[-1]
         vk = node_list[k]
 
@@ -61,13 +61,23 @@ def combinatorial_embedding_to_pos(embedding):
         delta_x[wp1] += 1
         delta_x[wq] += 1
 
-        # Adjust offset
+        # Adjust offsets
         delta_x_wp_wq = sum((delta_x[neighbours[i]] for i in
                              range(1, len(neighbours))))
+        delta_x[vk] = (-y_coordinate[wp] + delta_x_wp_wq + y_coordinate[wq]) // 2
+        y_coordinate[vk] = (y_coordinate[wp] + delta_x_wp_wq + y_coordinate[wq]) // 2
+        delta_x[wq] = delta_x_wp_wq - delta_x[vk]
+        if p + 1 != q:
+            delta_x[wp1] -= delta_x[vk]
 
-        # TODO: Continue Implementation
-
-    # TODO: Finish Phase 1
+        # Install v_k:
+        right_t_child[wp] = vk
+        right_t_child[vk] = wq
+        if p + 1 != q:
+            left_t_child[wp] = vk
+            right_t_child[wq1] = Nil
+        else:
+            left_t_child[vk] = Nil
 
     # 2. Phase
     accumulate_offsets(v1, 0, left_t_child, right_t_child, delta_x)
@@ -97,7 +107,7 @@ def get_canonical_neighbors(node_list, k, embedding):
 
     TODO: Is it more efficient to compute this once for all k?
     """
-    return [...]  # TODO: Implement (should return a list of nodes)
+    return [...], (p, q)  # TODO: Implement (should return a list of nodes and a tuple (p, q))
 
 
 def accumulate_offsets(vertex, delta, left_t_child, right_t_child, delta_x):
