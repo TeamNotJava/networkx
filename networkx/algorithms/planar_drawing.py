@@ -22,6 +22,8 @@ def combinatorial_embedding_to_pos(embedding):
         pass
         # TODO: Special case for n < 4
 
+    embedding = triangulate_embedding(embedding)
+
     # The following dics map a node to another node
     left_t_child = {}
     right_t_child = {}
@@ -53,8 +55,10 @@ def combinatorial_embedding_to_pos(embedding):
     left_t_child[v3] = Nil
 
     for k in range(3, len(node_list)):
-        neighbours, p, q = get_contour_neighbors(node_list, k, embedding)
-        wp, wp1, wq1, wq = neighbours[0], neighbours[1], neighbours[-2], neighbours[-1]
+        contour_neighbors, p, q = get_contour_neighbors(right_t_child,
+                                                        embedding, v1, vk)
+        wp, wp1 = contour_neighbors[0], contour_neighbors[1]
+        wq1, wq = contour_neighbors[-2], contour_neighbors[-1]
         vk = node_list[k]
 
         # Stretch gaps:
@@ -62,10 +66,11 @@ def combinatorial_embedding_to_pos(embedding):
         delta_x[wq] += 1
 
         # Adjust offsets
-        delta_x_wp_wq = sum((delta_x[neighbours[i]] for i in
-                             range(1, len(neighbours))))
-        delta_x[vk] = (-y_coordinate[wp] + delta_x_wp_wq + y_coordinate[wq]) // 2
-        y_coordinate[vk] = (y_coordinate[wp] + delta_x_wp_wq + y_coordinate[wq]) // 2
+        delta_x_wp_wq = sum((delta_x[contour_neighbors[i]] for i in
+                             range(1, len(contour_neighbors))))
+        delta_x[vk] = (-y_coordinate[wp] + delta_x_wp_wq + y_coordinate[wq])//2
+        y_coordinate[vk] = (y_coordinate[wp] + delta_x_wp_wq +
+                            y_coordinate[wq]) // 2
         delta_x[wq] = delta_x_wp_wq - delta_x[vk]
         if p + 1 != q:
             delta_x[wp1] -= delta_x[vk]
@@ -82,16 +87,17 @@ def combinatorial_embedding_to_pos(embedding):
     # 2. Phase
     accumulate_offsets(v1, 0, left_t_child, right_t_child, delta_x)
 
+    # 3. Phase: Calculate absolute positions
+    # TODO
+
 
 def get_canonical_ordering(embedding):
     """Returns a canonical ordering of the nodes
 
-    # TODO: Maybe it might be of advantage to have not only the embedding but
-    # the whole graph in this function (because of the dict structure).
-
     Parameters
     ----------
     embedding : dict
+        The embedding is already fully triangulated
 
     Returns
     -------
@@ -101,7 +107,7 @@ def get_canonical_ordering(embedding):
     return [...]  # TODO: Implement (should return list of nodes)
 
 
-def get_contour_neighbors(node_list, k, embedding):
+def get_contour_neighbors(right_t_child, embedding, v1, vk):
     """Returns sorted neighbors of v_k that are in C_k-1 (w_p, ..., w_q)
 
     Consider the graph G_(k-1), which is the subgraph induced by node_list[0:k].
@@ -109,12 +115,41 @@ def get_contour_neighbors(node_list, k, embedding):
     according to their absolute x position: w_1, ..., w_m.
     We return all neighbors of the node v_k=node_list[k] that are in this contour
     and keep the order described above. We also return the indices p and q, such
-    that w_p is the first neighbor in the contour and w_q the last neighbour.
+    that w_p is the first neighbor in the contour and w_q the last neighbor.
 
-    QUESTION: How do we know the absolute x position?
-    TODO: Is it more efficient to compute this once for all k?
+    Travers the tree T by the use of right_t_child only along the right to
+    obtain the contour nodes.
+    TODO: Check complexity of this implementation
+    TODO: Is this implementation actually correct?
     """
-    return [...], p, q  # TODO: Implement (should return a list of nodes and a tuple (p, q))
+    contour_node = v1
+    neighbor_set = set(embedding[vk])
+    contour_neighbors = []
+    p, q = None, None
+    idx = 0
+    while True:
+        if contour_node in neighbor_set:
+            # The contour node is a neighbor of v_k
+            contour_neighbors.append(contour_node)
+            q = idx  # q is the last index, update it every time
+            if p is None:
+                p = idx  # p is the first index, only set on first occurrence
+        idx += 1
+        if contour_node in right_t_child and right_t_child[contour_node] is not Nil:
+            contour_node = right_t_child[contour_node]
+        else:
+            break
+
+    return contour_neighbors, p, q
+
+
+def triangulate_embedding(embedding):
+    """Triangulates the embedding.
+
+    Adds edges to the embedding until all faces are triangles.
+    """
+    # TODO: Implement
+    return new_embedding
 
 
 def accumulate_offsets(vertex, delta, left_t_child, right_t_child, delta_x):
