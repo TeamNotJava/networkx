@@ -1,5 +1,5 @@
 import networkx as nx
-import namedtuple
+from collections import namedtuple
 
 
 __all__ = ["combinatorial_embedding_to_pos"]
@@ -20,7 +20,7 @@ def combinatorial_embedding_to_pos(embedding):
         Maps each node to a tuple that defines the (x, y) position
     """
     if len(embedding) < 4:
-        pass
+        raise NotImplementedError
         # TODO: Special case for n < 4
 
     embedding = triangulate_embedding(embedding)
@@ -92,7 +92,28 @@ def combinatorial_embedding_to_pos(embedding):
     accumulate_offsets(v1, 0, left_t_child, right_t_child, delta_x)
 
     # 3. Phase: Calculate absolute positions
-    # TODO
+    pos = dict()
+    pos[v1] = (0, y_coordinate[v1])
+    remaining_nodes = [v1]
+    while remaining_nodes:
+        parent_node = remaining_nodes.pop()
+        parent_node_x = pos[parent_node][0]
+
+        left_child = left_t_child[parent_node]
+        if left_child is not Nil:
+            # Calculate pos of left child
+            left_child_x = parent_node_x + delta_x[left_child]
+            pos[left_child] = (left_child_x, y_coordinate[left_child])
+            # Remember to calculate pos of its children
+            remaining_nodes.append(left_child)
+
+        right_child = right_t_child[parent_node]
+        if right_child is not Nil:
+            # Calculate pos of right child
+            right_child_x = parent_node_x + delta_x[right_child]
+            pos[right_child] = (right_child_x, y_coordinate[right_child])
+            # Remember to calculate pos of its children
+            remaining_nodes.append(right_child)
 
 
 def get_canonical_ordering(embedding):
