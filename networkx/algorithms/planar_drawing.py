@@ -1,5 +1,5 @@
 import networkx as nx
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 
 __all__ = ["combinatorial_embedding_to_pos"]
@@ -117,7 +117,6 @@ def combinatorial_embedding_to_pos(embedding):
 
 def get_canonical_ordering(embedding):
     """Returns a canonical ordering of the nodes
-    # TODO: I guess this is not yet linear
 
     Parameters
     ----------
@@ -141,6 +140,12 @@ def get_canonical_ordering(embedding):
     # Remaining node stack
     insertable_nodes = [v3]
 
+    # Count how many neighbors of a node are in G_k
+    neighbors_gk = defaultdict(int)
+    for v in node_list:  # Initialize values for neighbors of v1 and v2
+        for nbr in embedding[v]:
+            neighbors_gk[nbr] += 1
+
     # Obtain remaining order
     while len(node_list) != len(embedding):
         vk = insertable_nodes.pop()
@@ -149,12 +154,12 @@ def get_canonical_ordering(embedding):
             node_set.add(vk)
             node_list.append(vk)
 
-            # Neighbors of vk with >1 neighbor in node_set can be added later
             for v_next in embedding[vk]:
-                for v_next_nbr in embedding[v_next]:  # TODO: I guess this makes the method non linear
-                    if v_next_nbr != vk and v_next_nbr in node_set:
-                        # v_next has at least two neighbors in node_set
-                        insertable_nodes.append(v_next)
+                # Update neighbors_gk
+                neighbors_gk[v_next] += 1
+                # Neighbors of vk with > 1 neighbor in G_k can be added later
+                if neighbors_gk[v_next] > 1:
+                    insertable_nodes.append(v_next)
 
     return node_list
 
