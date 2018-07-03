@@ -20,8 +20,12 @@ def combinatorial_embedding_to_pos(embedding):
         Maps each node to a tuple that defines the (x, y) position
     """
     if len(embedding) < 4:
-        raise NotImplementedError
-        # TODO: Special case for n < 4
+        # Position the node in any triangle
+        default_positions = [(0, 0), (3, 0), (2, 1)]
+        pos = {}
+        for i, v in enumerate(embedding):
+            pos[v] = default_positions[i]
+        return pos
 
     embedding = triangulate_embedding(embedding)
 
