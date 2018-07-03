@@ -26,6 +26,8 @@ def combinatorial_embedding_to_pos(embedding):
     embedding = triangulate_embedding(embedding)
 
     # The following dicts map a node to another node
+    # If a node is not in the key set it means that the node is not yet in G_k
+    # If a node maps to Nil then the corresponding subtree does not exist
     left_t_child = {}
     right_t_child = {}
 
