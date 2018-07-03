@@ -117,6 +117,7 @@ def combinatorial_embedding_to_pos(embedding):
 
 def get_canonical_ordering(embedding):
     """Returns a canonical ordering of the nodes
+    # TODO: I guess this is not yet linear
 
     Parameters
     ----------
@@ -128,7 +129,34 @@ def get_canonical_ordering(embedding):
     node_list : list
         All nodes in the canonical ordering
     """
-    return [...]  # TODO: Implement (should return list of nodes)
+    # Choose v1 and v2
+    v1 = next(iter(embedding))  # Select any node as v1
+    v2 = embedding[v1][0]  # Select any neighbor of v1 as v2
+    v3 = embedding[v2][1]  # Determined by the embedding
+
+    # Maintain a list for the result and a set for fast queries
+    node_list = [v1, v2]
+    node_set = set(node_list)
+
+    # Remaining node stack
+    insertable_nodes = [v3]
+
+    # Obtain remaining order
+    while len(node_list) != len(embedding):
+        vk = insertable_nodes.pop()
+        if vk not in node_set:
+            # vk is the next node in the canonical ordering
+            node_set.add(vk)
+            node_list.append(vk)
+
+            # Neighbors of vk with >1 neighbor in node_set can be added later
+            for v_next in embedding[vk]:
+                for v_next_nbr in embedding[v_next]:  # TODO: I guess this makes the method non linear
+                    if v_next_nbr != vk and v_next_nbr in node_set:
+                        # v_next has at least two neighbors in node_set
+                        insertable_nodes.append(v_next)
+
+    return node_list
 
 
 def get_contour_neighbors(right_t_child, embedding, delta_x, v1, vk):
