@@ -96,29 +96,12 @@ def combinatorial_embedding_to_pos(embedding):
     # 2. Phase
     accumulate_offsets(v1, 0, left_t_child, right_t_child, delta_x)
 
-    # 3. Phase: Calculate absolute positions
+    # Set absolute positions
     pos = dict()
-    pos[v1] = (0, y_coordinate[v1])
-    remaining_nodes = [v1]
-    while remaining_nodes:
-        parent_node = remaining_nodes.pop()
-        parent_node_x = pos[parent_node][0]
-
-        left_child = left_t_child[parent_node]
-        if left_child is not Nil:
-            # Calculate pos of left child
-            left_child_x = parent_node_x + delta_x[left_child]
-            pos[left_child] = (left_child_x, y_coordinate[left_child])
-            # Remember to calculate pos of its children
-            remaining_nodes.append(left_child)
-
-        right_child = right_t_child[parent_node]
-        if right_child is not Nil:
-            # Calculate pos of right child
-            right_child_x = parent_node_x + delta_x[right_child]
-            pos[right_child] = (right_child_x, y_coordinate[right_child])
-            # Remember to calculate pos of its children
-            remaining_nodes.append(right_child)
+    for v in node_list:
+        pos[v] = (delta_x[v], y_coordinate[v])
+    
+    return pos
 
 
 def get_canonical_ordering(embedding):
@@ -245,7 +228,7 @@ def accumulate_offsets(vertex, delta, left_t_child, right_t_child, delta_x):
 
 
 ContourNeighborData = namedtuple('ContourNeighborData',
-                                 ['wp', 'wp1', 'wq1', 'wp', 'delta_x_wp_wq',
+                                 ['wp', 'wp1', 'wq1', 'wq', 'delta_x_wp_wq',
                                   'adds_mult_tri'])
 
 
