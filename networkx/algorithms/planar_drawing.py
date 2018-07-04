@@ -21,7 +21,7 @@ def combinatorial_embedding_to_pos(embedding):
     """
     if len(embedding) < 4:
         # Position the node in any triangle
-        default_positions = [(0, 0), (3, 0), (2, 1)]
+        default_positions = [(0, 0), (2, 0), (1, 1)]
         pos = {}
         for i, v in enumerate(embedding):
             pos[v] = default_positions[i]
