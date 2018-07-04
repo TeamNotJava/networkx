@@ -64,7 +64,7 @@ def combinatorial_embedding_to_pos(embedding):
     for k in range(3, len(node_list)):
         vk = node_list[k]
         contour_neighbor_data = get_contour_neighbors(right_t_child, embedding,
-                                                      delta_x, v1, vk)
+                                                      delta_x, vk)
         wp = contour_neighbor_data.wp
         wp1 = contour_neighbor_data.wp1
         wq = contour_neighbor_data.wq
@@ -149,7 +149,7 @@ def get_canonical_ordering(embedding):
 
     # For not fully triangulated embeddings we might need to flip v1 and v2
     if embedding[v3][(emb_idx[v3][v2] + 1) % len(embedding[v3])] is not v1:
-        print("Flip")
+        # v1, v2, v3 is not a triangle
         v1, v2 = v2, v1
         v3 = embedding[v2][(emb_idx[v2][v1] + 1) % len(embedding[v2])]
 
@@ -177,7 +177,7 @@ def get_canonical_ordering(embedding):
     return node_list
 
 
-def get_contour_neighbors(right_t_child, embedding, delta_x, v1, vk):
+def get_contour_neighbors(right_t_child, embedding, delta_x, vk):
     """Returns sorted neighbors of v_k that are in C_k-1 (w_p, ..., w_q)
 
     # TODO: Reformulate this explanation
