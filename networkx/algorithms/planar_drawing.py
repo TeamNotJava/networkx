@@ -27,7 +27,7 @@ def combinatorial_embedding_to_pos(embedding):
             pos[v] = default_positions[i]
         return pos
 
-    embedding = triangulate_embedding(embedding)
+    embedding, start_triangle = triangulate_embedding(embedding)
 
     # The following dicts map a node to another node
     # If a node is not in the key set it means that the node is not yet in G_k
@@ -39,7 +39,7 @@ def combinatorial_embedding_to_pos(embedding):
     delta_x = {}
     y_coordinate = {}
 
-    node_list = get_canonical_ordering(embedding)
+    node_list = get_canonical_ordering(embedding, start_triangle)
 
     # 1. Phase
 
@@ -120,7 +120,7 @@ def set_absolute_position(parent, tree, remaining_nodes, delta_x, y_coordinate, 
         remaining_nodes.append(child)
 
 
-def get_canonical_ordering(embedding):
+def get_canonical_ordering(embedding, start_triangle):
     """Returns a canonical ordering of the nodes
 
     Parameters
@@ -142,10 +142,8 @@ def get_canonical_ordering(embedding):
         for idx, v in enumerate(l):
             emb_idx[u][v] = idx
 
-    # Choose v1 and v2
-    v1 = next(iter(embedding))  # Select any node as v1
-    v2 = embedding[v1][0]  # Select any neighbor of v1 as v2
-    v3 = embedding[v2][(emb_idx[v2][v1] + 1) % len(embedding[v2])]
+    # Set v1, v2 and v3
+    v1, v2, v3 = start_triangle
 
     # For not fully triangulated embeddings we might need to flip v1 and v2
     if embedding[v3][(emb_idx[v3][v2] + 1) % len(embedding[v3])] is not v1:
@@ -231,10 +229,25 @@ def get_contour_neighbors(right_t_child, embedding, delta_x, vk):
 def triangulate_embedding(embedding):
     """Triangulates the embedding.
 
-    Adds edges to the embedding until all faces are triangles.
+    Chooses the face that has the most vertices as the outer face. All other
+    faces are triangulated by adding edges in a zig-zag way to keep the maximum
+    degree low.
+
+    Returns
+    -------
+    embedding : dict
+        A new embedding containing all edges from the input embedding and the
+        additional edges to internally triangulate the graph.
+
+    start_triangle : tuple
+        A tuple of 3 nodes (v1, v2, v3) that define a triangle in the graph.
+        The edge (v1,v2) must lie on the outer face.
+
     """
     # TODO: Implement
-    return embedding
+    new_embedding = embedding   # TODO: Remove this
+    start_triangle = (1, 2, 3)  # TODO: Remove this
+    return new_embedding, start_triangle
 
 
 ContourNeighborData = namedtuple('ContourNeighborData',
