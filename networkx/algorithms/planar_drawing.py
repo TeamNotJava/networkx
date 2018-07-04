@@ -147,19 +147,18 @@ def get_canonical_ordering(embedding):
     v2 = embedding[v1][0]  # Select any neighbor of v1 as v2
     v3 = embedding[v2][(emb_idx[v2][v1] + 1) % len(embedding[v2])]
 
+    # For not fully triangulated embeddings we might need to flip v1 and v2
+    if embedding[v3][(emb_idx[v3][v2] + 1) % len(embedding[v3])] is not v1:
+        print("Flip")
+        v1, v2 = v2, v1
+        v3 = embedding[v2][(emb_idx[v2][v1] + 1) % len(embedding[v2])]
+
     # Maintain a list for the result and a set for fast queries
     node_list = [v1, v2]
     node_set = set(node_list)
 
     # Remaining node stack
     insertable_nodes = [v3]
-
-    for v in node_list:  # Initialize values for neighbors of v1 and v2
-        for nbr in embedding[v]:
-            idx = emb_idx[nbr][v]
-            if (embedding[nbr][(idx + 1) % len(embedding[nbr])] in node_set or
-                embedding[nbr][idx - 1] in node_set):
-                insertable_nodes.append(nbr)
 
     # Obtain remaining order
     while len(node_list) != len(embedding):
@@ -172,9 +171,8 @@ def get_canonical_ordering(embedding):
             for v_next in embedding[vk]:
                 idx = emb_idx[v_next][vk]
                 if (embedding[v_next][(idx + 1) % len(embedding[v_next])] in node_set or
-                    embedding[v_next][idx - 1] in node_set):
+                        embedding[v_next][idx - 1] in node_set):
                     insertable_nodes.append(v_next)
-
 
     return node_list
 
@@ -214,9 +212,9 @@ def get_contour_neighbors(right_t_child, embedding, delta_x, v1, vk):
 
     # Determine all relevant contour neighbors
     wq = contour_neighbors[q_idx]
-    wq1 = contour_neighbors[q_idx-1]
-    wp = contour_neighbors[(q_idx + 1) % len(contour_neighbors)]
-    wp1 = contour_neighbors[(q_idx + 2) % len(contour_neighbors)]
+    wq1 = contour_neighbors[(q_idx + 1) % len(contour_neighbors)]
+    wp = contour_neighbors[q_idx-1]
+    wp1 = contour_neighbors[q_idx-2]  # Note that len(contour_neighbors) >= 2
 
     # Determine if v_k only adds multiple triangles
     adds_mult_tri = len(contour_neighbors) > 2
