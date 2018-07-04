@@ -150,6 +150,9 @@ def get_canonical_ordering(embedding):
     for v in node_list:  # Initialize values for neighbors of v1 and v2
         for nbr in embedding[v]:
             neighbors_gk[nbr] += 1
+            # Neighbors of v with > 1 neighbor in G_k can be added later
+            if neighbors_gk[nbr] > 1:
+                insertable_nodes.append(nbr)
 
     # Obtain remaining order
     while len(node_list) != len(embedding):
