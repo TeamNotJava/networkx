@@ -133,10 +133,19 @@ def get_canonical_ordering(embedding):
     node_list : list
         All nodes in the canonical ordering
     """
+
+    # Create dict holding for each node a dict mapping
+    # neighbor vertices to index in the embedding list
+    emb_idx = {}
+    for u, l in embedding.items():
+        emb_idx[u] = {}
+        for idx, v in enumerate(l):
+            emb_idx[u][v] = idx
+
     # Choose v1 and v2
     v1 = next(iter(embedding))  # Select any node as v1
     v2 = embedding[v1][0]  # Select any neighbor of v1 as v2
-    v3 = embedding[v2][1]  # Determined by the embedding
+    v3 = embedding[v2][(emb_idx[v2][v1] + 1) % len(embedding[v2])]
 
     # Maintain a list for the result and a set for fast queries
     node_list = [v1, v2]
@@ -145,13 +154,11 @@ def get_canonical_ordering(embedding):
     # Remaining node stack
     insertable_nodes = [v3]
 
-    # Count how many neighbors of a node are in G_k
-    neighbors_gk = defaultdict(int)
     for v in node_list:  # Initialize values for neighbors of v1 and v2
         for nbr in embedding[v]:
-            neighbors_gk[nbr] += 1
-            # Neighbors of v with > 1 neighbor in G_k can be added later
-            if neighbors_gk[nbr] > 1:
+            idx = emb_idx[nbr][v]
+            if (embedding[nbr][(idx + 1) % len(embedding[nbr])] in node_set or
+                embedding[nbr][idx - 1] in node_set):
                 insertable_nodes.append(nbr)
 
     # Obtain remaining order
@@ -163,11 +170,11 @@ def get_canonical_ordering(embedding):
             node_list.append(vk)
 
             for v_next in embedding[vk]:
-                # Update neighbors_gk
-                neighbors_gk[v_next] += 1
-                # Neighbors of vk with > 1 neighbor in G_k can be added later
-                if neighbors_gk[v_next] > 1:
+                idx = emb_idx[v_next][vk]
+                if (embedding[v_next][(idx + 1) % len(embedding[v_next])] in node_set or
+                    embedding[v_next][idx - 1] in node_set):
                     insertable_nodes.append(v_next)
+
 
     return node_list
 
