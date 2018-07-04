@@ -93,14 +93,29 @@ def combinatorial_embedding_to_pos(embedding):
         else:
             left_t_child[vk] = Nil
 
-    # 2. Phase
-    accumulate_offsets(v1, 0, left_t_child, right_t_child, delta_x)
-
-    # Set absolute positions
+    # 2. Phase Set absolute positions
     pos = dict()
-    for v in node_list:
-        pos[v] = (delta_x[v], y_coordinate[v])
-    
+    pos[v1] = (0, y_coordinate[v1])
+    remaining_nodes = [v1]
+    while remaining_nodes:
+        parent_node = remaining_nodes.pop()
+        parent_node_x = pos[parent_node][0]
+
+        left_child = left_t_child[parent_node]
+        if left_child is not Nil:
+            # Calculate pos of left child
+            left_child_x = parent_node_x + delta_x[left_child]
+            pos[left_child] = (left_child_x, y_coordinate[left_child])
+            # Remember to calculate pos of its children
+            remaining_nodes.append(left_child)
+
+        right_child = right_t_child[parent_node]
+        if right_child is not Nil:
+            # Calculate pos of right child
+            right_child_x = parent_node_x + delta_x[right_child]
+            pos[right_child] = (right_child_x, y_coordinate[right_child])
+            # Remember to calculate pos of its children
+            remaining_nodes.append(right_child)
     return pos
 
 
@@ -210,21 +225,7 @@ def triangulate_embedding(embedding):
     Adds edges to the embedding until all faces are triangles.
     """
     # TODO: Implement
-    return new_embedding
-
-
-def accumulate_offsets(vertex, delta, left_t_child, right_t_child, delta_x):
-    """
-    TODO: Write docstring
-    """
-    if vertex is Nil:
-        return
-
-    delta_x[vertex] += delta
-    accumulate_offsets(left_t_child[vertex], delta_x[vertex],
-                       left_t_child, right_t_child, delta_x)
-    accumulate_offsets(right_t_child[vertex], delta_x[vertex],
-                       left_t_child, right_t_child, delta_x)
+    return embedding
 
 
 ContourNeighborData = namedtuple('ContourNeighborData',
