@@ -233,6 +233,15 @@ def triangulate_embedding(embedding):
     faces are triangulated by adding edges in a zig-zag way to keep the maximum
     degree low.
 
+    The triangulated graph is 2-connected. This means on a cycle on the outer face
+    a node cannot appear twice.
+
+    Parameters
+    ----------
+    embedding : dict
+        Maps each node to a list of neighbors in clockwise orientation. The input
+        graph contains at least 3 nodes.
+
     Returns
     -------
     embedding : dict
@@ -241,7 +250,8 @@ def triangulate_embedding(embedding):
 
     start_triangle : tuple
         A tuple of 3 nodes (v1, v2, v3) that define a triangle in the graph.
-        The edge (v1,v2) must lie on the outer face.
+        The edge (v1,v2) must lie on the outer face. When viewed with the edge
+        (v1, v2) at the bottom, the node v1 lies to the left of v2.
 
     """
     # TODO: Implement
