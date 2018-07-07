@@ -254,11 +254,76 @@ def triangulate_embedding(embedding):
         (v1, v2) at the bottom, the node v1 lies to the left of v2.
 
     """
-    # TODO: Implement
-    new_embedding = embedding   # TODO: Remove this
-    start_triangle = (1, 2, 3)  # TODO: Remove this
-    return new_embedding, start_triangle
+     # TODO: Finish Implementation
+    if len(embedding) <= 1:
+        return embedding
 
+    # 1. Transform embedding datastructure (and obtain components)
+    left_neighbor = defaultdict(dict)  # Maps a node v to a dict that maps a neighbor of v to the neighbor left of it
+    right_neighbor = defaultdict(dict)  # Similar to the above but for the right neighbor
+    # TODO: Component tracking
+
+    #Get components
+    component_nodes = []  # A node for each component in the graph
+
+    #Just DFS to get the components
+    visited_nodes = set()
+    #Think about merging this loop into the one below
+    for v, neighbor_list in embedding.items():
+        if v not in visited_nodes:
+           component_nodes.append(v)
+           visited_nodes.add(v)
+           to_visit=[x for x in neighbor_list]
+           while len(to_visit) > 0:
+               n=to_visit.pop()
+               if n not in visited_nodes:
+                   visited_nodes.add(n)
+                   to_visit.extend(embedding[n])
+
+    for v, neighbor_list in embedding.items():
+        for i in range(len(neighbor_list)):
+            left_neighbor1 = neighbor_list[i-1]
+            right_neighbor1 = neighbor_list[i]
+            left_neighbor[v][right_neighbor1] = left_neighbor1
+            right_neighbor[v][left_neighbor1] = right_neighbor1
+
+    # 2. Make graph a single component (add edge between components)
+    for i in range(len(component_nodes)-1):
+        v1 = component_nodes[i]
+        v2 = component_nodes[i+1]
+        add_half_edge(v1, v2, left_neighbor, right_neighbor)
+        add_half_edge(v2, v1, left_neighbor, right_neighbor)
+
+    # 3. Calculate faces, ensure 2-connected and determine outer face
+
+    marked_edges = defaultdict(dict)
+
+
+
+
+
+    outer_face = []  # A face with the most number of nodes
+    # TODO
+
+    # 4. Triangulate internal faces (in a sig-zack fashion)
+    # TODO
+
+    # 5. Transform embedding datastructure back
+    new_embedding = dict()
+    for v in embedding:
+        start_node = next(iter(right_neighbor[v]))
+        current_node = start_node
+        neighbor_list = list()
+        while len(neighbor_list) == 0 or start_node != current_node:
+            neighbor_list.append(current_node)
+            current_node = right_neighbor[v][current_node]
+        new_embedding[v] = neighbor_list
+
+    # 6. Choose start_triangle
+    v1 = outer_face[0]
+    v2 = outer_face[1]
+    v3 = left_neighbor[v1][v2]
+    return new_embedding, (v1, v2, v3)
 
 ContourNeighborData = namedtuple('ContourNeighborData',
                                  ['wp', 'wp1', 'wq1', 'wq', 'delta_x_wp_wq',
