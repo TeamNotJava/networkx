@@ -226,6 +226,32 @@ def get_contour_neighbors(right_t_child, embedding, delta_x, vk):
     return ContourNeighborData(wp, wp1, wq1, wq, delta_x_wp_wq, adds_mult_tri)
 
 
+
+def get_face(embedding, edge, marked_edges):
+    if edge in marked_edges: #face was already found once
+        return None
+    v,u = edge
+
+    face = set()
+    face.add(v)
+    first_node = v
+    edge_start=v
+    edge_end = u
+
+    while edge_end != v:
+        face.add(edge_end) #TODO: check if it already contains edge_end then additional measures for 2 connectedness are necsessary
+        nghbrs = embedding[edge_end]
+        for idx,n in enumerate(nghbrs):
+            if n == edge_start:
+                next_node = nghbrs[(idx+1) % len(nghbrs)]
+                break
+        edge_start=edge_end
+        edge_end=next_node
+        marked_edges.add((edge_start,edge_end))
+
+    return face
+
+
 def triangulate_embedding(embedding):
     """Triangulates the embedding.
 
@@ -295,15 +321,20 @@ def triangulate_embedding(embedding):
         add_half_edge(v2, v1, left_neighbor, right_neighbor)
 
     # 3. Calculate faces, ensure 2-connected and determine outer face
-
-    marked_edges = defaultdict(dict)
-
-
+    faces = []
+    marked_edges = set()
 
 
+    #edges=[]
+    #     for v,neighbor_list in embedding.items():
+    #    edges.extend(((v,x) for x in neighbor_list))
 
-    outer_face = []  # A face with the most number of nodes
-    # TODO
+    for v,neighbor_list in embedding.items():
+        for u in neighbor_list:
+            face = get_face(embedding,(v,u),marked_edges)
+            faces.append(face)
+
+    outer_face =  max(faces, key=lambda x:len(x))  # A face with the most number of nodes
 
     # 4. Triangulate internal faces (in a sig-zack fashion)
     # TODO
