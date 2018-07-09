@@ -232,14 +232,14 @@ def get_face(embedding, edge, marked_edges):
         return None
     v,u = edge
 
-    face = set()
+    face = []
     face.add(v)
     first_node = v
     edge_start=v
     edge_end = u
 
     while edge_end != v:
-        face.add(edge_end) #TODO: check if it already contains edge_end then additional measures for 2 connectedness are necsessary
+        face.append(edge_end) #TODO: check if it already contains edge_end then additional measures for 2 connectedness are necsessary
         nghbrs = embedding[edge_end]
         for idx,n in enumerate(nghbrs):
             if n == edge_start:
@@ -332,12 +332,25 @@ def triangulate_embedding(embedding):
     for v,neighbor_list in embedding.items():
         for u in neighbor_list:
             face = get_face(embedding,(v,u),marked_edges)
-            faces.append(face)
+            if face is not None:
+                faces.append(face)
 
     outer_face =  max(faces, key=lambda x:len(x))  # A face with the most number of nodes
 
     # 4. Triangulate internal faces (in a sig-zack fashion)
-    # TODO
+
+    for face in faces:
+        if face != outer_face:
+            edge_start=0
+            edge_end=0;
+            dir=1
+            for i in range(1,len(face)):
+                edge_end = (edge_end + i*dir) % len(face) #Zig zag pattern
+                add_half_edge(edge_start, edge_end, left_neighbor, right_neighbor)
+                add_half_edge(v1, v2, edge_start, edge_end)
+                edge_start = edge_end
+
+
 
     # 5. Transform embedding datastructure back
     new_embedding = dict()
