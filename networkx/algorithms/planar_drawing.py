@@ -296,7 +296,7 @@ def triangulate_embedding(embedding):
     face_list = []
     edges_counted = set()
     for v in right_neighbor:
-        for w in right_neighbor[v]:
+        for w in list(right_neighbor[v]):
             new_face = get_face_nodes(left_neighbor, right_neighbor, v, w, edges_counted)
             if new_face:
                 # Found a new face
@@ -391,8 +391,9 @@ def get_face_nodes(left_neighbor, right_neighbor, starting_node, outgoing_node, 
         next_next_node = right_neighbor[next_node][current_node]
         # cycle is not completed yet
         if next_node in face_set:
-            add_half_edge(current_node, next_next_node, left_neighbor, right_neighbor, next_node)
-            add_half_edge(next_next_node, current_node, left_neighbor, right_neighbor, left_neighbor[next_next_node][next_node])
+            add_half_edge(current_node, next_next_node, left_neighbor, right_neighbor, left_neighbor[current_node][next_node])
+            add_half_edge(next_next_node, current_node, left_neighbor, right_neighbor, next_node)
+            edges_counted.add((next_node, next_next_node))
             next_node = current_node
 
         else:
