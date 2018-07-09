@@ -296,16 +296,19 @@ def triangulate_embedding(embedding):
 
     # 5. Triangulate internal faces (in a zig-zag fashion)
     for face in face_list:
-        i, j, it = 1, -1, 0
+        if face is outer_face:
+            continue
+        
+        i, j, even_it = 1, -1, True
         while face[i] != face[j - 1]:
             print("Add edge: i=", face[i]," j=", face[j])
             add_half_edge(face[i], face[j], left_neighbor, right_neighbor)
             add_half_edge(face[j], face[i], left_neighbor, right_neighbor)
-            if it == 0:
+            if even_it:
                 i += 1
             else:
                 j -= 1
-            it = 1 - it
+            even_it = not even_it
 
     # 6. Transform embedding datastructure back
     new_embedding = dict()
