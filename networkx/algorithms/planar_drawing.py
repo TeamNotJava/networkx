@@ -335,7 +335,7 @@ def add_half_edge(v1, v2, left_neighbor, right_neighbor):
         right_neighbor[v1][v2] = v2
 
 
-def get_face_nodes(right_neighbor, starting_node, outgoing_node, edges_counted, make_biconnected=False):
+def get_face_nodes(right_neighbor, starting_node, outgoing_node, edges_counted, make_biconnected=False, left_neighbor=None):
     """
     ----------
     embedding: dict
@@ -363,10 +363,17 @@ def get_face_nodes(right_neighbor, starting_node, outgoing_node, edges_counted, 
     next_node = outgoing_node
     face = set([starting_node])
     while next_node != starting_node or right_neighbor[current_node] != starting_node:
+        next_next_node = right_neighbor[next_node][current_node]
         # cycle is not completed yet
-
+        if make_biconnected and next_node in face:
+            add_half_edge(current_node, next_next_node, left_neighbor, right_neighbor)
+            add_half_edge(next_next_node, current_node, left_neighbor, right_neighbor)
+            next_node = current_node
+            
+        face.add(next_node)
+        
         # set next edge
-        current_node, next_node = next_node, right_neighbor[next_node][current_node]
+        current_node, next_node = next_node, next_next_node
 
         # remember that this edge has been counted
         edges_counted.add((current_node, next_node))
