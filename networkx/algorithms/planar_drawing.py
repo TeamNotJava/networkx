@@ -239,7 +239,7 @@ def get_face(embedding, edge, marked_edges):
     edge_end = u
 
     while edge_end != v:
-        face.append(edge_end) #TODO: check if it already contains edge_end then additional measures for 2 connectedness are necsessary
+        face.append(edge_end) #TODO: check if it already contains edge_end then additional measures for 2 connectedness are necessary
         nghbrs = embedding[edge_end]
         for idx,n in enumerate(nghbrs):
             if n == edge_start:

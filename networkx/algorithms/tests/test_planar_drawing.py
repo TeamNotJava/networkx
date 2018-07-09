@@ -46,8 +46,8 @@ def is_planar_drawing_correct(G, pos):
                     dist_b_p= math.sqrt((x2 - px)**2 + (y2 - py)**2)
                     if(dist_a_p + dist_b_p ==dist_a_b ):
                         print("There is an intersection at {},{}".format(px,py))
-                        assert False
-        pass
+                        return False
+    return True
 
 
 def planar_drawing_conforms_to_embedding(embedding, pos):
@@ -56,4 +56,17 @@ def planar_drawing_conforms_to_embedding(embedding, pos):
     Returns true iff the neighbors are actually oriented in the orientation
     specified of the embedding
     """
-    pass
+    for _,nbrs in embedding:
+        if len(nbrs)>1:
+            for idx,n in nbrs:
+                x1,y1 = pos[n]
+                x2,y2 = pos[nbrs[(idx+1)%len(nbrs)]]
+                if x1==x2 and y1==y2 : # There should be no nodes mapped to identical positions
+                    return False
+                if x1 > x2:
+                    if y1 < y2: # If the point is right of its predecessor it also has to be lower
+                        return False
+                if x1 < x2:
+                    if y1 > y2:
+                        return False
+    return True
