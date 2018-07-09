@@ -301,10 +301,6 @@ def triangulate_embedding(embedding):
         
         i, j, even_it = 1, -1, True
         while face[i] != face[j - 1]:
-            print("Face: ", face)
-            print("Add edge: i=", face[i], " j=", face[j])
-            print("i={}  j={}".format(i, j))
-
             if even_it:
                 left_of_j = face[j + 1]
             else:
@@ -331,11 +327,9 @@ def triangulate_embedding(embedding):
         new_embedding[v] = neighbor_list
 
     # 7. Choose start_triangle
-    v1 = outer_face[0]
-    v2 = outer_face[1]
+    v1 = outer_face[1]
+    v2 = outer_face[0]
     v3 = left_neighbor[v1][v2]
-    print("Outerface", outer_face)
-    print("Right_neighbor", right_neighbor)
     return new_embedding, (v1, v2, v3)
 
 
