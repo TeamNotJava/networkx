@@ -302,9 +302,17 @@ def triangulate_embedding(embedding):
         i, j, even_it = 1, -1, True
         while face[i] != face[j - 1]:
             print("Face: ", face)
-            print("Add edge: i=", face[i]," j=", face[j])
-            add_half_edge(face[i], face[j], left_neighbor, right_neighbor, TODO v2_left)
-            add_half_edge(face[j], face[i], left_neighbor, right_neighbor, TODO v2_left)
+            print("Add edge: i=", face[i], " j=", face[j])
+            print("i={}  j={}".format(i, j))
+
+            if even_it:
+                left_of_j = face[j + 1]
+            else:
+                left_of_j = face[i - 1]
+            add_half_edge(face[i], face[j], left_neighbor, right_neighbor,
+                          left_of_j)
+            add_half_edge(face[j], face[i], left_neighbor, right_neighbor,
+                          face[j-1])
             if even_it:
                 i += 1
             else:
@@ -378,8 +386,8 @@ def get_face_nodes(right_neighbor, starting_node, outgoing_node, edges_counted, 
         next_next_node = right_neighbor[next_node][current_node]
         # cycle is not completed yet
         if make_biconnected and next_node in face_set:
-            add_half_edge(current_node, next_next_node, left_neighbor, right_neighbor, TODO v2_left)
-            add_half_edge(next_next_node, current_node, left_neighbor, right_neighbor, TODO v2_left)
+            add_half_edge(current_node, next_next_node, left_neighbor, right_neighbor, next_node)
+            add_half_edge(next_next_node, current_node, left_neighbor, right_neighbor, current_node)
             next_node = current_node
             
         face_set.add(next_node)
