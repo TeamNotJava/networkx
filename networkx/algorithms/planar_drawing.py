@@ -303,8 +303,8 @@ def triangulate_embedding(embedding):
         while face[i] != face[j - 1]:
             print("Face: ", face)
             print("Add edge: i=", face[i]," j=", face[j])
-            add_half_edge(face[i], face[j], left_neighbor, right_neighbor)
-            add_half_edge(face[j], face[i], left_neighbor, right_neighbor)
+            add_half_edge(face[i], face[j], left_neighbor, right_neighbor, TODO v2_left)
+            add_half_edge(face[j], face[i], left_neighbor, right_neighbor, TODO v2_left)
             if even_it:
                 i += 1
             else:
@@ -326,12 +326,15 @@ def triangulate_embedding(embedding):
     v1 = outer_face[0]
     v2 = outer_face[1]
     v3 = left_neighbor[v1][v2]
+    print("Outerface", outer_face)
+    print("Right_neighbor", right_neighbor)
     return new_embedding, (v1, v2, v3)
 
 
-def add_half_edge(v1, v2, left_neighbor, right_neighbor):
+def add_half_edge(v1, v2, left_neighbor, right_neighbor, v2_left=None):
     if left_neighbor[v1]:
-        v2_left = next(iter(right_neighbor[v1]))  # Choose any neighbor of v1
+        if v2_left is None:
+            v2_left = next(iter(right_neighbor[v1]))  # Choose any neighbor of v1
         v2_right = right_neighbor[v1][v2_left]
         right_neighbor[v1][v2_left] = v2
         right_neighbor[v1][v2] = v2_right
@@ -340,7 +343,7 @@ def add_half_edge(v1, v2, left_neighbor, right_neighbor):
     else:
         # v1 has no neighbors, v2 is the only new neighbor
         right_neighbor[v1][v2] = v2
-        right_neighbor[v1][v2] = v2
+        left_neighbor[v1][v2] = v2
 
 
 def get_face_nodes(right_neighbor, starting_node, outgoing_node, edges_counted, make_biconnected=False, left_neighbor=None):
@@ -375,8 +378,8 @@ def get_face_nodes(right_neighbor, starting_node, outgoing_node, edges_counted, 
         next_next_node = right_neighbor[next_node][current_node]
         # cycle is not completed yet
         if make_biconnected and next_node in face_set:
-            add_half_edge(current_node, next_next_node, left_neighbor, right_neighbor)
-            add_half_edge(next_next_node, current_node, left_neighbor, right_neighbor)
+            add_half_edge(current_node, next_next_node, left_neighbor, right_neighbor, TODO v2_left)
+            add_half_edge(next_next_node, current_node, left_neighbor, right_neighbor, TODO v2_left)
             next_node = current_node
             
         face_set.add(next_node)
