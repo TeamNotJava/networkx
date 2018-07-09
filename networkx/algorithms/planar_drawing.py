@@ -289,7 +289,8 @@ def triangulate_embedding(embedding):
                 face_list.append(new_face)
 
     # 4. Ensure 2-connectedness of outer face
-    get_face_nodes(right_neighbor, v, w, edges_counted, True)
+    get_face_nodes(right_neighbor, outer_face[0], outer_face[1], edges_counted,
+                   True, left_neighbor)
 
     # 5. Triangulate internal faces (in a zig-zag fashion)
     for face in face_list:
