@@ -280,10 +280,16 @@ def triangulate_embedding(embedding):
     # 3. Calculate faces, and determine outer face
     outer_face = []  # A face with the most number of nodes
     face_list = []
-
-    # TODO
+    edges_counted = set()
+    for v in right_neighbor:
+        for w in right_neighbor[v]:
+            new_face = get_face_nodes(right_neighbor, v, w, edges_counted)
+            if new_face:
+                # Found a new face
+                face_list.append(new_face)
 
     # 4. Ensure 2-connectedness of outer face
+    get_face_nodes(right_neighbor, v, w, edges_counted, True)
 
     # 5. Triangulate internal faces (in a zig-zag fashion)
     for face in face_list:
@@ -329,7 +335,7 @@ def add_half_edge(v1, v2, left_neighbor, right_neighbor):
         right_neighbor[v1][v2] = v2
 
 
-def get_face_nodes(right_neighbor, starting_node, outgoing_node, edges_counted):
+def get_face_nodes(right_neighbor, starting_node, outgoing_node, edges_counted, make_biconnected=False):
     """
     ----------
     embedding: dict
