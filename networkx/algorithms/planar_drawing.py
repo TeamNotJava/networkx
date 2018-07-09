@@ -283,10 +283,12 @@ def triangulate_embedding(embedding):
     edges_counted = set()
     for v in right_neighbor:
         for w in right_neighbor[v]:
-            new_face = get_face_nodes(right_neighbor, v, w, edges_counted)
+            new_face = get_face_nodes(right_neighbor, v, w, edges_counted, False, left_neighbor)
             if new_face:
                 # Found a new face
                 face_list.append(new_face)
+                if len(new_face) > len(outer_face):
+                    outer_face = new_face
 
     # 4. Ensure 2-connectedness of outer face
     get_face_nodes(right_neighbor, outer_face[0], outer_face[1], edges_counted,
@@ -296,6 +298,7 @@ def triangulate_embedding(embedding):
     for face in face_list:
         i, j, it = 1, -1, 0
         while face[i] != face[j - 1]:
+            print("Add edge: i=", face[i]," j=", face[j])
             add_half_edge(face[i], face[j], left_neighbor, right_neighbor)
             add_half_edge(face[j], face[i], left_neighbor, right_neighbor)
             if it == 0:
@@ -363,7 +366,7 @@ def get_face_nodes(right_neighbor, starting_node, outgoing_node, edges_counted, 
     current_node = starting_node
     next_node = outgoing_node
     face = set([starting_node])
-    while next_node != starting_node or right_neighbor[current_node] != starting_node:
+    while next_node != starting_node or left_neighbor[starting_node][outgoing_node] != current_node:
         next_next_node = right_neighbor[next_node][current_node]
         # cycle is not completed yet
         if make_biconnected and next_node in face:
@@ -396,11 +399,11 @@ class Nil:
 
 if __name__ == '__main__':
     embeddingX = {
-        1: [4, 3, 2],
+        1: [4, 2],
         2: [1, 3, 5],
-        3: [1, 4, 6, 5, 2],
+        3: [4, 6, 2],
         4: [6, 3, 1],
-        5: [2, 3, 6],
+        5: [2, 6],
         6: [5, 3, 4],
     }
-    print(combinatorial_embedding_to_pos(embeddingX))
+    print(triangulate_embedding(embeddingX))
