@@ -301,6 +301,7 @@ def triangulate_embedding(embedding):
         
         i, j, even_it = 1, -1, True
         while face[i] != face[j - 1]:
+            print("Face: ", face)
             print("Add edge: i=", face[i]," j=", face[j])
             add_half_edge(face[i], face[j], left_neighbor, right_neighbor)
             add_half_edge(face[j], face[i], left_neighbor, right_neighbor)
@@ -368,16 +369,18 @@ def get_face_nodes(right_neighbor, starting_node, outgoing_node, edges_counted, 
     # Add all edges to edges_counted which have this face to their left
     current_node = starting_node
     next_node = outgoing_node
-    face = set([starting_node])
+    face_list = [starting_node]
+    face_set = set(face_list)
     while next_node != starting_node or left_neighbor[starting_node][outgoing_node] != current_node:
         next_next_node = right_neighbor[next_node][current_node]
         # cycle is not completed yet
-        if make_biconnected and next_node in face:
+        if make_biconnected and next_node in face_set:
             add_half_edge(current_node, next_next_node, left_neighbor, right_neighbor)
             add_half_edge(next_next_node, current_node, left_neighbor, right_neighbor)
             next_node = current_node
             
-        face.add(next_node)
+        face_set.add(next_node)
+        face_list.append(next_node)
         
         # set next edge
         current_node, next_node = next_node, next_next_node
@@ -385,8 +388,7 @@ def get_face_nodes(right_neighbor, starting_node, outgoing_node, edges_counted, 
         # remember that this edge has been counted
         edges_counted.add((current_node, next_node))
 
-    # 5. Count this face
-    return list(face)
+    return face_list
 
 ContourNeighborData = namedtuple('ContourNeighborData',
                                  ['wp', 'wp1', 'wq1', 'wq', 'delta_x_wp_wq',
