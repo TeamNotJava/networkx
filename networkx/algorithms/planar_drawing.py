@@ -233,7 +233,7 @@ def get_face(embedding, edge, marked_edges):
     v,u = edge
 
     face = []
-    face.add(v)
+    face.append(v)
     first_node = v
     edge_start=v
     edge_end = u
@@ -295,6 +295,7 @@ def triangulate_embedding(embedding):
     #Just DFS to get the components
     visited_nodes = set()
     #Think about merging this loop into the one below
+
     for v, neighbor_list in embedding.items():
         if v not in visited_nodes:
            component_nodes.append(v)
