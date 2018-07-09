@@ -265,10 +265,10 @@ def triangulate_embedding(embedding):
     component_nodes = []  # A node for each component in the graph
     for v, neighbor_list in embedding.items():
         for i in range(len(neighbor_list)):
-            left_neighbor = neighbor_list[i-1]
-            right_neighbor = neighbor_list[i]
-            left_neighbor[v][right_neighbor] = left_neighbor
-            right_neighbor[v][left_neighbor] = right_neighbor
+            cur_left_neighbor = neighbor_list[i-1]
+            cur_right_neighbor = neighbor_list[i]
+            left_neighbor[v][cur_right_neighbor] = cur_left_neighbor
+            right_neighbor[v][cur_left_neighbor] = cur_right_neighbor
 
     # 2. Make graph a single component (add edge between components)
     for i in range(len(component_nodes)-1):
@@ -280,9 +280,19 @@ def triangulate_embedding(embedding):
     # 3. Calculate faces, ensure 2-connected and determine outer face
     outer_face = []  # A face with the most number of nodes
     # TODO
+    
+    # 4. Triangulate internal faces (in a zig-zag fashion)
+    for face in face_list:
+        i, j, it = 1, -1, 0
+        while face[i] != face[j - 1]:
+            add_half_edge(face[i], face[j], left_neighbor, right_neighbor)
+            add_half_edge(face[j], face[i], left_neighbor, right_neighbor)
+            if it == 0:
+                i += 1
+            else:
+                j -= 1
+            it = 1 - it
 
-    # 4. Triangulate internal faces (in a sig-zack fashion)
-    # TODO
 
     # 5. Transform embedding datastructure back
     new_embedding = dict()
