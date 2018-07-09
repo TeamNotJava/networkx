@@ -261,8 +261,22 @@ def triangulate_embedding(embedding):
     # 1. Transform embedding datastructure (and obtain components)
     left_neighbor = defaultdict(dict)  # Maps a node v to a dict that maps a neighbor of v to the neighbor right of it
     right_neighbor = defaultdict(dict)  # Similar to the above but for the right neighbor
-    # TODO: Component tracking
+    # Get components
     component_nodes = []  # A node for each component in the graph
+    # Just DFS to get the components
+    visited_nodes = set()
+    # Think about merging this loop into the one below
+    for v, neighbor_list in embedding.items():
+        if v not in visited_nodes:
+            component_nodes.append(v)
+            visited_nodes.add(v)
+            to_visit = [x for x in neighbor_list]
+            while len(to_visit) > 0:
+                n = to_visit.pop()
+                if n not in visited_nodes:
+                    visited_nodes.add(n)
+                    to_visit.extend(embedding[n])
+
     for v, neighbor_list in embedding.items():
         for i in range(len(neighbor_list)):
             cur_left_neighbor = neighbor_list[i-1]
@@ -277,24 +291,21 @@ def triangulate_embedding(embedding):
         add_half_edge(v1, v2, left_neighbor, right_neighbor)
         add_half_edge(v2, v1, left_neighbor, right_neighbor)
 
-    # 3. Calculate faces, and determine outer face
+    # 3. Calculate faces, Ensure 2-connectedness of outer face, and determine outer face
     outer_face = []  # A face with the most number of nodes
     face_list = []
     edges_counted = set()
     for v in right_neighbor:
         for w in right_neighbor[v]:
-            new_face = get_face_nodes(right_neighbor, v, w, edges_counted, False, left_neighbor)
+            new_face = get_face_nodes(left_neighbor, right_neighbor, v, w, edges_counted)
             if new_face:
                 # Found a new face
                 face_list.append(new_face)
                 if len(new_face) > len(outer_face):
                     outer_face = new_face
 
-    # 4. Ensure 2-connectedness of outer face
-    get_face_nodes(right_neighbor, outer_face[0], outer_face[1], edges_counted,
-                   True, left_neighbor)
-
-    # 5. Triangulate internal faces (in a zig-zag fashion)
+    print(outer_face)
+    # 4. Triangulate internal faces (in a zig-zag fashion)
     for face in face_list:
         if face is outer_face:
             continue
@@ -315,7 +326,7 @@ def triangulate_embedding(embedding):
                 j -= 1
             even_it = not even_it
 
-    # 6. Transform embedding datastructure back
+    # 5. Transform embedding datastructure back
     new_embedding = dict()
     for v in embedding:
         start_node = next(iter(right_neighbor[v]))
@@ -326,7 +337,7 @@ def triangulate_embedding(embedding):
             current_node = right_neighbor[v][current_node]
         new_embedding[v] = neighbor_list
 
-    # 7. Choose start_triangle
+    # 6. Choose start_triangle
     v1 = outer_face[1]
     v2 = outer_face[0]
     v3 = left_neighbor[v1][v2]
@@ -348,7 +359,7 @@ def add_half_edge(v1, v2, left_neighbor, right_neighbor, v2_left=None):
         left_neighbor[v1][v2] = v2
 
 
-def get_face_nodes(right_neighbor, starting_node, outgoing_node, edges_counted, make_biconnected=False, left_neighbor=None):
+def get_face_nodes(left_neighbor, right_neighbor, starting_node, outgoing_node, edges_counted):
     """
     ----------
     embedding: dict
@@ -379,13 +390,14 @@ def get_face_nodes(right_neighbor, starting_node, outgoing_node, edges_counted, 
     while next_node != starting_node or left_neighbor[starting_node][outgoing_node] != current_node:
         next_next_node = right_neighbor[next_node][current_node]
         # cycle is not completed yet
-        if make_biconnected and next_node in face_set:
+        if next_node in face_set:
             add_half_edge(current_node, next_next_node, left_neighbor, right_neighbor, next_node)
-            add_half_edge(next_next_node, current_node, left_neighbor, right_neighbor, current_node)
+            add_half_edge(next_next_node, current_node, left_neighbor, right_neighbor, left_neighbor[next_next_node][next_node])
             next_node = current_node
-            
-        face_set.add(next_node)
-        face_list.append(next_node)
+
+        else:
+            face_set.add(next_node)
+            face_list.append(next_node)
         
         # set next edge
         current_node, next_node = next_node, next_next_node
@@ -409,11 +421,12 @@ class Nil:
 
 if __name__ == '__main__':
     embeddingX = {
-        1: [4, 2],
-        2: [1, 3, 5],
-        3: [4, 6, 2],
-        4: [6, 3, 1],
-        5: [2, 6],
-        6: [5, 3, 4],
+        1: [2, 3],
+        2: [3, 1],
+        3: [1, 2],
+        4: [5, 6],
+        5: [6, 4],
+        6: [4, 5],
+        7: [],
     }
     print(triangulate_embedding(embeddingX))
