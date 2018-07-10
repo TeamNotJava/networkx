@@ -304,7 +304,7 @@ def triangulate_embedding(embedding):
                 if len(new_face) > len(outer_face):
                     outer_face = new_face
 
-    print(outer_face)
+    print("Outer face ", outer_face)
     # 4. Triangulate internal faces (in a zig-zag fashion)
     for face in face_list:
         if face is outer_face:
@@ -343,6 +343,17 @@ def triangulate_embedding(embedding):
     v3 = left_neighbor[v1][v2]
     return new_embedding, (v1, v2, v3)
 
+def embedding_backtransformation(left_neighbor, right_neighbor):
+    # 5. Transform embedding datastructure back
+    new_embedding = dict()
+    for v in embedding:
+        start_node = next(iter(right_neighbor[v]))
+        current_node = start_node
+        neighbor_list = list()
+        while len(neighbor_list) == 0 or start_node != current_node:
+            neighbor_list.append(current_node)
+            current_node = right_neighbor[v][current_node]
+        new_embedding[v] = neighbor_list
 
 def add_half_edge(v1, v2, left_neighbor, right_neighbor, v2_left=None):
     if left_neighbor[v1]:
@@ -420,14 +431,22 @@ class Nil:
     """
     pass
 
+
 if __name__ == '__main__':
-    embeddingX = {
-        1: [2, 3],
-        2: [3, 1],
-        3: [1, 2],
-        4: [5, 6],
-        5: [6, 4],
-        6: [4, 5],
-        7: [],
-    }
-    print(triangulate_embedding(embeddingX))
+    import matplotlib.pyplot as plt
+
+    embedding = {0: [2, 6], 1: [3], 2: [0, 3, 9, 7, 6], 3: [2, 7, 1], 4: [7, 9], 5: [7], 6: [7, 0, 2, 8], 7: [3, 6, 2, 4, 5], 8: [6], 9: [4, 2]}
+    if not embedding:
+        n = 10
+        p = 0.9
+        is_planar = False
+        while not is_planar:
+            G = nx.fast_gnp_random_graph (n, p)
+            is_planar, embedding = nx.check_planarity(G)
+            p /= 2
+    print("Embedding ", embedding)
+    pos = nx.combinatorial_embedding_to_pos(embedding)
+    print("Pos ", pos)
+    nx.draw(G, pos)  # networkx draw()
+    plt.draw()  # pyplot draw()
+    plt.show()
