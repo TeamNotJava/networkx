@@ -300,16 +300,19 @@ def triangulate_embedding(embedding):
             new_face = get_face_nodes(left_neighbor, right_neighbor, v, w, edges_counted)
             if new_face:
                 # Found a new face
+                print("Found face: ", new_face)
+                print("Current Embedding: ", embedding_backtransformation(left_neighbor, right_neighbor))
                 face_list.append(new_face)
                 if len(new_face) > len(outer_face):
                     outer_face = new_face
 
     print("Outer face ", outer_face)
+    print("Face list", face_list)
     # 4. Triangulate internal faces (in a zig-zag fashion)
     for face in face_list:
         if face is outer_face:
             continue
-        
+        print("Current face: ", face)
         i, j, even_it = 1, -1, True
         while face[i] != face[j - 1]:
             if even_it:
@@ -320,22 +323,16 @@ def triangulate_embedding(embedding):
                           left_of_j)
             add_half_edge(face[j], face[i], left_neighbor, right_neighbor,
                           face[j-1])
+            print("Add edge: ", face[i], face[j])
             if even_it:
                 i += 1
             else:
                 j -= 1
             even_it = not even_it
+            print("Current embedding", embedding_backtransformation(left_neighbor, right_neighbor))
 
     # 5. Transform embedding datastructure back
-    new_embedding = dict()
-    for v in embedding:
-        start_node = next(iter(right_neighbor[v]))
-        current_node = start_node
-        neighbor_list = list()
-        while len(neighbor_list) == 0 or start_node != current_node:
-            neighbor_list.append(current_node)
-            current_node = right_neighbor[v][current_node]
-        new_embedding[v] = neighbor_list
+    new_embedding = embedding_backtransformation(left_neighbor, right_neighbor)
 
     # 6. Choose start_triangle
     v1 = outer_face[1]
@@ -343,10 +340,11 @@ def triangulate_embedding(embedding):
     v3 = left_neighbor[v1][v2]
     return new_embedding, (v1, v2, v3)
 
+
 def embedding_backtransformation(left_neighbor, right_neighbor):
     # 5. Transform embedding datastructure back
     new_embedding = dict()
-    for v in embedding:
+    for v in right_neighbor:
         start_node = next(iter(right_neighbor[v]))
         current_node = start_node
         neighbor_list = list()
@@ -354,6 +352,7 @@ def embedding_backtransformation(left_neighbor, right_neighbor):
             neighbor_list.append(current_node)
             current_node = right_neighbor[v][current_node]
         new_embedding[v] = neighbor_list
+    return new_embedding
 
 def add_half_edge(v1, v2, left_neighbor, right_neighbor, v2_left=None):
     if left_neighbor[v1]:
@@ -402,9 +401,10 @@ def get_face_nodes(left_neighbor, right_neighbor, starting_node, outgoing_node, 
         next_next_node = right_neighbor[next_node][current_node]
         # cycle is not completed yet
         if next_node in face_set:
+            print("Added biconnect edge: ", current_node, " ", next_next_node)
             add_half_edge(current_node, next_next_node, left_neighbor, right_neighbor, left_neighbor[current_node][next_node])
             add_half_edge(next_next_node, current_node, left_neighbor, right_neighbor, next_node)
-            edges_counted.add((next_node, next_next_node))
+            edges_counted.add((next_node, next_next_node))  # TODO: Fix this
             next_node = current_node
 
         else:
