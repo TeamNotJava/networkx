@@ -417,3 +417,79 @@ class LRPlanarity(object):
             self.side[e] = self.side[e] * self.sign(self.ref[e])
             self.ref[e] = None
         return self.side[e]
+
+
+class PlanarEmbedding:
+
+    def get_data(self):
+        """Converts this object into a dict of list of nodes structure"""
+        pass
+
+    def get_neighbors(self, v):
+        """Returns a list of neighbors of v in clockwise order"""
+        pass
+
+    def check_planarity(self):
+        """Checks if this object is a valid planar embedding."""
+        pass
+
+    def add_half_edge_ccw(self, start_node, reference_neighbor, end_node):
+        """Adds a half edge from start_node to end_node.
+
+        The half edge is added counter clockwise next to the existing half edge
+        (start_node, reference_neighbor).
+
+        Calling this method can break the embedding.
+
+        Raises an exception if the reference half edge does not exist."""
+        pass
+
+    def add_half_edge_cw(self, start_node, reference_neighbor, end_node):
+        """Adds a half edge from start_node to end_node.
+
+        The half edge is added clockwise next to the existing half edge
+        (start_node, reference_neighbor).
+
+        Calling this method can break the embedding.
+
+        Raises an exception if the reference half edge does not exist, or if
+        adding the specified edge would break the planar embedding."""
+        pass
+
+    def add_edge_cw(self, start_node, reference_neighbor, end_node):
+        """Adds the half edges from start_node to end_node and the reverse.
+
+        The half edge (start_node, end_node) is added clockwise next to the
+        existing half edge (start_node, reference_neighbor). The half edge
+        in the other direction is automatically determined by traversing the
+        face that the added edge splits.
+
+        Calling this method on a valid planar embedding object guarantees that
+        the resulting object is still a valid planar embedding.
+
+        Raises an exception if the reference half edge does not exist, or if
+        adding the specified edge would break the planar embedding."""
+        pass
+
+    def add_edge_ccw(self, start_node, reference_neighbor, end_node):
+        """Adds the half edges from start_node to end_node and the reverse.
+
+        The half edge (start_node, end_node) is added counter clockwise next to
+        the existing half edge (start_node, reference_neighbor). The half edge
+        in the other direction is automatically determined by traversing the
+        face that the added edge splits.
+
+        Calling this method on a valid planar embedding object guarantees that
+        the resulting object is still a valid planar embedding.
+
+        Raises an exception if the reference half edge does not exist, or if
+        adding the specified edge would break the planar embedding."""
+        pass
+
+    def add_edge(self, v, w):
+        """Adds half edges for (v, w) and (w, v) at some position.
+
+        This method should only be called if v and w are in different
+        components, or it might break the embedding.
+        """
+        pass
