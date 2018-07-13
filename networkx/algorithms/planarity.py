@@ -587,6 +587,8 @@ class PlanarEmbedding:
             cw_order[end_node] = end_node
             self.first_nbr[start_node] = end_node
             return
+        if self.has_edge(start_node, end_node):
+            raise nx.NetworkXException("Cannot add edge. Edge already present")
         if reference_neighbor not in cw_order:
             raise nx.NetworkXException(
                 "Cannot add edge. Reference neighbor does not exist")
@@ -667,16 +669,14 @@ class PlanarEmbedding:
             self.ccw_nbr[v][w] = w
             self.first_nbr[v] = w
         else:
-            reference = next(iter(self.cw_nbr[v]))
-            self.add_half_edge_ccw(v, w, reference)
+            self.add_half_edge_first(v, w)
 
         if len(self.cw_nbr[w]) == 0:
             self.cw_nbr[w][v] = v
             self.ccw_nbr[w][v] = v
             self.first_nbr[w] = v
         else:
-            reference = next(iter(self.cw_nbr[w]))
-            self.add_half_edge_ccw(w, v, reference)
+            self.add_half_edge_first(w, v)
 
     def add_half_edge_first(self, start_node, end_node):
         reference = self.first_nbr.get(start_node, None)
