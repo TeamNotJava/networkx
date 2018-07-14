@@ -155,10 +155,36 @@ def get_canonical_ordering(embedding, start_triangle):
             node_set.add(vk)
             node_list.append(vk)
 
+            all_vk_nbrs_in_contour = True
+            # vk is the next node in the canonical ordering
             for v_next in embedding.get_neighbors(vk):
-                if (embedding.cw_nbr[v_next][vk] in node_set or
-                        embedding.ccw_nbr[v_next][vk] in node_set):
+                if v_next in node_set:
+                    continue
+
+                all_vk_nbrs_in_contour = False
+
+                # Check if v_next can be added to the subgraph
+                vk_ccw_nbr1 = embedding.ccw_nbr[vk][v_next]
+                vk_ccw_nbr2 = embedding.ccw_nbr[vk][vk_ccw_nbr1]
+                if (vk_ccw_nbr1 in node_set and vk_ccw_nbr2 in node_set and
+                        embedding.has_edge(vk_ccw_nbr1, vk_ccw_nbr2) and
+                        embedding.has_edge(vk_ccw_nbr1, v_next)):
                     insertable_nodes.append(v_next)
+
+                vk_cw_nbr1 = embedding.cw_nbr[vk][v_next]
+                vk_cw_nbr2 = embedding.cw_nbr[vk][vk_cw_nbr1]
+                if (vk_cw_nbr1 in node_set and vk_cw_nbr2 in node_set and
+                        embedding.has_edge(vk_cw_nbr1, vk_cw_nbr2) and
+                        embedding.has_edge(vk_cw_nbr1, v_next)):
+                    insertable_nodes.append(v_next)
+
+            if all_vk_nbrs_in_contour:
+                # If there is an edge surrounding vk add the node at the other side
+                for nbr1 in embedding.get_neighbors(vk):
+                    nbr2 = embedding.cw_nbr[vk][nbr1]
+                    v_next = embedding.ccw_nbr[nbr1][nbr2]
+                    if v_next not in node_set:
+                        insertable_nodes.append(v_next)
 
     return node_list
 
