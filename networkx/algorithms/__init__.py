@@ -33,6 +33,7 @@ from networkx.algorithms.mis import *
 from networkx.algorithms.operators import *
 from networkx.algorithms.planarity import *
 from networkx.algorithms.planar_drawing import *
+from networkx.algorithms.planarity import *
 from networkx.algorithms.reciprocity import *
 from networkx.algorithms.richclub import *
 from networkx.algorithms.shortest_paths import *
