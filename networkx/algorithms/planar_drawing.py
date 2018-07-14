@@ -220,6 +220,30 @@ def get_contour_neighbors(right_t_child, embedding, delta_x, vk):
     return ContourNeighborData(wp, wp1, wq1, wq, delta_x_wp_wq, adds_mult_tri)
 
 
+def triangulate_face(embedding, v1, v2):
+    """Triangulates the face given by half edge (v, w)"""
+    _, v3 = embedding.next_face_half_edge(v1, v2)
+    _, v4 = embedding.next_face_half_edge(v2, v3)
+    if v1 == v2 or v1 == v3:
+        # The component has less than 3 nodes
+        return
+    while v1 != v4:
+        # Add edge if not already present on other side
+        if embedding.has_edge(v1, v3):
+            # Cannot triangulate at this position
+            v1, v2, v3 = v2, v3, v4
+        else:
+            # Add edge for triangulation
+            print("Add edge v1 v3")
+            embedding.add_half_edge_cw(v1, v3, v2)
+            embedding.add_half_edge_ccw(v3, v1, v2)
+            v1, v2, v3 = v1, v3, v4
+        # Get next node
+        _, v4 = embedding.next_face_half_edge(v2, v3)
+
+
+
+
 def triangulate_embedding(embedding):
     """Triangulates the embedding.
 
@@ -248,7 +272,6 @@ def triangulate_embedding(embedding):
         (v1, v2) at the bottom, the node v1 lies to the left of v2.
 
     """
-    # TODO: Finish Implementation
     if len(embedding.nodes()) <= 1:
         return embedding
     embedding = embedding.copy()
@@ -265,10 +288,10 @@ def triangulate_embedding(embedding):
     # 2. Calculate faces, ensure 2-connectedness and determine outer face
     outer_face = []  # A face with the most number of nodes
     face_list = []
-    edges_counted = set()
+    edges_visited = set()
     for v in embedding.nodes():
         for w in embedding.get_neighbors(v):
-            new_face = get_face_nodes(embedding, v, w, edges_counted)
+            new_face = make_bi_connected(embedding, v, w, edges_visited)
             if new_face:
                 # Found a new face
                 print("Found face: ", new_face)
@@ -280,10 +303,11 @@ def triangulate_embedding(embedding):
     print("Face list", face_list)
     # 3. Triangulate internal faces
     for face in face_list:
-        if face is outer_face:
+        if face is outer_face:  # TODO: Test the output if th
             continue
+
         print("Current face: ", face)
-        # TODO: Triangulate graph
+        triangulate_face(embedding, face[0], face[1])
 
     # 4. Choose start_triangle
     v1 = outer_face[1]
@@ -292,8 +316,9 @@ def triangulate_embedding(embedding):
     return embedding, (v1, v2, v3)
 
 
-def get_face_nodes(embedding, starting_node, outgoing_node, edges_counted):
-    """
+def make_bi_connected(embedding, starting_node, outgoing_node, edges_counted):
+    """Makes the face given by face 2-connected
+
     Parameters
     ----------
     embedding: nx.PlanarEmbedding
@@ -322,13 +347,13 @@ def get_face_nodes(embedding, starting_node, outgoing_node, edges_counted):
     next_node = outgoing_node
     face_list = [starting_node]
     face_set = set(face_list)
-    while next_node != starting_node or embedding.ccw_nbr[starting_node][outgoing_node] != current_node:
-        next_next_node = embedding.cw_nbr[next_node][current_node]
+    while next_node != starting_node or embedding.cw_nbr[starting_node][outgoing_node] != current_node:
+        _, next_next_node = embedding.next_face_half_edge(current_node, next_node)
         # cycle is not completed yet
         if next_node in face_set:
             print("Added biconnect edge: ", current_node, " ", next_next_node)
-            embedding.add_half_edge_cw(current_node, next_next_node, embedding.ccw_nbr[current_node][next_node])
-            embedding.add_half_edge_cw(next_next_node, current_node, next_node)
+            embedding.add_half_edge_ccw(current_node, next_next_node, embedding.cw_nbr[current_node][next_node])
+            embedding.add_half_edge_ccw(next_next_node, current_node, next_node)
             edges_counted.add((next_node, next_next_node))
             next_node = current_node
 
@@ -358,21 +383,28 @@ class Nil:
     pass
 
 
-if __name__ == '__main__':
+def main():
     import matplotlib.pyplot as plt
 
-    embeddingX = {0: [2, 6], 1: [3], 2: [0, 3, 9, 7, 6], 3: [2, 7, 1], 4: [7, 9], 5: [7], 6: [7, 0, 2, 8], 7: [3, 6, 2, 4, 5], 8: [6], 9: [4, 2]}
-    if not embeddingX:
+    embedding_data = {0: [2, 6], 1: [3], 2: [0, 3, 9, 7, 6], 3: [2, 7, 1], 4: [7, 9], 5: [7], 6: [7, 0, 2, 8], 7: [3, 6, 2, 4, 5], 8: [6], 9: [4, 2]}
+    embedding = nx.PlanarEmbedding()
+    embedding.set_data(embedding_data)
+    #embedding = None
+    if not embedding:
         n = 10
         p = 0.9
         is_planar = False
         while not is_planar:
-            G = nx.fast_gnp_random_graph (n, p)
-            is_planar, embeddingX = nx.check_planarity(G)
+            G = nx.fast_gnp_random_graph(n, p)
+            is_planar, embedding = nx.check_planarity(G)
             p /= 2
-    print("Embedding ", embeddingX)
-    posX = nx.combinatorial_embedding_to_pos(embeddingX)
-    print("Pos ", posX)
-    nx.draw(G, posX)  # networkx draw()
+    print("Embedding ", embedding)
+    pos = nx.combinatorial_embedding_to_pos(embedding)
+    print("Pos ", pos)
+    nx.draw(G, pos)  # networkx draw()
     plt.draw()  # pyplot draw()
     plt.show()
+
+
+if __name__ == '__main__':
+    main()
