@@ -40,7 +40,8 @@ def combinatorial_embedding_to_pos(embedding):
     y_coordinate = {}
 
     node_list = get_canonical_ordering(embedding, start_triangle)
-
+    print("Start triangle: ", start_triangle)
+    print("Canonical ordering: ", node_list)
     # 1. Phase
 
     # Initialization
@@ -234,7 +235,7 @@ def triangulate_face(embedding, v1, v2):
             v1, v2, v3 = v2, v3, v4
         else:
             # Add edge for triangulation
-            print("Add edge v1 v3")
+            print("Add edge: ", v1, " ", v3)
             embedding.add_half_edge_cw(v1, v3, v2)
             embedding.add_half_edge_ccw(v3, v1, v2)
             v1, v2, v3 = v1, v3, v4
@@ -310,14 +311,14 @@ def triangulate_embedding(embedding):
         triangulate_face(embedding, face[0], face[1])
 
     # 4. Choose start_triangle
-    v1 = outer_face[1]
-    v2 = outer_face[0]
-    v3 = embedding.ccw_nbr[v1][v2]
+    v1 = outer_face[0]
+    v2 = outer_face[1]
+    _, v3 = embedding.next_face_half_edge(v2, v1)
     return embedding, (v1, v2, v3)
 
 
 def make_bi_connected(embedding, starting_node, outgoing_node, edges_counted):
-    """Makes the face given by face 2-connected
+    """Makes the face given by (starting_node, outgoing_node) 2-connected
 
     Parameters
     ----------
@@ -326,8 +327,8 @@ def make_bi_connected(embedding, starting_node, outgoing_node, edges_counted):
     starting_node : node
         A node on the face
     outgoing_node : node
-        A node such that the half edge (starting_node, outgoing_node) lies on
-        the face
+        A node such that the half edge (starting_node, outgoing_node) belongs
+        to the face
     edges_counted: set
         Set of all half-edges that belong to a face that has been counted
     Returns
@@ -343,29 +344,31 @@ def make_bi_connected(embedding, starting_node, outgoing_node, edges_counted):
     edges_counted.add((starting_node, outgoing_node))
 
     # Add all edges to edges_counted which have this face to their left
-    current_node = starting_node
-    next_node = outgoing_node
+    v1 = starting_node
+    v2 = outgoing_node
     face_list = [starting_node]
     face_set = set(face_list)
-    while next_node != starting_node or embedding.cw_nbr[starting_node][outgoing_node] != current_node:
-        _, next_next_node = embedding.next_face_half_edge(current_node, next_node)
+    _, v3 = embedding.next_face_half_edge(v1, v2)
+    while v2 != starting_node or v3 != outgoing_node:
         # cycle is not completed yet
-        if next_node in face_set:
-            print("Added biconnect edge: ", current_node, " ", next_next_node)
-            embedding.add_half_edge_ccw(current_node, next_next_node, embedding.cw_nbr[current_node][next_node])
-            embedding.add_half_edge_ccw(next_next_node, current_node, next_node)
-            edges_counted.add((next_node, next_next_node))
-            next_node = current_node
+        if v2 in face_set:
+            print("Added biconnect edge: ", v1, " ", v3)
+            embedding.add_half_edge_cw(v1, v3, v2)
+            embedding.add_half_edge_ccw(v3, v1, v2)
+            edges_counted.add((v2, v3))
+            edges_counted.add((v3, v1))
+            v2 = v1
 
         else:
-            face_set.add(next_node)
-            face_list.append(next_node)
+            face_set.add(v2)
+            face_list.append(v2)
         
         # set next edge
-        current_node, next_node = next_node, next_next_node
+        v1 = v2
+        v2, v3 = embedding.next_face_half_edge(v2, v3)
 
         # remember that this edge has been counted
-        edges_counted.add((current_node, next_node))
+        edges_counted.add((v1, v2))
 
     return face_list
 
@@ -389,6 +392,7 @@ def main():
     embedding_data = {0: [2, 6], 1: [3], 2: [0, 3, 9, 7, 6], 3: [2, 7, 1], 4: [7, 9], 5: [7], 6: [7, 0, 2, 8], 7: [3, 6, 2, 4, 5], 8: [6], 9: [4, 2]}
     embedding = nx.PlanarEmbedding()
     embedding.set_data(embedding_data)
+    G = embedding.get_graph()
     #embedding = None
     if not embedding:
         n = 10
@@ -399,7 +403,7 @@ def main():
             is_planar, embedding = nx.check_planarity(G)
             p /= 2
     print("Embedding ", embedding)
-    pos = nx.combinatorial_embedding_to_pos(embedding)
+    pos = combinatorial_embedding_to_pos(embedding)
     print("Pos ", pos)
     nx.draw(G, pos)  # networkx draw()
     plt.draw()  # pyplot draw()
