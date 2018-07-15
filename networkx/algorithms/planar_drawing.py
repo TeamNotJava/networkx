@@ -121,10 +121,6 @@ def set_absolute_position(parent, tree, remaining_nodes, delta_x, y_coordinate, 
         remaining_nodes.append(child)
 
 
-def update_chords(v, chords, zero_chords, ready_to_pick):
-    pass  # TODO
-
-
 def get_canonical_ordering(embedding, outer_face):
     """Returns a canonical ordering of the nodes
 
@@ -140,34 +136,111 @@ def get_canonical_ordering(embedding, outer_face):
     node_list : list
         All nodes in the canonical ordering
     """
-    chords = defaultdict(int)  # Maps nodes to number of chords
-    zero_chords = set()  # Set of all nodes with 0 chords
-    out = set()  # Set of nodes on the outside of the graph
+    v1 = outer_face[0]
+    v2 = outer_face[1]
+    chords = defaultdict(int)  # Maps nodes to the number of their chords
     marked_nodes = set()
-    ready_to_pick = set()
+    ready_to_pick = set(outer_face)
 
+    # Initialize outer_face_ccw_nbr (do not include v1 -> v2)
+    outer_face_ccw_nbr = {}
+    prev_nbr = v2
+    for idx in range(2, len(outer_face)):
+        outer_face_ccw_nbr[prev_nbr] = outer_face[idx]
+        prev_nbr = outer_face[idx]
+    outer_face_ccw_nbr[prev_nbr] = v1
+
+    # Initialize outer_face_cw_nbr (do not include v2 -> v1)
+    outer_face_cw_nbr = {}
+    prev_nbr = v1
+    for idx in range(len(outer_face)-1, 0, -1):
+        outer_face_cw_nbr[prev_nbr] = outer_face[idx]
+        prev_nbr = outer_face[idx]
+
+    def is_outer_face_nbr(v, w):
+        if v not in outer_face_ccw_nbr:
+            return outer_face_cw_nbr[v] == w
+        if v not in outer_face_cw_nbr:
+            return outer_face_ccw_nbr[v] == w
+        return outer_face_ccw_nbr[v] == w or outer_face_cw_nbr[v] == w
+
+    def is_on_outer_face(v):
+        return v not in marked_nodes and (v in outer_face_ccw_nbr.keys() or
+                                          v == v1 or v == v2)  # TODO: We can remove the v1 or the v2 comparison check which
+
+    # Initialize number of chords
     for v in outer_face:
-        # Calculate initial chords
-        update_chords(v, chords, zero_chords, ready_to_pick)
+        for nbr in embedding.get_neighbors(v):
+            if is_on_outer_face(nbr) and not is_outer_face_nbr(v, nbr):
+                chords[v] += 1
+                ready_to_pick.discard(v)
 
+    # Initialize canonical_ordering
     canonical_ordering = [None]*len(embedding.nodes())
+    canonical_ordering[0] = v1
+    canonical_ordering[1] = v2
+    ready_to_pick.discard(v1)
+    ready_to_pick.discard(v2)
 
     for k in range(len(embedding.nodes()), 2, -1):
         # 1. Pick v from ready_to_pick
         v = ready_to_pick.pop()
         marked_nodes.add(v)
         canonical_ordering[k] = v
-        # Obtain outerface
-        current_outerface = []  # TODO
 
-        # Get unmarked neighbors of vk
-        vk_nbrs = current_outerface  # TODO
+        # v has exactly two neighbors on the outer face (wp and wq)
+        wp = None
+        wq = None
+        for nbr in embedding.get_neighbors(v):  # TODO: Break if wp and wq are found
+            if nbr in marked_nodes:
+                # Only consider nodes that are not yet removed
+                continue
+            if is_on_outer_face(nbr):
+                # nbr is either wp or wq
+                if nbr == v1:
+                    wp = v1
+                elif nbr == v2:
+                    wq = v2
+                else:
+                    if outer_face_cw_nbr[nbr] == v:
+                        # nbr is wp
+                        wp = nbr
+                    else:
+                        # nbr is wq
+                        wq = nbr
 
-        for w in vk_nbrs:
-            out.add(v)
-            update_chords(w, chords, zero_chords, ready_to_pick)
-            for w_nbr in embedding.get_neighbors(w):
-                update_chords(w_nbr, chords, zero_chords, ready_to_pick)
+        # Obtain new nodes on outer face (neighbors of v from wp to wq)
+        wp_wq = [wp]  # TODO: Save the new_outerface
+        nbr = wp
+        while nbr != wq:
+            # Get next next neighbor (lies clockwise on the outer face)
+            next_nbr = embedding.ccw_nbr[v][nbr]
+            wp_wq.append(next_nbr)
+            # Update outer face
+            outer_face_cw_nbr[nbr] = next_nbr
+            outer_face_ccw_nbr[next_nbr] = nbr
+            # Move to next neighbor of v
+            nbr = next_nbr
+
+        if len(wp_wq) == 2:
+            # There was a chord between wp and wq, decrease number of chords
+            chords[wp] -= 1
+            if chords[wp] == 0:
+                ready_to_pick.add(wp)
+            chords[wq] -= 1
+            if chords[wq] == 0:
+                ready_to_pick.add(wq)
+        else:
+            new_face_nodes = set(wp_wq[1:-1])
+            for w in new_face_nodes:
+                for nbr in embedding.get_neighbors(w):
+                    if is_on_outer_face(nbr) and not is_outer_face_nbr(w, nbr):
+                        chords[w] += 1
+                        ready_to_pick.discard(w)
+                        if nbr not in new_face_nodes:
+                            # Also increase chord for the neighbor
+                            chords[nbr] += 1
+                            ready_to_pick.discard(nbr)
 
     return canonical_ordering
 
