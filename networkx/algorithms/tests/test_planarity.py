@@ -1,7 +1,7 @@
 import networkx as nx
 from nose.tools import assert_equals, assert_true, raises
 from networkx.algorithms.planarity import get_counterexample
-
+from networkx.algorithms.planarity import check_planarity_recursive
 
 class TestLRPlanarity:
     """Nose Unit tests for the :mod:`networkx.algorithms.planarity` module.
@@ -28,6 +28,7 @@ class TestLRPlanarity:
 
         # obtain results of planarity check
         is_planar_lr, result = nx.check_planarity(G, True)
+        is_planar_lr_rec, result_rec = check_planarity_recursive(G, True)
 
         if is_planar is not None:
             # set a message for the assert
@@ -38,13 +39,16 @@ class TestLRPlanarity:
 
             # check if the result is as expected
             assert_equals(is_planar, is_planar_lr, msg)
+            assert_equals(is_planar, is_planar_lr_rec, msg)
 
         if is_planar_lr:
             # check embedding
             check_embedding(G, result)
+            check_embedding(G, result_rec)
         else:
             # check counter example
             check_counterexample(G, result)
+            check_counterexample(G, result_rec)
 
     def test_simple_planar_graph(self):
         e = [(1, 2), (2, 3), (3, 4), (4, 6), (6, 7), (7, 1), (1, 5),

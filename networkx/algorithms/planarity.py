@@ -64,6 +64,20 @@ def check_planarity(G, counterexample=False):
         # graph is planar
         return True, embedding
 
+# recursive version of check_planarity
+def check_planarity_recursive(G, counterexample=False):
+    planarity_state = LRPlanarity(G)
+    embedding = planarity_state.lr_planarity_recursive()
+    if embedding is None:
+        # graph is not planar
+        if counterexample:
+            return False, get_counterexample_recursive(G)
+        else:
+            return False, None
+    else:
+        # graph is planar
+        return True, embedding
+
 
 def get_counterexample(G):
     """Obtains a Kuratowski subgraph
@@ -97,6 +111,26 @@ def get_counterexample(G):
         for v in nbrs:
             G.remove_edge(u, v)
             if check_planarity(G)[0]:
+                G.add_edge(u, v)
+                subgraph.add_edge(u, v)
+
+    return subgraph
+
+# recursive version of get_counterexample
+def get_counterexample_recursive(G):
+    # copy graph
+    G = nx.Graph(G)
+
+    if check_planarity_recursive(G)[0]:
+        raise nx.NetworkXException("G is planar - no counter example.")
+
+    # find Kuratowski subgraph
+    subgraph = nx.Graph()
+    for u in G:
+        nbrs = list(G[u])
+        for v in nbrs:
+            G.remove_edge(u, v)
+            if check_planarity_recursive(G)[0]:
                 G.add_edge(u, v)
                 subgraph.add_edge(u, v)
 
