@@ -219,10 +219,9 @@ def check_embedding(G, embedding):
         if edge[0] != edge[1]:
             loop_free_graph.add_edge(edge[0], edge[1])
 
-    embedding_graph = embedding.get_graph()
-    assert_equals(loop_free_graph.nodes, embedding_graph.nodes,
+    assert_equals(loop_free_graph.nodes, embedding.nodes,
                   "Bad embedding. Nodes don't match the original graph.")
-    assert_equals(loop_free_graph.edges, embedding_graph.edges,
+    assert_equals(loop_free_graph.edges, embedding.edges,
                   "Bad embedding. Edges don't match the original graph.")
 
 

@@ -1,7 +1,7 @@
 from collections import defaultdict, Mapping
 import networkx as nx
 
-__all__ = ["check_planarity", "PlanarEmbeddingAdjacency"]
+__all__ = ["check_planarity", "PlanarEmbeddingGraph"]
 
 
 def check_planarity(G, counterexample=False):
@@ -235,7 +235,7 @@ class LRPlanarity(object):
         self.left_ref = {}
         self.right_ref = {}
 
-        self.embedding = PlanarEmbeddingAdjacency()
+        self.embedding = PlanarEmbeddingGraph()
 
     def lr_planarity(self):
         """Execute the LR planarity test
@@ -683,11 +683,14 @@ class PlanarEmbeddingGraph(nx.Graph):
         """Returns true if there is an edge between v and w"""
         return w in self._adj.ccw_nbr[v]
 
-    def add_node(self, v):
+    def add_node(self, v, **attr):
         """Adds a node to the embedding if it does not exist"""
         if v not in self._adj.ccw_nbr:
             self._adj.ccw_nbr[v] = {}
             self._adj.cw_nbr[v] = {}
+            self._node[v] = attr
+        else:
+            self._node[v].update(attr)
 
     def add_nodes_from(self, nodes):
         for v in nodes:
@@ -885,8 +888,8 @@ class PlanarEmbeddingAtlas(Mapping):
     __slots__ = ('_start_node', '_nbr_order')
 
     def __init__(self, start_node, nbr_order):
-        self._start_node
-        self._nbr_order
+        self._start_node = start_node
+        self._nbr_order = nbr_order
 
     def __getstate__(self):
         return {'_start_node': self._start_node, '_nbr_order': self._nbr_order}
@@ -904,7 +907,6 @@ class PlanarEmbeddingAtlas(Mapping):
         while self._start_node != current_node:
             yield current_node
             current_node = self._nbr_order[current_node]
-        return iter(self._nbrs)
 
     def __getitem__(self, item):
         if item not in self._nbr_order:
@@ -946,7 +948,7 @@ class PlanarEmbeddingAdjacency(Mapping):
         The resulting embedding is only guaranteed to be valid, if the
         connected nodes were contained in different graph components.
     """
-    __slots__ = ('self.ccw_nbr', 'self.cw_nbr', 'self.first_nbr')
+    __slots__ = ('ccw_nbr', 'cw_nbr', 'first_nbr')
 
     def __init__(self):
         # Maps nodes to a dict mapping neighbor nodes to the ccw neighbor node
@@ -960,7 +962,7 @@ class PlanarEmbeddingAdjacency(Mapping):
         """Converts this object into a dict of list of nodes structure"""
         embedding = dict()
         for v in self.ccw_nbr:
-            embedding[v] = list(self.get_neighbors(v))
+            embedding[v] = list(self[v])
         return embedding
 
     def __setstate__(self, embedding_data):
