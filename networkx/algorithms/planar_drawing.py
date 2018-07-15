@@ -44,7 +44,7 @@ def combinatorial_embedding_to_pos(embedding):
     # 1. Phase
 
     # Initialization
-    v1, v2, v3 = node_list[0], node_list[1], node_list[2]
+    v1, v2, v3 = node_list[0][0], node_list[1][0], node_list[2][0]
 
     delta_x[v1] = 0
     y_coordinate[v1] = 0
@@ -62,19 +62,18 @@ def combinatorial_embedding_to_pos(embedding):
     left_t_child[v3] = Nil
 
     for k in range(3, len(node_list)):
-        vk = node_list[k]
-        contour_neighbor_data = get_contour_neighbors(right_t_child, embedding,
-                                                      delta_x, vk)
-        wp = contour_neighbor_data.wp
-        wp1 = contour_neighbor_data.wp1
-        wq = contour_neighbor_data.wq
-        wq1 = contour_neighbor_data.wq1
-        adds_mult_tri = contour_neighbor_data.adds_mult_tri
-        delta_x_wp_wq = contour_neighbor_data.delta_x_wp_wq
+        vk, contour_neighbors = node_list[k]
+        wp = contour_neighbors[0]
+        wp1 = contour_neighbors[1]
+        wq = contour_neighbors[-1]
+        wq1 = contour_neighbors[-2]
+        adds_mult_tri = len(contour_neighbors) > 2
 
         # Stretch gaps:
         delta_x[wp1] += 1
         delta_x[wq] += 1
+
+        delta_x_wp_wq = sum((delta_x[x] for x in contour_neighbors[1:]))
 
         # Adjust offsets
         delta_x[vk] = (-y_coordinate[wp] + delta_x_wp_wq + y_coordinate[wq])//2
@@ -175,9 +174,9 @@ def get_canonical_ordering(embedding, outer_face):
                 ready_to_pick.discard(v)
 
     # Initialize canonical_ordering
-    canonical_ordering = [None]*len(embedding.nodes())
-    canonical_ordering[0] = v1
-    canonical_ordering[1] = v2
+    canonical_ordering = [None]*len(embedding.nodes())  # type: object
+    canonical_ordering[0] = (v1, [])
+    canonical_ordering[1] = (v2, [])
     ready_to_pick.discard(v1)
     ready_to_pick.discard(v2)
 
@@ -185,7 +184,6 @@ def get_canonical_ordering(embedding, outer_face):
         # 1. Pick v from ready_to_pick
         v = ready_to_pick.pop()
         marked_nodes.add(v)
-        canonical_ordering[k] = v
 
         # v has exactly two neighbors on the outer face (wp and wq)
         wp = None
@@ -241,6 +239,7 @@ def get_canonical_ordering(embedding, outer_face):
                             # Also increase chord for the neighbor
                             chords[nbr] += 1
                             ready_to_pick.discard(nbr)
+        canonical_ordering[k] = (v, wp_wq)
 
     return canonical_ordering
 
@@ -469,7 +468,7 @@ def main():
         embedding = nx.PlanarEmbedding()
         embedding.set_data(embedding_data)
         G = embedding.get_graph()
-        #embedding = None
+        embedding = None
         if not embedding:
             n = 10
             p = 0.9
@@ -481,7 +480,9 @@ def main():
         print("Embedding ", embedding.get_data())
         pos = combinatorial_embedding_to_pos(embedding)
         print("Pos ", pos)
-        nx.draw(G, pos)  # networkx draw()
+        labels = {x: str(x) for x in pos}
+        nx.draw(G, pos)
+        nx.draw_networkx_labels(G, pos, labels)  # networkx draw()
         plt.draw()  # pyplot draw()
         plt.show()
 
