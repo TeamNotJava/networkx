@@ -40,7 +40,6 @@ def combinatorial_embedding_to_pos(embedding):
     y_coordinate = {}
 
     node_list = get_canonical_ordering(embedding, outer_face)
-    print("Start triangle: ", start_triangle)
     print("Canonical ordering: ", node_list)
     # 1. Phase
 
@@ -182,7 +181,7 @@ def get_canonical_ordering(embedding, outer_face):
     ready_to_pick.discard(v1)
     ready_to_pick.discard(v2)
 
-    for k in range(len(embedding.nodes()), 2, -1):
+    for k in range(len(embedding.nodes())-1, 1, -1):
         # 1. Pick v from ready_to_pick
         v = ready_to_pick.pop()
         marked_nodes.add(v)
@@ -233,6 +232,7 @@ def get_canonical_ordering(embedding, outer_face):
         else:
             new_face_nodes = set(wp_wq[1:-1])
             for w in new_face_nodes:
+                ready_to_pick.add(w)
                 for nbr in embedding.get_neighbors(w):
                     if is_on_outer_face(nbr) and not is_outer_face_nbr(w, nbr):
                         chords[w] += 1
@@ -464,26 +464,26 @@ class Nil:
 
 def main():
     import matplotlib.pyplot as plt
-
-    embedding_data = {0: [2, 6], 1: [3], 2: [0, 3, 9, 7, 6], 3: [2, 7, 1], 4: [7, 9], 5: [7], 6: [7, 0, 2, 8], 7: [3, 6, 2, 4, 5], 8: [6], 9: [4, 2]}
-    embedding = nx.PlanarEmbedding()
-    embedding.set_data(embedding_data)
-    G = embedding.get_graph()
-    #embedding = None
-    if not embedding:
-        n = 10
-        p = 0.9
-        is_planar = False
-        while not is_planar:
-            G = nx.fast_gnp_random_graph(n, p)
-            is_planar, embedding = nx.check_planarity(G)
-            p /= 2
-    print("Embedding ", embedding)
-    pos = combinatorial_embedding_to_pos(embedding)
-    print("Pos ", pos)
-    nx.draw(G, pos)  # networkx draw()
-    plt.draw()  # pyplot draw()
-    plt.show()
+    while True:
+        embedding_data = {0: [1, 8], 1: [0, 3, 7], 2: [4, 7], 3: [1, 8], 4: [8, 2, 7, 5, 9], 5: [4], 6: [7], 7: [2, 1, 4, 6], 8: [3, 0, 4], 9: [4]}
+        embedding = nx.PlanarEmbedding()
+        embedding.set_data(embedding_data)
+        G = embedding.get_graph()
+        #embedding = None
+        if not embedding:
+            n = 10
+            p = 0.9
+            is_planar = False
+            while not is_planar:
+                G = nx.fast_gnp_random_graph(n, p)
+                is_planar, embedding = nx.check_planarity(G)
+                p /= 2
+        print("Embedding ", embedding.get_data())
+        pos = combinatorial_embedding_to_pos(embedding)
+        print("Pos ", pos)
+        nx.draw(G, pos)  # networkx draw()
+        plt.draw()  # pyplot draw()
+        plt.show()
 
 
 if __name__ == '__main__':
