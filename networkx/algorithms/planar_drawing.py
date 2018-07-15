@@ -205,9 +205,12 @@ def get_canonical_ordering(embedding, outer_face):
                     else:
                         # nbr is wq
                         wq = nbr
+            if wp is not None and wq is not None:
+                # We don't need to iterate any further
+                break
 
         # Obtain new nodes on outer face (neighbors of v from wp to wq)
-        wp_wq = [wp]  # TODO: Save the new_outerface
+        wp_wq = [wp]
         nbr = wp
         while nbr != wq:
             # Get next next neighbor (lies clockwise on the outer face)
@@ -228,17 +231,22 @@ def get_canonical_ordering(embedding, outer_face):
             if chords[wq] == 0:
                 ready_to_pick.add(wq)
         else:
+            # Update all chords involving w_(p+1) to w_(q-1)
             new_face_nodes = set(wp_wq[1:-1])
             for w in new_face_nodes:
+                # If we do not find a chord for w later we can pick it next
                 ready_to_pick.add(w)
                 for nbr in embedding.get_neighbors(w):
                     if is_on_outer_face(nbr) and not is_outer_face_nbr(w, nbr):
+                        # There is a chord involving w
                         chords[w] += 1
                         ready_to_pick.discard(w)
                         if nbr not in new_face_nodes:
                             # Also increase chord for the neighbor
+                            # We only iterator over new_face_nodes
                             chords[nbr] += 1
                             ready_to_pick.discard(nbr)
+        # Set the canonical ordering node and the list of contour neighbors
         canonical_ordering[k] = (v, wp_wq)
 
     return canonical_ordering
