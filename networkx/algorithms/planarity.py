@@ -658,6 +658,21 @@ class LRPlanarity(object):
 
 
 class PlanarEmbeddingGraph(nx.Graph):
+    """
+    This class maintains an order on the outgoing edges for each node.
+    In order to represent a valid planar embedding of a Graph each edge of the
+    graph must be represented by two half edges in either direction.
+
+    There are two different ways to add edges to the planar embedding:
+    - add_half_edge_{ccw,cw} : Inserts one half edge at a specific position.
+        This method takes constant amount of time.
+        The resulting embedding is not guaranteed to be valid.
+
+    - add_edge_between_components : Adds two half edges between some random edges.
+        This method takes a constant amount of time.
+        The resulting embedding is only guaranteed to be valid, if the
+        connected nodes were contained in different graph components.
+    """
     def __init__(self, graph=None):
         if graph is not None:
             self.graph = graph.graph
@@ -849,6 +864,14 @@ class PlanarEmbeddingGraph(nx.Graph):
         reference = self._adj.first_nbr.get(start_node, None)
         self.add_half_edge_ccw(start_node, end_node, reference)
 
+    def get_cw_neighbor(self, v, reference_node):
+        """Returns the neighbor of v clockwise of reference_node"""
+        return self._adj.cw_nbr[v][reference_node]
+
+    def get_ccw_neighbor(self, v, reference_node):
+        """Returns the neighbor of v counter clockwise of reference_node"""
+        return self._adj.ccw_nbr[v][reference_node]
+
     def next_face_half_edge(self, v, w):
         """Returns the following half edge left of a face"""
         new_node = self._adj.ccw_nbr[w][v]
@@ -927,27 +950,6 @@ class PlanarEmbeddingAtlas(Mapping):
 
 
 class PlanarEmbeddingAdjacency(Mapping):
-    """ Represents a planar embedding.
-
-    This class maintains an order on the outgoing edges for each node.
-    In order to represent a valid planar embedding of a Graph each edge of the
-    graph must be represented by two half edges in either direction.
-
-    There are three different ways to add edges to the planar embedding:
-    - add_half_edge_{ccw,cw} : Inserts one half edge at a specific position.
-        This method takes constant amount of time.
-        The resulting embedding is not guaranteed to be valid.
-
-    - add_edge_{ccw,cw} : Inserts two half edges at a specific position.
-        This method cannot be used if the nodes are in different components
-        The method can takes more time for larger graphs.
-        If no exception is thrown the embedding stays valid afterwards.
-
-    - add_edge : Adds two half edges between some random edges.
-        This method takes a constant amount of time.
-        The resulting embedding is only guaranteed to be valid, if the
-        connected nodes were contained in different graph components.
-    """
     __slots__ = ('ccw_nbr', 'cw_nbr', 'first_nbr')
 
     def __init__(self):
