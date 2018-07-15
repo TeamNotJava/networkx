@@ -27,7 +27,7 @@ def combinatorial_embedding_to_pos(embedding):
             pos[v] = default_positions[i]
         return pos
 
-    embedding, start_triangle = triangulate_embedding(embedding)
+    embedding, outer_face = triangulate_embedding(embedding)
 
     # The following dicts map a node to another node
     # If a node is not in the key set it means that the node is not yet in G_k
@@ -39,7 +39,7 @@ def combinatorial_embedding_to_pos(embedding):
     delta_x = {}
     y_coordinate = {}
 
-    node_list = get_canonical_ordering(embedding, start_triangle)
+    node_list = get_canonical_ordering(embedding, outer_face)
     print("Start triangle: ", start_triangle)
     print("Canonical ordering: ", node_list)
     # 1. Phase
@@ -121,72 +121,55 @@ def set_absolute_position(parent, tree, remaining_nodes, delta_x, y_coordinate, 
         remaining_nodes.append(child)
 
 
-def get_canonical_ordering(embedding, start_triangle):
+def update_chords(v, chords, zero_chords, ready_to_pick):
+    pass  # TODO
+
+
+def get_canonical_ordering(embedding, outer_face):
     """Returns a canonical ordering of the nodes
 
     Parameters
     ----------
     embedding : nx.PlanarEmbedding
         The embedding is already fully triangulated
-    start_triangle : tuple
-        The nodes (v1, v2, v3) that build the initial triangle in the algorithm
+    outer_face : list
+        The nodes on the outer face of the graph
 
     Returns
     -------
     node_list : list
         All nodes in the canonical ordering
     """
+    chords = defaultdict(int)  # Maps nodes to number of chords
+    zero_chords = set()  # Set of all nodes with 0 chords
+    out = set()  # Set of nodes on the outside of the graph
+    marked_nodes = set()
+    ready_to_pick = set()
 
-    # Set v1, v2 and v3
-    v1, v2, v3 = start_triangle
+    for v in outer_face:
+        # Calculate initial chords
+        update_chords(v, chords, zero_chords, ready_to_pick)
 
-    # Maintain a list for the result and a set for fast queries
-    node_list = [v1, v2]
-    node_set = set(node_list)
+    canonical_ordering = [None]*len(embedding.nodes())
 
-    # Remaining node stack
-    insertable_nodes = [v3]
+    for k in range(len(embedding.nodes()), 2, -1):
+        # 1. Pick v from ready_to_pick
+        v = ready_to_pick.pop()
+        marked_nodes.add(v)
+        canonical_ordering[k] = v
+        # Obtain outerface
+        current_outerface = []  # TODO
 
-    # Obtain remaining order
-    while len(node_list) != len(embedding.nodes()):
-        vk = insertable_nodes.pop()
-        if vk not in node_set:
-            # vk is the next node in the canonical ordering
-            node_set.add(vk)
-            node_list.append(vk)
+        # Get unmarked neighbors of vk
+        vk_nbrs = current_outerface  # TODO
 
-            all_vk_nbrs_in_contour = True
-            # vk is the next node in the canonical ordering
-            for v_next in embedding.get_neighbors(vk):
-                if v_next in node_set:
-                    continue
+        for w in vk_nbrs:
+            out.add(v)
+            update_chords(w, chords, zero_chords, ready_to_pick)
+            for w_nbr in embedding.get_neighbors(w):
+                update_chords(w_nbr, chords, zero_chords, ready_to_pick)
 
-                all_vk_nbrs_in_contour = False
-
-                # Check if v_next can be added to the subgraph
-                vk_ccw_nbr1 = embedding.ccw_nbr[vk][v_next]
-                vk_ccw_nbr2 = embedding.ccw_nbr[vk][vk_ccw_nbr1]
-                if (vk_ccw_nbr1 in node_set and vk_ccw_nbr2 in node_set and
-                        embedding.has_edge(vk_ccw_nbr1, vk_ccw_nbr2) and
-                        embedding.has_edge(vk_ccw_nbr1, v_next)):
-                    insertable_nodes.append(v_next)
-
-                vk_cw_nbr1 = embedding.cw_nbr[vk][v_next]
-                vk_cw_nbr2 = embedding.cw_nbr[vk][vk_cw_nbr1]
-                if (vk_cw_nbr1 in node_set and vk_cw_nbr2 in node_set and
-                        embedding.has_edge(vk_cw_nbr1, vk_cw_nbr2) and
-                        embedding.has_edge(vk_cw_nbr1, v_next)):
-                    insertable_nodes.append(v_next)
-
-            if all_vk_nbrs_in_contour:
-                # If there is an edge surrounding vk add the node at the other side
-                for nbr1 in embedding.get_neighbors(vk):
-                    nbr2 = embedding.cw_nbr[vk][nbr1]
-                    v_next = embedding.ccw_nbr[nbr1][nbr2]
-                    if v_next not in node_set:
-                        insertable_nodes.append(v_next)
-
-    return node_list
+    return canonical_ordering
 
 
 def get_contour_neighbors(right_t_child, embedding, delta_x, vk):
@@ -269,8 +252,6 @@ def triangulate_face(embedding, v1, v2):
         _, v4 = embedding.next_face_half_edge(v2, v3)
 
 
-
-
 def triangulate_embedding(embedding):
     """Triangulates the embedding.
 
@@ -336,11 +317,7 @@ def triangulate_embedding(embedding):
         print("Current face: ", face)
         triangulate_face(embedding, face[0], face[1])
 
-    # 4. Choose start_triangle
-    v1 = outer_face[0]
-    v2 = outer_face[1]
-    _, v3 = embedding.next_face_half_edge(v2, v1)
-    return embedding, (v1, v2, v3)
+    return embedding, outer_face
 
 
 def make_bi_connected(embedding, starting_node, outgoing_node, edges_counted):
