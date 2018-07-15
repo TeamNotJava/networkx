@@ -5,7 +5,7 @@ from collections import namedtuple, defaultdict
 __all__ = ["combinatorial_embedding_to_pos"]
 
 
-def combinatorial_embedding_to_pos(embedding):
+def combinatorial_embedding_to_pos(embedding, fully_triangulate=False):
     """Assigns every node a (x, y) position based on the given embedding
 
     Parameters
@@ -27,7 +27,7 @@ def combinatorial_embedding_to_pos(embedding):
             pos[v] = default_positions[i]
         return pos
 
-    embedding, outer_face = triangulate_embedding(embedding)
+    embedding, outer_face = triangulate_embedding(embedding, fully_triangulate)
 
     # The following dicts map a node to another node
     # If a node is not in the key set it means that the node is not yet in G_k
@@ -244,64 +244,6 @@ def get_canonical_ordering(embedding, outer_face):
     return canonical_ordering
 
 
-def get_contour_neighbors(right_t_child, embedding, delta_x, vk):
-    """Returns sorted neighbors of v_k that are in C_k-1 (w_p, ..., w_q)
-
-    # TODO: Reformulate this explanation
-    Consider the graph G_(k-1), which is the subgraph induced by node_list[0:k].
-    We can obtain the contour of it using the embedding and numerate the nodes
-    according to their absolute x position: w_1, ..., w_m.
-    We return all neighbors of the node v_k=node_list[k] that are in this contour
-    and keep the order described above. We also return the indices p and q, such
-    that w_p is the first neighbor in the contour and w_q the last neighbor.
-
-    Note that because the graph is fully triangulated there are no nodes between
-    w_p and w_q that are not also a neighbor of v_k. So we only need to consider
-    the neighbors of v_k. We can find out if a neighbor of v_k lies on C_(n-1) by
-    checking if an entry in right_t_child already exists.
-    This way we can filter the neighbors of v_k such that only the ones in C_(n-1)
-    remain. We then need to find the first and last node in x direction to get w_p
-    and w_q. For i in [p, ..., q-1] it holds that right_t_child[w_i] is a neighbor
-    of v_k, but for w_q this does not hold. So we have a way to determine w_q and
-    because we know in which sequence the neighbors occur we directly have w_(q-1)
-    w_p and w_(p+1).
-
-    Parameters
-    ----------
-    right_t_child : dict
-    embedding : nx.PlanarEmbedding
-    delta_x : dict
-    vk : node
-    """
-    # Calculate neighbors of v_k on the contour of G_(k-1)
-    all_neighbors = embedding.get_neighbors(vk)
-    contour_neighbors = list(filter(lambda w: w in right_t_child, all_neighbors))
-    contour_neighbors_set = set(contour_neighbors)
-
-    # Determine idx of w_q in contour_neighbors
-    for q_idx in range(len(contour_neighbors)):
-        if right_t_child[contour_neighbors[q_idx]] not in contour_neighbors_set:
-            # contour_neighbors[idx] is w_q
-            break
-
-    # Determine all relevant contour neighbors
-    wq = contour_neighbors[q_idx]
-    wq1 = contour_neighbors[(q_idx + 1) % len(contour_neighbors)]
-    wp = contour_neighbors[q_idx-1]
-    wp1 = contour_neighbors[q_idx-2]  # Note that len(contour_neighbors) >= 2
-
-    # Determine if v_k only adds multiple triangles
-    adds_mult_tri = len(contour_neighbors) > 2
-
-    # Calculate delta x(w_p, w_q)
-    delta_x_wp_wq = 2  # +2 because the gaps are later stretched
-    for idx in range(len(contour_neighbors)):
-        if idx != (q_idx + 1) % len(contour_neighbors):  # Exclude w_p
-            delta_x_wp_wq += delta_x[contour_neighbors[idx]]
-
-    return ContourNeighborData(wp, wp1, wq1, wq, delta_x_wp_wq, adds_mult_tri)
-
-
 def triangulate_face(embedding, v1, v2):
     """Triangulates the face given by half edge (v, w)"""
     _, v3 = embedding.next_face_half_edge(v1, v2)
@@ -316,7 +258,6 @@ def triangulate_face(embedding, v1, v2):
             v1, v2, v3 = v2, v3, v4
         else:
             # Add edge for triangulation
-            print("Add edge: ", v1, " ", v3)
             embedding.add_half_edge_cw(v1, v3, v2)
             embedding.add_half_edge_ccw(v3, v1, v2)
             v1, v2, v3 = v1, v3, v4
@@ -324,7 +265,7 @@ def triangulate_face(embedding, v1, v2):
         _, v4 = embedding.next_face_half_edge(v2, v3)
 
 
-def triangulate_embedding(embedding):
+def triangulate_embedding(embedding, fully_triangulate=False):
     """Triangulates the embedding.
 
     Chooses the face that has the most vertices as the outer face. All other
@@ -374,20 +315,22 @@ def triangulate_embedding(embedding):
             new_face = make_bi_connected(embedding, v, w, edges_visited)
             if new_face:
                 # Found a new face
-                print("Found face: ", new_face)
                 face_list.append(new_face)
                 if len(new_face) > len(outer_face):
                     outer_face = new_face
 
-    print("Outer face ", outer_face)
-    print("Face list", face_list)
     # 3. Triangulate internal faces
     for face in face_list:
-        if face is outer_face:  # TODO: Test the output if th
+        if face is outer_face and not fully_triangulate:
+            # Don't triangulate this face
             continue
-
-        print("Current face: ", face)
         triangulate_face(embedding, face[0], face[1])
+
+    if fully_triangulate:
+        v1 = outer_face[0]
+        v2 = outer_face[1]
+        v3 = embedding.ccw_nbr[v2][v1]
+        outer_face = [v1, v2, v3]
 
     return embedding, outer_face
 
@@ -427,7 +370,6 @@ def make_bi_connected(embedding, starting_node, outgoing_node, edges_counted):
     while v2 != starting_node or v3 != outgoing_node:
         # cycle is not completed yet
         if v2 in face_set:
-            print("Added biconnect edge: ", v1, " ", v3)
             embedding.add_half_edge_cw(v1, v3, v2)
             embedding.add_half_edge_ccw(v3, v1, v2)
             edges_counted.add((v2, v3))
@@ -448,11 +390,6 @@ def make_bi_connected(embedding, starting_node, outgoing_node, edges_counted):
     return face_list
 
 
-ContourNeighborData = namedtuple('ContourNeighborData',
-                                 ['wp', 'wp1', 'wq1', 'wq', 'delta_x_wp_wq',
-                                  'adds_mult_tri'])
-
-
 class Nil:
     """A class to represent that a node is not present
 
@@ -463,29 +400,20 @@ class Nil:
 
 def main():
     import matplotlib.pyplot as plt
-    while True:
-        embedding_data = {0: [1, 8], 1: [0, 3, 7], 2: [4, 7], 3: [1, 8], 4: [8, 2, 7, 5, 9], 5: [4], 6: [7], 7: [2, 1, 4, 6], 8: [3, 0, 4], 9: [4]}
-        embedding = nx.PlanarEmbedding()
-        embedding.set_data(embedding_data)
-        G = embedding.get_graph()
-        embedding = None
-        if not embedding:
-            n = 10
-            p = 0.9
-            is_planar = False
-            while not is_planar:
-                G = nx.fast_gnp_random_graph(n, p)
-                is_planar, embedding = nx.check_planarity(G)
-                p /= 2
-        print("Embedding ", embedding.get_data())
-        pos = combinatorial_embedding_to_pos(embedding)
-        print("Pos ", pos)
-        labels = {x: str(x) for x in pos}
-        nx.draw(G, pos)
-        nx.draw_networkx_labels(G, pos, labels)  # networkx draw()
-        plt.draw()  # pyplot draw()
-        plt.show()
 
+    while True:
+        n = 50
+        p = 1.0
+        is_planar = False
+        while not is_planar:
+            G = nx.fast_gnp_random_graph(n, p)
+            is_planar, embedding = nx.check_planarity(G)
+            p *= 0.99
+        print("Embedding: ", embedding.get_data())
+        pos = combinatorial_embedding_to_pos(embedding)
+        nx.draw(G, pos, node_size=2)
+        plt.draw()
+        plt.show()
 
 if __name__ == '__main__':
     main()
