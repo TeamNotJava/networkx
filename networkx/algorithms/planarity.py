@@ -187,6 +187,7 @@ class LRPlanarity(object):
         self.DG = nx.DiGraph()
         self.DG.add_nodes_from(G.nodes)
 
+        self.adjs = {}
         self.ordered_adjs = {}
 
         self.ref = defaultdict(lambda: None)
@@ -213,6 +214,10 @@ class LRPlanarity(object):
         if self.G.order() > 2 and self.G.size() > 3 * self.G.order() - 6:
             # graph is not planar
             return None
+
+        # make adjacency lists for dfs
+        for v in self.G:
+            self.adjs[v] = list(self.G[v])
 
         # orientation of the graph by depth first search traversal
         for v in self.G:
@@ -254,6 +259,59 @@ class LRPlanarity(object):
 
     # orient the graph by DFS-traversal, compute lowpoints and nesting order
     def dfs_orientation(self, v):
+        # the recursion stack
+        dfs_stack = [v]
+        # index of next edge to handle in adjacency list of each node
+        ind = defaultdict(lambda: 0)
+        # boolean to indicate whether to skip the initial work for an edge
+        skip_init = defaultdict(lambda: False)
+
+        while dfs_stack:
+            v = dfs_stack.pop()
+            e = self.parent_edge[v]
+
+            for w in self.adjs[v][ind[v]:]:
+                vw = (v, w)
+
+                if not skip_init[vw]:
+                    if (v, w) in self.DG.edges or (w, v) in self.DG.edges:
+                        ind[v] += 1
+                        continue  # the edge was already oriented
+
+                    self.DG.add_edge(v, w)  # orient the edge
+
+                    self.lowpt[vw] = self.height[v]
+                    self.lowpt2[vw] = self.height[v]
+                    if self.height[w] is None:  # (v, w) is a tree edge
+                        self.parent_edge[w] = vw
+                        self.height[w] = self.height[v] + 1
+
+                        dfs_stack.append(v) # revisit v after finishing w
+                        dfs_stack.append(w) # visit w next
+                        skip_init[vw] = True # don't redo this block
+                        break # handle next node in dfs_stack (i.e. w)
+                    else:  # (v, w) is a back edge
+                        self.lowpt[vw] = self.height[w]
+
+                # determine nesting graph
+                self.nesting_depth[vw] = 2 * self.lowpt[vw]
+                if self.lowpt2[vw] < self.height[v]:  # chordal
+                    self.nesting_depth[vw] += 1
+
+                # update lowpoints of parent edge e
+                if e is not None:
+                    if self.lowpt[vw] < self.lowpt[e]:
+                        self.lowpt2[e] = min(self.lowpt[e], self.lowpt2[vw])
+                        self.lowpt[e] = self.lowpt[vw]
+                    elif self.lowpt[vw] > self.lowpt[e]:
+                        self.lowpt2[e] = min(self.lowpt2[e], self.lowpt[vw])
+                    else:
+                        self.lowpt2[e] = min(self.lowpt2[e], self.lowpt2[vw])
+
+                ind[v] += 1
+
+    # recursive version of dfs_orientation
+    def dfs_orientation_recursive(self, v):
         e = self.parent_edge[v]
         for w in self.G[v]:
             if (v, w) in self.DG.edges or (w, v) in self.DG.edges:
@@ -266,7 +324,7 @@ class LRPlanarity(object):
             if self.height[w] is None:  # (v, w) is a tree edge
                 self.parent_edge[w] = vw
                 self.height[w] = self.height[v] + 1
-                self.dfs_orientation(w)
+                self.dfs_orientation_recursive(w)
             else:  # (v, w) is a back edge
                 self.lowpt[vw] = self.height[w]
 
@@ -287,12 +345,61 @@ class LRPlanarity(object):
 
     def dfs_testing(self, v):
         """Test for LR partition"""
+        # the recursion stack
+        dfs_stack = [v]
+        # index of next edge to handle in adjacency list of each node
+        ind = defaultdict(lambda: 0)
+        # boolean to indicate whether to skip the initial work for an edge
+        skip_init = defaultdict(lambda: False)
+
+        while dfs_stack:
+            v = dfs_stack.pop()
+            e = self.parent_edge[v]
+            # to indicate whether to skip the final block after the for loop
+            skip_final = False
+
+            for w in self.ordered_adjs[v][ind[v]:]:
+                ei = (v, w)
+
+                if not skip_init[ei]:
+                    self.stack_bottom[ei] = top_of_stack(self.S)
+
+                    if ei == self.parent_edge[w]:  # tree edge
+                        dfs_stack.append(v) # revisit v after finishing w
+                        dfs_stack.append(w) # visit w next
+                        skip_init[ei] = True # don't redo this block
+                        skip_final = True # skip final work after breaking
+                        break # handle next node in dfs_stack (i.e. w)
+                    else:  # back edge
+                        self.lowpt_edge[ei] = ei
+                        self.S.append(ConflictPair(right=Interval(ei, ei)))
+
+                # integrate new return edges
+                if self.lowpt[ei] < self.height[v]:
+                    if w == self.ordered_adjs[v][0]:  # e_i has return edge
+                        self.lowpt_edge[e] = self.lowpt_edge[ei]
+                    else:  # add constraints of e_i
+                        if not self.add_constraints(ei, e):
+                            # graph is not planar
+                            return False
+
+                ind[v] += 1
+
+            if not skip_final:
+                # remove back edges returning to parent
+                if e is not None:  # v isn't root
+                    self.remove_back_edges(e)
+
+        return True
+
+    # recursive version of dfs_testing
+    def dfs_testing_recursive(self, v):
         e = self.parent_edge[v]
         for w in self.ordered_adjs[v]:
             ei = (v, w)
             self.stack_bottom[ei] = top_of_stack(self.S)
             if ei == self.parent_edge[w]:  # tree edge
-                if not self.dfs_testing(w):
+                if not self.dfs_testing_recursive(w):
                     return False
             else:  # back edge
                 self.lowpt_edge[ei] = ei
@@ -397,13 +504,44 @@ class LRPlanarity(object):
 
     # complete the embedding
     def dfs_embedding(self, v):
+        # the recursion stack
+        dfs_stack = [v]
+        # index of next edge to handle in adjacency list of each node
+        ind = defaultdict(lambda: 0)
+
+        while dfs_stack:
+            v = dfs_stack.pop()
+
+            for w in self.ordered_adjs[v][ind[v]:]:
+                ind[v] += 1
+                ei = (v, w)
+
+                if ei == self.parent_edge[w]:  # tree edge
+                    self.embedding.add_half_edge_first(w, v)
+                    self.left_ref[v] = w
+                    self.right_ref[v] = w
+
+                    dfs_stack.append(v) # revisit v after finishing w
+                    dfs_stack.append(w) # visit w next
+                    break # handle next node in dfs_stack (i.e. w)
+                else:  # back edge
+                    if self.side[ei] == 1:
+                        # place v directly after right_ref[w] in embed. list of w
+                        self.embedding.add_half_edge_cw(w, v, self.right_ref[w])
+                    else:
+                        # place v directly before left_ref[w] in embed. list of w
+                        self.embedding.add_half_edge_ccw(w, v, self.left_ref[w])
+                        self.left_ref[w] = v
+
+    # recursive version of dfs_embedding
+    def dfs_embedding_recursive(self, v):
         for w in self.ordered_adjs[v]:
             ei = (v, w)
             if ei == self.parent_edge[w]:  # tree edge
                 self.embedding.add_half_edge_first(w, v)
                 self.left_ref[v] = w
                 self.right_ref[v] = w
-                self.dfs_embedding(w)
+                self.dfs_embedding_recursive(w)
             else:  # back edge
                 if self.side[ei] == 1:
                     # place v directly after right_ref[w] in embed. list of w
@@ -415,8 +553,28 @@ class LRPlanarity(object):
 
     # function to resolve the relative side of an edge to the absolute side
     def sign(self, e):
+        # the recursion stack
+        dfs_stack = [e]
+        # dict to remember reference edges
+        old_ref = defaultdict(lambda: None)
+
+        while dfs_stack:
+            e = dfs_stack.pop()
+
+            if self.ref[e] is not None:
+                dfs_stack.append(e) # revisit e after finishing self.ref[e]
+                dfs_stack.append(self.ref[e]) # visit self.ref[e] next
+                old_ref[e] = self.ref[e] # remember value of self.ref[e]
+                self.ref[e] = None
+            else:
+                self.side[e] *= self.side[old_ref[e]]
+
+        return self.side[e]
+
+    # recursive version of sign
+    def sign_recursive(self, e):
         if self.ref[e] is not None:
-            self.side[e] = self.side[e] * self.sign(self.ref[e])
+            self.side[e] = self.side[e] * self.sign_recursive(self.ref[e])
             self.ref[e] = None
         return self.side[e]
 
