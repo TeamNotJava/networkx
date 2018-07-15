@@ -198,7 +198,7 @@ def check_embedding(G, embedding):
         - No intersections of edges (checked by Euler's formula)
     """
 
-    if not isinstance(embedding, nx.PlanarEmbedding):
+    if not isinstance(embedding, nx.PlanarEmbeddingGraph):
         raise nx.NetworkXException(
             "Bad embedding. Not of type nx.PlanarEmbedding")
 

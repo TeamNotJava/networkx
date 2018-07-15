@@ -1,7 +1,7 @@
-from collections import defaultdict
+from collections import defaultdict, Mapping
 import networkx as nx
 
-__all__ = ["check_planarity", "PlanarEmbedding"]
+__all__ = ["check_planarity", "PlanarEmbeddingAdjacency"]
 
 
 def check_planarity(G, counterexample=False):
@@ -235,7 +235,7 @@ class LRPlanarity(object):
         self.left_ref = {}
         self.right_ref = {}
 
-        self.embedding = PlanarEmbedding()
+        self.embedding = PlanarEmbeddingAdjacency()
 
     def lr_planarity(self):
         """Execute the LR planarity test
@@ -657,7 +657,274 @@ class LRPlanarity(object):
         return self.side[e]
 
 
-class PlanarEmbedding:
+class PlanarEmbeddingGraph(nx.Graph):
+    def __init__(self, graph=None):
+        if graph is not None:
+            self.graph = graph.graph
+            self._node = graph._node
+        else:
+            self.graph = {}
+            self._node = {}
+        self._adj = PlanarEmbeddingAdjacency()
+
+    def add_edge(self, *args, **kwds):
+        msg = "Planar embedding graphs do not support the add_edge method."
+        raise nx.NetworkXError(msg)
+
+    def add_edges_from(self, *args, **kwds):
+        msg = "Planar embedding graphs do not support the add_edges_from method."
+        raise nx.NetworkXError(msg)
+
+    def add_weighted_edges_from(self, *args, **kwds):
+        msg = "Planar embedding graphs do not support the add_weighted_edges_from method."
+        raise nx.NetworkXError(msg)
+
+    def has_edge(self, v, w):
+        """Returns true if there is an edge between v and w"""
+        return w in self._adj.ccw_nbr[v]
+
+    def add_node(self, v):
+        """Adds a node to the embedding if it does not exist"""
+        if v not in self._adj.ccw_nbr:
+            self._adj.ccw_nbr[v] = {}
+            self._adj.cw_nbr[v] = {}
+
+    def add_nodes_from(self, nodes):
+        for v in nodes:
+            self.add_node(v)
+
+    def remove_edge(self, v, w):
+        """Removes both half edges between v and w.
+
+        Raises an exception if not BOTH half edges are present.
+        The complexity is constant."""
+        if not self.has_edge(v, w):
+            raise nx.NetworkXException("Cannot remove edge. Edge not present.")
+        self.remove_half_edge(v, w)
+        self.remove_half_edge(w, v)
+
+    def remove_half_edge(self, v, w):
+        """ Removes the half edge (v, w)
+        """
+        if len(self._adj.ccw_nbr[v]) == 1:
+            self._adj.ccw_nbr[v] = {}
+            del self._adj.first_nbr[v]
+        else:
+            ccw_neighbor = self._adj.ccw_nbr[v][w]
+            cw_neighbor = self._adj.cw_nbr[v][w]
+            self._adj.cw_nbr[v][ccw_neighbor] = cw_neighbor
+            self._adj.ccw_nbr[v][cw_neighbor] = ccw_neighbor
+            self._adj.first_nbr[v] = cw_neighbor
+
+    def check_structure(self):
+        """Returns true if every half edge has its opposite half edge"""
+        for v in self._adj.ccw_nbr:
+            for w in self._adj.ccw_nbr[v]:
+                # Check that half edge (w, v) exists
+                if v not in self._adj.ccw_nbr[w]:
+                    return False
+        return True
+
+    def check_intersection(self):
+        """Returns true if there are no intersections of edges"""
+        counted_half_edges = set()
+        for component in nx.connected_components(self):
+            if len(component) == 1:
+                # Don't need to check single node component
+                continue
+            num_nodes = len(component)
+            num_half_edges = 0
+            num_faces = 0
+            for v in component:
+                for w in self[v]:
+                    num_half_edges += 1
+                    if (v, w) not in counted_half_edges:
+                        # We encountered a new face
+                        num_faces += 1
+                        # Mark all half edges belonging to this face
+                        try:
+                            self.traverse_face(v, w, counted_half_edges)
+                        except nx.NetworkXException:
+                            # The face is invalid
+                            return False
+            if num_half_edges % 2 != 0:
+                # There must be an even number of half edges
+                return False
+            num_edges = num_half_edges // 2
+            if num_nodes - num_edges + num_faces != 2:
+                # The result does not match Euler's formula
+                return False
+        # All components match Euler's formula
+        return True
+
+    def add_half_edge_ccw(self, start_node, end_node, reference_neighbor):
+        """Adds a half edge from start_node to end_node.
+
+        The half edge is added counter clockwise next to the existing half edge
+        (start_node, reference_neighbor).
+
+        Calling this method can break the embedding.
+
+        Raises an exception if the reference half edge does not exist.
+
+        If there are no hash table collisions the complexity is constant.
+        """
+        if reference_neighbor is None and len(self._adj.ccw_nbr[start_node]) == 0:
+            # The start node has no neighbors
+            self._adj.ccw_nbr[start_node][end_node] = end_node
+            self._adj.cw_nbr[start_node][end_node] = end_node
+            self._adj.first_nbr[start_node] = end_node
+        else:
+            ccw_reference = self._adj.ccw_nbr[start_node][reference_neighbor]
+            self.add_half_edge_cw(start_node, end_node, ccw_reference)
+
+            if reference_neighbor == self._adj.first_nbr[start_node]:
+                # Update first neighbor
+                self._adj.first_nbr[start_node] = end_node
+
+    def add_half_edge_cw(self, start_node, end_node, reference_neighbor):
+        """Adds a half edge from start_node to end_node.
+
+        The half edge is added clockwise next to the existing half edge
+        (start_node, reference_neighbor).
+
+        Calling this method can break the embedding.
+
+        Raises an exception if the reference half edge does not exist, or if
+        adding the specified edge would break the planar embedding.
+
+        If there are no hash table collisions the complexity is constant.
+        """
+        ccw_order = self._adj.ccw_nbr[start_node]
+        cw_order = self._adj.cw_nbr[start_node]
+        if reference_neighbor is None and len(cw_order) == 0:
+            # The start node has no neighbors
+            ccw_order[end_node] = end_node
+            cw_order[end_node] = end_node
+            self._adj.first_nbr[start_node] = end_node
+            return
+        if self.has_edge(start_node, end_node):
+            raise nx.NetworkXException("Cannot add edge. Edge already present")
+        if reference_neighbor not in cw_order:
+            raise nx.NetworkXException(
+                "Cannot add edge. Reference neighbor does not exist")
+        # Get half edge at the other side
+        cw_reference = cw_order[reference_neighbor]
+        # Alter half edge data structures
+        cw_order[reference_neighbor] = end_node
+        cw_order[end_node] = cw_reference
+        ccw_order[cw_reference] = end_node
+        ccw_order[end_node] = reference_neighbor
+
+    def add_edge_between_components(self, v, w):
+        """Adds half edges for (v, w) and (w, v) at some position.
+
+        This method should only be called if v and w are in different
+        components, or it might break the embedding.
+
+        The complexity is constant.
+        """
+        if self.has_edge(v, w):
+            # Edge already present
+            raise nx.NetworkXException("Edge is already present")
+
+        if len(self._adj.cw_nbr[v]) == 0:
+            self._adj.cw_nbr[v][w] = w
+            self._adj.ccw_nbr[v][w] = w
+            self._adj.first_nbr[v] = w
+        else:
+            self.add_half_edge_first(v, w)
+
+        if len(self._adj.cw_nbr[w]) == 0:
+            self._adj.cw_nbr[w][v] = v
+            self._adj.ccw_nbr[w][v] = v
+            self._adj.first_nbr[w] = v
+        else:
+            self.add_half_edge_first(w, v)
+
+    def add_half_edge_first(self, start_node, end_node):
+        reference = self._adj.first_nbr.get(start_node, None)
+        self.add_half_edge_ccw(start_node, end_node, reference)
+
+    def next_face_half_edge(self, v, w):
+        """Returns the following half edge left of a face"""
+        new_node = self._adj.ccw_nbr[w][v]
+        return w, new_node
+
+    def traverse_face(self, v, w, mark_half_edges=None):
+        """Returns nodes on the face of the half edge (v, w)
+
+        The face lies to the right of the half edge (when v is at the bottom
+        and w at the top).
+
+        Optionally it is possible to pass a set in which all encountered half
+        edges are added.
+        """
+        if mark_half_edges is None:
+            mark_half_edges = set()
+
+        face_nodes = [v]
+        mark_half_edges.add((v, w))
+        prev_node = v
+        cur_node = w
+        # Last half edge is (incoming_node, v)
+        incoming_node = self._adj.cw_nbr[v][w]
+
+        while cur_node != v or prev_node != incoming_node:
+            face_nodes.append(cur_node)
+            prev_node, cur_node = self.next_face_half_edge(prev_node, cur_node)
+            if (prev_node, cur_node) in mark_half_edges:
+                raise nx.NetworkXException(
+                    "Bad planar embedding. Impossible face.")
+            mark_half_edges.add((prev_node, cur_node))
+
+        return face_nodes
+
+
+class PlanarEmbeddingAtlas(Mapping):
+    __slots__ = ('_start_node', '_nbr_order')
+
+    def __init__(self, start_node, nbr_order):
+        self._start_node
+        self._nbr_order
+
+    def __getstate__(self):
+        return {'_start_node': self._start_node, '_nbr_order': self._nbr_order}
+
+    def __setstate__(self, state):
+        self._start_node = state['_start_node']
+        self._nbr_order = state['_nbr_order']
+
+    def __len__(self):
+        return len(self._nbr_order)
+
+    def __iter__(self):
+        yield self._start_node
+        current_node = self._nbr_order[self._start_node]
+        while self._start_node != current_node:
+            yield current_node
+            current_node = self._nbr_order[current_node]
+        return iter(self._nbrs)
+
+    def __getitem__(self, item):
+        if item not in self._nbr_order:
+            raise KeyError(item)
+        else:
+            # Map to empty dict, because we do not support edge attributes
+            return {}
+
+    def copy(self):
+        return {n: {} for n in self._nbr_order}
+
+    def __str__(self):
+        return str(list(self))
+
+    def __repr__(self):
+        return '%s(%r, %r)' % (self.__class__.__name__, self._start_node,
+                               self._nbr_order)
+
+
+class PlanarEmbeddingAdjacency(Mapping):
     """ Represents a planar embedding.
 
     This class maintains an order on the outgoing edges for each node.
@@ -679,6 +946,7 @@ class PlanarEmbedding:
         The resulting embedding is only guaranteed to be valid, if the
         connected nodes were contained in different graph components.
     """
+    __slots__ = ('self.ccw_nbr', 'self.cw_nbr', 'self.first_nbr')
 
     def __init__(self):
         # Maps nodes to a dict mapping neighbor nodes to the ccw neighbor node
@@ -688,293 +956,46 @@ class PlanarEmbedding:
         # Maps a node to the first neighbor
         self.first_nbr = {}
 
-    def get_data(self):
+    def __getstate__(self):
         """Converts this object into a dict of list of nodes structure"""
         embedding = dict()
         for v in self.ccw_nbr:
             embedding[v] = list(self.get_neighbors(v))
         return embedding
 
-    def get_graph(self):
-        """Extracts the represented networkx graph
+    def __setstate__(self, embedding_data):
+        """Sets this embedding to the given embedding_data"""
+        self.add_nodes_from(embedding_data.keys())
+        for v in embedding_data:
+            reference = None
+            for w in embedding_data[v]:
+                self.add_half_edge_cw(v, w, reference)
+                reference = w
 
-         In the networkx graph the edge ordering is lost."""
-        G = nx.Graph()
-        G.add_nodes_from(self.nodes())
-        G.add_edges_from(self.edges())
-        return G
+    def __len__(self):
+        return len(self.cw_nbr.keys())
 
-    def get_neighbors(self, v):
-        """Yields the neighbors of v in clockwise order"""
-        if v not in self.first_nbr:
+    def __iter__(self):
+        return iter(self.cw_nbr)
+
+    def __getitem__(self, item):
+        if item not in self.first_nbr:
             # v has no neighbors
-            return
-        start_node = self.first_nbr[v]
-        nbr_order = self.cw_nbr[v]
-        yield start_node
-        current_node = nbr_order[start_node]
-        while start_node != current_node:
-            yield current_node
-            current_node = nbr_order[current_node]
-
-    def check_structure(self):
-        """Returns true if every half edge has its opposite half edge"""
-        for v in self.ccw_nbr:
-            for w in self.ccw_nbr[v]:
-                # Check that half edge (w, v) exists
-                if v not in self.ccw_nbr[w]:
-                    return False
-        return True
-
-    def check_intersection(self):
-        """Returns true if there are no intersections of edges"""
-        G = self.get_graph()
-        counted_half_edges = set()
-        for component in nx.connected_components(G):
-            if len(component) == 1:
-                # Don't need to check single node component
-                continue
-            num_nodes = len(component)
-            num_half_edges = 0
-            num_faces = 0
-            for v in component:
-                for w in self.get_neighbors(v):
-                    num_half_edges += 1
-                    if (v, w) not in counted_half_edges:
-                        # We encountered a new face
-                        num_faces += 1
-                        # Mark all half edges belonging to this face
-                        try:
-                            self.traverse_face(v, w, counted_half_edges)
-                        except nx.NetworkXException:
-                            # The face is invalid
-                            return False
-            if num_half_edges % 2 != 0:
-                # There must be an even number of half edges
-                return False
-            num_edges = num_half_edges // 2
-            if num_nodes - num_edges + num_faces != 2:
-                # The result does not match Euler's formula
-                return False
-        # All components match Euler's formula
-        return True
-
-    def nodes(self):
-        return self.cw_nbr.keys()
-
-    def edges(self):
-        for v in self.cw_nbr:
-            for w in self.cw_nbr[v]:
-                yield (v, w)
-
-    def add_node(self, v):
-        """Adds a node to the embedding if it does not exist"""
-        if v not in self.ccw_nbr:
-            self.ccw_nbr[v] = {}
-            self.cw_nbr[v] = {}
-
-    def add_nodes_from(self, nodes):
-        for v in nodes:
-            self.add_node(v)
-
-    def add_half_edge_ccw(self, start_node, end_node, reference_neighbor):
-        """Adds a half edge from start_node to end_node.
-
-        The half edge is added counter clockwise next to the existing half edge
-        (start_node, reference_neighbor).
-
-        Calling this method can break the embedding.
-
-        Raises an exception if the reference half edge does not exist.
-
-        If there are no hash table collisions the complexity is constant.
-        """
-        if reference_neighbor is None and len(self.ccw_nbr[start_node]) == 0:
-            # The start node has no neighbors
-            self.ccw_nbr[start_node][end_node] = end_node
-            self.cw_nbr[start_node][end_node] = end_node
-            self.first_nbr[start_node] = end_node
+            return {}
         else:
-            ccw_reference = self.ccw_nbr[start_node][reference_neighbor]
-            self.add_half_edge_cw(start_node, end_node, ccw_reference)
+            start_node = self.first_nbr[item]
+            nbr_order = self.cw_nbr[item]
+            return PlanarEmbeddingAtlas(start_node, nbr_order)
 
-            if reference_neighbor == self.first_nbr[start_node]:
-                # Update first neighbor
-                self.first_nbr[start_node] = end_node
+    def copy(self):
+        return {n: self[n].copy() for n in self.ccw_nbr}
 
-    def add_half_edge_cw(self, start_node, end_node, reference_neighbor):
-        """Adds a half edge from start_node to end_node.
+    def __str__(self):
+        return str(self.__getstate__())
 
-        The half edge is added clockwise next to the existing half edge
-        (start_node, reference_neighbor).
+    def __repr__(self):
+        return '%s(%r)' % (self.__class__.__name__, self.__getstate__())
 
-        Calling this method can break the embedding.
 
-        Raises an exception if the reference half edge does not exist, or if
-        adding the specified edge would break the planar embedding.
 
-        If there are no hash table collisions the complexity is constant.
-        """
-        ccw_order = self.ccw_nbr[start_node]
-        cw_order = self.cw_nbr[start_node]
-        if reference_neighbor is None and len(cw_order) == 0:
-            # The start node has no neighbors
-            ccw_order[end_node] = end_node
-            cw_order[end_node] = end_node
-            self.first_nbr[start_node] = end_node
-            return
-        if self.has_edge(start_node, end_node):
-            raise nx.NetworkXException("Cannot add edge. Edge already present")
-        if reference_neighbor not in cw_order:
-            raise nx.NetworkXException(
-                "Cannot add edge. Reference neighbor does not exist")
-        # Get half edge at the other side
-        cw_reference = cw_order[reference_neighbor]
-        # Alter half edge data structures
-        cw_order[reference_neighbor] = end_node
-        cw_order[end_node] = cw_reference
-        ccw_order[cw_reference] = end_node
-        ccw_order[end_node] = reference_neighbor
 
-    def add_edge_ccw(self, start_node, end_node, reference_neighbor):
-        """Adds the half edges from start_node to end_node and the reverse.
-
-        The half edge (start_node, end_node) is added counter clockwise next to
-        the
-        existing half edge (start_node, reference_neighbor). The half edge
-        in the other direction is automatically determined by traversing the
-        face that the added edge splits.
-
-        Calling this method on a valid planar embedding object guarantees that
-        the resulting object is still a valid planar embedding.
-
-        Raises an exception if the reference half edge does not exist, if
-        adding the specified edge would break the planar embedding or if
-        start_node and end_node are in different components.
-
-        The complexity is linear in the size of the graph.
-        """
-        if reference_neighbor not in self.ccw_nbr[start_node]:
-            nx.NetworkXException(
-                "Cannot add edge. The start node has degree 0.")
-        ccw_reference = self.ccw_nbr[start_node][reference_neighbor]
-        self.add_edge_cw(start_node, end_node, ccw_reference)
-
-    def add_edge_cw(self, start_node, end_node, reference_neighbor):
-        """Adds the half edges from start_node to end_node and the reverse.
-
-        The half edge (start_node, end_node) is added clockwise next to
-        the existing half edge (start_node, reference_neighbor). The half edge
-        in the other direction is automatically determined by traversing the
-        face that the added edge splits.
-
-        Calling this method on a valid planar embedding object guarantees that
-        the resulting object is still a valid planar embedding.
-
-        Raises an exception if the reference half edge does not exist, if
-        adding the specified edge would break the planar embedding or if
-        start_node and end_node are in different components.
-
-        The complexity is linear in the size of the graph.
-        """
-        prev_face_node = start_node
-        for face_node in self.traverse_face(start_node, reference_neighbor):
-            if face_node == end_node:
-                self.add_half_edge_cw(start_node, end_node, reference_neighbor)
-                self.add_half_edge_ccw(end_node, start_node, prev_face_node)
-                return
-            prev_face_node = face_node
-        exception_msg = "Cannot add edge. End node is either in a different " \
-                        "component, or the edge would would violate planarity."
-        raise nx.NetworkXException(exception_msg)
-
-    def add_edge(self, v, w):
-        """Adds half edges for (v, w) and (w, v) at some position.
-
-        This method should only be called if v and w are in different
-        components, or it might break the embedding.
-
-        The complexity is constant.
-        """
-        if self.has_edge(v, w):
-            # Edge already present
-            raise nx.NetworkXException("Edge is already present")
-
-        if len(self.cw_nbr[v]) == 0:
-            self.cw_nbr[v][w] = w
-            self.ccw_nbr[v][w] = w
-            self.first_nbr[v] = w
-        else:
-            self.add_half_edge_first(v, w)
-
-        if len(self.cw_nbr[w]) == 0:
-            self.cw_nbr[w][v] = v
-            self.ccw_nbr[w][v] = v
-            self.first_nbr[w] = v
-        else:
-            self.add_half_edge_first(w, v)
-
-    def add_half_edge_first(self, start_node, end_node):
-        reference = self.first_nbr.get(start_node, None)
-        self.add_half_edge_ccw(start_node, end_node, reference)
-
-    def has_edge(self, v, w):
-        """Returns true if both half edges (v, w) and (w, v) are present"""
-        return w in self.ccw_nbr[v]
-
-    def next_face_half_edge(self, v, w):
-        """Returns the following half edge left of a face"""
-        new_node = self.ccw_nbr[w][v]
-        return w, new_node
-
-    def traverse_face(self, v, w, mark_half_edges=None):
-        """Returns nodes on the face of the half edge (v, w)
-
-        The face lies to the right of the half edge (when v is at the bottom
-        and w at the top).
-
-        Optionally it is possible to pass a set in which all encountered half
-        edges are added.
-        """
-        if mark_half_edges is None:
-            mark_half_edges = set()
-
-        face_nodes = [v]
-        mark_half_edges.add((v, w))
-        prev_node = v
-        cur_node = w
-        # Last half edge is (incoming_node, v)
-        incoming_node = self.cw_nbr[v][w]
-
-        while cur_node != v or prev_node != incoming_node:
-            face_nodes.append(cur_node)
-            prev_node, cur_node = self.next_face_half_edge(prev_node, cur_node)
-            if (prev_node, cur_node) in mark_half_edges:
-                raise nx.NetworkXException(
-                    "Bad planar embedding. Impossible face.")
-            mark_half_edges.add((prev_node, cur_node))
-
-        return face_nodes
-
-    def remove_half_edge(self, v, w):
-        """ Removes the half edge (v, w)
-        """
-        if len(self.ccw_nbr[v]) == 1:
-            self.ccw_nbr[v] = {}
-            del self.first_nbr[v]
-        else:
-            ccw_neighbor = self.ccw_nbr[v][w]
-            cw_neighbor = self.cw_nbr[v][w]
-            self.cw_nbr[v][ccw_neighbor] = cw_neighbor
-            self.ccw_nbr[v][cw_neighbor] = ccw_neighbor
-            self.first_nbr[v] = cw_neighbor
-
-    def remove_edge(self, v, w):
-        """Removes both half edges between v and w.
-
-        Raises an exception if not BOTH half edges are present.
-        The complexity is constant."""
-        if not self.has_edge(v, w):
-            raise nx.NetworkXException("Cannot remove edge. Edge not present.")
-        self.remove_half_edge(v, w)
-        self.remove_half_edge(w, v)
