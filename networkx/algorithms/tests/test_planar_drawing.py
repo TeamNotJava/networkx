@@ -5,7 +5,9 @@ from nose.tools import assert_true
 
 def test_graph1():
     G = nx.Graph([(0, 1), (1, 2), (2, 3), (3, 0), (0, 2)])
-    embedding = {0: [1, 2, 3], 1: [2, 0], 2: [3, 0, 1], 3: [2, 0]}
+    embedding_data = {0: [1, 2, 3], 1: [2, 0], 2: [3, 0, 1], 3: [2, 0]}
+    embedding = nx.PlanarEmbedding()
+    embedding.set_data(embedding_data)
     pos = nx.combinatorial_embedding_to_pos(embedding)
     assert_true(is_planar_drawing_correct(G, pos),
                 "Planar drawing is not correct")
