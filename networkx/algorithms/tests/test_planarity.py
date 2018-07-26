@@ -4,6 +4,7 @@ from networkx.algorithms.planarity import get_counterexample
 from networkx.algorithms.planarity import get_counterexample_recursive
 from networkx.algorithms.planarity import check_planarity_recursive
 
+
 class TestLRPlanarity:
     """Nose Unit tests for the :mod:`networkx.algorithms.planarity` module.
 
@@ -203,26 +204,20 @@ def check_embedding(G, embedding):
             "Bad embedding. Not of type nx.PlanarEmbedding")
 
     # Check structure
-    assert_true(embedding.check_structure(),
-                "Bad embedding. Structure is violated.")
-
-    # Check for intersections
-    assert_true(embedding.check_intersection(),
-                "Bad embedding. Not intersection free.")
+    assert_true(embedding.check_structure())
 
     # Check that graphs are equivalent
-    loop_free_graph = nx.Graph()
-    # Add nodes
-    loop_free_graph.add_nodes_from(G.nodes)
-    # Add edges without self-loops
+
+    assert_equals(set(G.nodes), set(embedding.nodes),
+                  "Bad embedding. Nodes don't match the original graph.")
+
+    # Check that the edges are equal
+    g_edges = set()
     for edge in G.edges:
         if edge[0] != edge[1]:
-            loop_free_graph.add_edge(edge[0], edge[1])
-
-    embedding_graph = embedding.get_graph()
-    assert_equals(loop_free_graph.nodes, embedding_graph.nodes,
-                  "Bad embedding. Nodes don't match the original graph.")
-    assert_equals(loop_free_graph.edges, embedding_graph.edges,
+            g_edges.add((edge[0], edge[1]))
+            g_edges.add((edge[1], edge[0]))
+    assert_equals(g_edges, set(embedding.edges),
                   "Bad embedding. Edges don't match the original graph.")
 
 
