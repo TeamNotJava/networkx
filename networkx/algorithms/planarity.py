@@ -711,7 +711,14 @@ class PlanarEmbedding(nx.DiGraph):
         """
         # Check fundamental structure
         for v in self:
-            sorted_nbrs = set(self.get_neighbors(v))
+            try:
+                sorted_nbrs = set(self.get_neighbors(v))
+            except KeyError:
+                msg = "Bad embedding. " \
+                      "Missing orientation for a neighbor of {}".format(v)
+                raise nx.NetworkXException(msg)
+
+
             unsorted_nbrs = set(self[v])
             if sorted_nbrs != unsorted_nbrs:
                 msg = "Bad embedding. Edge orientations not set correctly."
@@ -761,11 +768,15 @@ class PlanarEmbedding(nx.DiGraph):
         """
         if reference_neighbor is None:
             # The start node has no neighbors
+            self.add_edge(start_node, end_node)  # Add edge to graph
             self[start_node][end_node]['cw'] = end_node
             self[start_node][end_node]['ccw'] = end_node
             self.nodes[start_node]['first_nbr'] = end_node
         else:
-            ccw_reference = self[start_node][reference_neighbor]['ccw']
+            if start_node in self:
+                ccw_reference = self[start_node][reference_neighbor]['ccw']
+            else:
+                ccw_reference = None
             self.add_half_edge_cw(start_node, end_node, ccw_reference)
 
             if reference_neighbor == self.nodes[start_node].get('first_nbr', None):
@@ -785,15 +796,19 @@ class PlanarEmbedding(nx.DiGraph):
 
         If there are no hash table collisions the complexity is constant.
         """
+        self.add_edge(start_node, end_node)  # Add edge to graph
+
         if reference_neighbor is None:
             # The start node has no neighbors
             self[start_node][end_node]['cw'] = end_node
             self[start_node][end_node]['ccw'] = end_node
             self.nodes[start_node]['first_nbr'] = end_node
             return
+
         if reference_neighbor not in self[start_node]:
             raise nx.NetworkXException(
                 "Cannot add edge. Reference neighbor does not exist")
+
         # Get half edge at the other side
         cw_reference = self[start_node][reference_neighbor]['cw']
         # Alter half edge data structures
@@ -814,7 +829,10 @@ class PlanarEmbedding(nx.DiGraph):
         self.add_half_edge_first(w, v)
 
     def add_half_edge_first(self, start_node, end_node):
-        reference = self.nodes[start_node].get('first_nbr', None)
+        if start_node in self and 'first_nbr' in self.nodes[start_node]:
+            reference = self.nodes[start_node]['first_nbr']
+        else:
+            reference = None
         self.add_half_edge_ccw(start_node, end_node, reference)
 
     def next_face_half_edge(self, v, w):

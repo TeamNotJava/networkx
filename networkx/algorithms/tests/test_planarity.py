@@ -270,3 +270,59 @@ def check_counterexample(G, sub_graph):
             raise nx.NetworkXException("Bad counter example.")
     else:
         raise nx.NetworkXException("Bad counter example.")
+
+
+class TestPlanarEmbeddingClass:
+    def test_get_data(self):
+        embedding = self.get_star_embedding(3)
+        data = embedding.get_data()
+        data_cmp = {0: [2, 1], 1: [0], 2: [0]}
+        assert_equals(data, data_cmp)
+
+    @raises(nx.NetworkXException)
+    def test_invalid_edge_orientation(self):
+        embedding = nx.PlanarEmbedding()
+        embedding.add_edge(1, 2)
+        embedding.add_edge(2, 1)
+        # Invalid structure because the orientation of the edge was not set
+        embedding.check_structure()
+
+    @raises(nx.NetworkXException)
+    def test_missing_half_edge(self):
+        embedding = nx.PlanarEmbedding()
+        embedding.add_half_edge_first(1, 2)
+        # Invalid structure because other half edge is missing
+        embedding.check_structure()
+
+    @raises(nx.NetworkXException)
+    def test_not_fulfilling_euler_formula(self):
+        embedding = nx.PlanarEmbedding()
+        for i in range(5):
+            for j in range(5):
+                if i != j:
+                    embedding.add_half_edge_first(i, j)
+        embedding.check_structure()
+
+    @raises(nx.NetworkXException)
+    def test_missing_reference(self):
+        embedding = nx.PlanarEmbedding()
+        embedding.add_half_edge_cw(1, 2, 3)
+
+    def test_connect_components(self):
+        embedding = nx.PlanarEmbedding()
+        embedding.connect_components(1, 2)
+
+    def test_successful_face_traversal(self):
+        embedding = nx.PlanarEmbedding()
+        embedding.add_half_edge_first(1, 2)
+        embedding.add_half_edge_first(2, 1)
+        face = embedding.traverse_face(1, 2)
+        assert_equals(face, [1, 2])
+
+    @staticmethod
+    def get_star_embedding(n):
+        embedding = nx.PlanarEmbedding()
+        for i in range(1, n):
+            embedding.add_half_edge_first(0, i)
+            embedding.add_half_edge_first(i, 0)
+        return embedding
