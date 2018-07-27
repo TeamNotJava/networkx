@@ -327,6 +327,13 @@ class TestPlanarEmbeddingClass:
         face = embedding.traverse_face(1, 2)
         assert_equals(face, [1, 2])
 
+    @raises(nx.NetworkXException)
+    def test_unsuccessful_face_traversal(self):
+        embedding = nx.PlanarEmbedding()
+        embedding.add_edge(1, 2, ccw=2, cw=3)
+        embedding.add_edge(2, 1, ccw=1, cw=3)
+        embedding.traverse_face(1, 2)
+
     @staticmethod
     def get_star_embedding(n):
         embedding = nx.PlanarEmbedding()
