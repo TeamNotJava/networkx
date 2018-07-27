@@ -205,8 +205,6 @@ class LRPlanarity(object):
             if e[0] != e[1]:
                 self.G.add_edge(e[0], e[1])
 
-        self.embedding = PlanarEmbedding(self.G)
-
         self.roots = []
 
         # distance from tree root
@@ -236,6 +234,8 @@ class LRPlanarity(object):
 
         self.left_ref = {}
         self.right_ref = {}
+
+        self.embedding = PlanarEmbedding()
 
     def lr_planarity(self):
         """Execute the LR planarity test
@@ -274,6 +274,7 @@ class LRPlanarity(object):
         for e in self.DG.edges:
             self.nesting_depth[e] = self.sign(e) * self.nesting_depth[e]
 
+        self.embedding.add_nodes_from(self.DG.nodes)
         for v in self.DG:
             # sort the adjacency lists again
             self.ordered_adjs[v] = sorted(

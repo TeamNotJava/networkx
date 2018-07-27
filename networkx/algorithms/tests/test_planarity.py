@@ -280,11 +280,19 @@ class TestPlanarEmbeddingClass:
         assert_equals(data, data_cmp)
 
     @raises(nx.NetworkXException)
-    def test_invalid_edge_orientation(self):
+    def test_missing_edge_orientation(self):
         embedding = nx.PlanarEmbedding()
         embedding.add_edge(1, 2)
         embedding.add_edge(2, 1)
         # Invalid structure because the orientation of the edge was not set
+        embedding.check_structure()
+
+    @raises(nx.NetworkXException)
+    def test_invalid_edge_orientation(self):
+        embedding = nx.PlanarEmbedding()
+        embedding.add_half_edge_first(1, 2)
+        embedding.add_half_edge_first(2, 1)
+        embedding.add_edge(1, 3)
         embedding.check_structure()
 
     @raises(nx.NetworkXException)
