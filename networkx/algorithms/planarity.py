@@ -774,10 +774,7 @@ class PlanarEmbedding(nx.DiGraph):
             self[start_node][end_node]['ccw'] = end_node
             self.nodes[start_node]['first_nbr'] = end_node
         else:
-            if start_node in self:
-                ccw_reference = self[start_node][reference_neighbor]['ccw']
-            else:
-                ccw_reference = None
+            ccw_reference = self[start_node][reference_neighbor]['ccw']
             self.add_half_edge_cw(start_node, end_node, ccw_reference)
 
             if reference_neighbor == self.nodes[start_node].get('first_nbr', None):
