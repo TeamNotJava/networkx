@@ -64,8 +64,12 @@ def check_planarity(G, counterexample=False):
         # graph is planar
         return True, embedding
 
+
 # recursive version of check_planarity
 def check_planarity_recursive(G, counterexample=False):
+    """Checks if a graph is planar and returns a counterexample or an embedding
+    This is the recursive version of check_planarity, refer to its documentation for further information.
+    """
     planarity_state = LRPlanarity(G)
     embedding = planarity_state.lr_planarity_recursive()
     if embedding is None:
@@ -116,6 +120,7 @@ def get_counterexample(G):
 
     return subgraph
 
+
 # recursive version of get_counterexample
 def get_counterexample_recursive(G):
     # copy graph
@@ -144,6 +149,7 @@ class Interval(object):
     edges, which means that all edges must either have a left orientation or
     all edges must have a right orientation.
     """
+
     def __init__(self, low=None, high=None):
         self.low = low
         self.high = high
@@ -168,6 +174,7 @@ class ConflictPair(object):
     The edges in the left interval must have a different orientation than
     the one in the right interval.
     """
+
     def __init__(self, left=Interval(), right=Interval()):
         self.left = left
         self.right = right
@@ -197,6 +204,7 @@ def top_of_stack(l):
 
 class LRPlanarity(object):
     """A class to maintain the state during planarity check"""
+
     def __init__(self, G):
         # copy G without adding self-loops
         self.G = nx.Graph()
@@ -364,10 +372,10 @@ class LRPlanarity(object):
                         self.parent_edge[w] = vw
                         self.height[w] = self.height[v] + 1
 
-                        dfs_stack.append(v) # revisit v after finishing w
-                        dfs_stack.append(w) # visit w next
-                        skip_init[vw] = True # don't redo this block
-                        break # handle next node in dfs_stack (i.e. w)
+                        dfs_stack.append(v)  # revisit v after finishing w
+                        dfs_stack.append(w)  # visit w next
+                        skip_init[vw] = True  # don't redo this block
+                        break  # handle next node in dfs_stack (i.e. w)
                     else:  # (v, w) is a back edge
                         self.lowpt[vw] = self.height[w]
 
@@ -443,11 +451,11 @@ class LRPlanarity(object):
                     self.stack_bottom[ei] = top_of_stack(self.S)
 
                     if ei == self.parent_edge[w]:  # tree edge
-                        dfs_stack.append(v) # revisit v after finishing w
-                        dfs_stack.append(w) # visit w next
-                        skip_init[ei] = True # don't redo this block
-                        skip_final = True # skip final work after breaking
-                        break # handle next node in dfs_stack (i.e. w)
+                        dfs_stack.append(v)  # revisit v after finishing w
+                        dfs_stack.append(w)  # visit w next
+                        skip_init[ei] = True  # don't redo this block
+                        skip_final = True  # skip final work after breaking
+                        break  # handle next node in dfs_stack (i.e. w)
                     else:  # back edge
                         self.lowpt_edge[ei] = ei
                         self.S.append(ConflictPair(right=Interval(ei, ei)))
@@ -472,6 +480,7 @@ class LRPlanarity(object):
 
     # recursive version of dfs_testing
     def dfs_testing_recursive(self, v):
+        """Recursively test for LR partition"""
         e = self.parent_edge[v]
         for w in self.ordered_adjs[v]:
             ei = (v, w)
@@ -575,7 +584,7 @@ class LRPlanarity(object):
             hr = top_of_stack(self.S).right.high
 
             if hl is not None and (
-                    hr is None or self.lowpt[hl] > self.lowpt[hr]):
+                            hr is None or self.lowpt[hl] > self.lowpt[hr]):
                 self.ref[e] = hl
             else:
                 self.ref[e] = hr
@@ -599,9 +608,9 @@ class LRPlanarity(object):
                     self.left_ref[v] = w
                     self.right_ref[v] = w
 
-                    dfs_stack.append(v) # revisit v after finishing w
-                    dfs_stack.append(w) # visit w next
-                    break # handle next node in dfs_stack (i.e. w)
+                    dfs_stack.append(v)  # revisit v after finishing w
+                    dfs_stack.append(w)  # visit w next
+                    break  # handle next node in dfs_stack (i.e. w)
                 else:  # back edge
                     if self.side[ei] == 1:
                         # place v directly after right_ref[w] in embed. list of w
@@ -640,9 +649,9 @@ class LRPlanarity(object):
             e = dfs_stack.pop()
 
             if self.ref[e] is not None:
-                dfs_stack.append(e) # revisit e after finishing self.ref[e]
-                dfs_stack.append(self.ref[e]) # visit self.ref[e] next
-                old_ref[e] = self.ref[e] # remember value of self.ref[e]
+                dfs_stack.append(e)  # revisit e after finishing self.ref[e]
+                dfs_stack.append(self.ref[e])  # visit self.ref[e] next
+                old_ref[e] = self.ref[e]  # remember value of self.ref[e]
                 self.ref[e] = None
             else:
                 self.side[e] *= self.side[old_ref[e]]
@@ -703,7 +712,8 @@ class PlanarEmbedding(nx.DiGraph):
             current_node = self[v][current_node]['cw']
 
     def check_structure(self):
-        """Returns true if the basic structure is correct
+        """Returns true if the basic structure is correct, i.e. whether the Planar Embedding
+        is valid.
 
         Checks:
           - Every edge in one direction has an edge in the other direction
@@ -718,7 +728,6 @@ class PlanarEmbedding(nx.DiGraph):
                 msg = "Bad embedding. " \
                       "Missing orientation for a neighbor of {}".format(v)
                 raise nx.NetworkXException(msg)
-
 
             unsorted_nbrs = set(self[v])
             if sorted_nbrs != unsorted_nbrs:
@@ -752,7 +761,7 @@ class PlanarEmbedding(nx.DiGraph):
                 # The result does not match Euler's formula
                 msg = "Bad embedding. The graph does not match Euler's formula"
                 raise nx.NetworkXException(msg)
-        # This object is valid
+        # This object is a valid embedding
         return True
 
     def add_half_edge_ccw(self, start_node, end_node, reference_neighbor):
@@ -846,6 +855,8 @@ class PlanarEmbedding(nx.DiGraph):
 
         Optionally it is possible to pass a set in which all encountered half
         edges are added.
+
+        Attention: This function only works correctly if it is called on a valid planar embedding.
         """
         if mark_half_edges is None:
             mark_half_edges = set()
@@ -868,5 +879,6 @@ class PlanarEmbedding(nx.DiGraph):
         return face_nodes
 
     def is_directed(self):
-        # The graph is undirected, all reverse edges are contained
+        # The graph is undirected, all reverse edges are contained, i.e. for every existing half edge (x,y) the half edge in
+        # the opposite direction (y,x) exists.
         return False
