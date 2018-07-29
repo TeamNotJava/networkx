@@ -775,6 +775,12 @@ class PlanarEmbedding(nx.DiGraph):
         Raises an exception if the reference half edge does not exist.
 
         If there are no hash table collisions the complexity is constant.
+
+        Parameters
+        ----------
+        start_node: Start node of inserted edge
+        end_node: End node of inserted edge
+        reference_neighbor: End node of reference edge
         """
         if reference_neighbor is None:
             # The start node has no neighbors
@@ -802,6 +808,12 @@ class PlanarEmbedding(nx.DiGraph):
         adding the specified edge would break the planar embedding.
 
         If there are no hash table collisions the complexity is constant.
+
+        Parameters
+        ----------
+        start_node: Start node of inserted edge
+        end_node: End node of inserted edge
+        reference_neighbor: End node of reference edge
         """
         self.add_edge(start_node, end_node)  # Add edge to graph
 
@@ -857,6 +869,12 @@ class PlanarEmbedding(nx.DiGraph):
         edges are added.
 
         Attention: This function only works correctly if it is called on a valid planar embedding.
+
+        Parameters
+        ----------
+        v: Start node of half edge
+        w: End node of half edge
+        mark_half_edges: Set to which all encountered half edges are added (Optional)
         """
         if mark_half_edges is None:
             mark_half_edges = set()
