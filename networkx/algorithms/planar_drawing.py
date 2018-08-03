@@ -214,7 +214,7 @@ def get_canonical_ordering(embedding, outer_face):
         nbr = wp
         while nbr != wq:
             # Get next next neighbor (lies clockwise on the outer face)
-            next_nbr = embedding.ccw_nbr[v][nbr]
+            next_nbr = embedding[v][nbr]['ccw']
             wp_wq.append(next_nbr)
             # Update outer face
             outer_face_cw_nbr[nbr] = next_nbr
@@ -303,16 +303,16 @@ def triangulate_embedding(embedding, fully_triangulate=False):
     """
     if len(embedding.nodes()) <= 1:
         return embedding
-    embedding = embedding.copy()
-    G = embedding.get_graph()
+    embedding = nx.PlanarEmbedding(embedding)
+
     # Get a list with a node for each connected component
-    component_nodes = [next(iter(x)) for x in nx.connected_components(G)]
+    component_nodes = [next(iter(x)) for x in nx.connected_components(embedding)]
 
     # 1. Make graph a single component (add edge between components)
     for i in range(len(component_nodes)-1):
         v1 = component_nodes[i]
         v2 = component_nodes[i+1]
-        embedding.add_edge(v1, v2)
+        embedding.connect_components(v1, v2)
 
     # 2. Calculate faces, ensure 2-connectedness and determine outer face
     outer_face = []  # A face with the most number of nodes
@@ -337,7 +337,7 @@ def triangulate_embedding(embedding, fully_triangulate=False):
     if fully_triangulate:
         v1 = outer_face[0]
         v2 = outer_face[1]
-        v3 = embedding.ccw_nbr[v2][v1]
+        v3 = embedding[v2][v1]['ccw']
         outer_face = [v1, v2, v3]
 
     return embedding, outer_face
