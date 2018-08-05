@@ -5,7 +5,7 @@ __all__ = ["check_planarity", "PlanarEmbedding"]
 
 
 def check_planarity(G, counterexample=False):
-    """Checks if a graph is planar and returns a counterexample or an embedding.
+    """Check if a graph is planar and return a counterexample or an embedding.
 
     A graph is planar iff it can be drawn in a plane without
     any edge intersections.
@@ -370,7 +370,7 @@ class LRPlanarity(object):
         return self.embedding
 
     def dfs_orientation(self, v):
-        """Orient the graph by DFS-traversal, compute lowpoints and nesting order.
+        """Orient the graph by DFS, compute lowpoints and nesting order.
         """
         # the recursion stack
         dfs_stack = [v]
@@ -965,10 +965,10 @@ class PlanarEmbedding(nx.DiGraph):
 
         This method should only be called if v and w are in different
         components, or it might break the embedding.
-        This especially means that if `connect_components(v, w)` is called it is
-        not allowed to call `connect_components(w, v)` afterwards.
-        The neighbor orientations in both directions are all set correctly
-        after the first call.
+        This especially means that if `connect_components(v, w)`
+        is called it is not allowed to call `connect_components(w, v)`
+        afterwards. The neighbor orientations in both directions are
+        all set correctly after the first call.
 
         Parameters
         ----------
