@@ -19,7 +19,7 @@ def check_planarity(G, counterexample=False):
 
     Returns
     -------
-    tuple : (is_planar : bool , certificate)
+    (is_planar : bool , certificate) : tuple
         is_planar is true if the graph is planar
         If the graph is planar `certificate` is a PlanarEmbedding
         otherwise it is a Kuratowski subgraph.
@@ -254,7 +254,7 @@ class LRPlanarity(object):
 
         Returns
         -------
-        embedding: dict
+        embedding : dict
             If the graph is planar an embedding is returned. Otherwise None.
         """
         if self.G.order() > 2 and self.G.size() > 3 * self.G.order() - 6:
@@ -1019,7 +1019,7 @@ class PlanarEmbedding(nx.DiGraph):
 
         Returns
         -------
-        tuple : half-edge
+        half-edge : tuple
         """
         new_node = self[w][v]['ccw']
         return w, new_node
@@ -1045,7 +1045,7 @@ class PlanarEmbedding(nx.DiGraph):
 
         Returns
         -------
-        list
+        face : list
             A list of nodes that lie on this face
         """
         if mark_half_edges is None:
