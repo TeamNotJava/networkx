@@ -7,8 +7,8 @@ __all__ = ["check_planarity", "PlanarEmbedding"]
 def check_planarity(G, counterexample=False):
     """Checks if a graph is planar and returns a counterexample or an embedding
 
-     A graph is planar iff it can be drawn in a plane without
-     any edge intersections.
+    A graph is planar iff it can be drawn in a plane without
+    any edge intersections.
 
     Parameters
     ----------
