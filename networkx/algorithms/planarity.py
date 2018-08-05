@@ -19,13 +19,10 @@ def check_planarity(G, counterexample=False):
 
     Returns
     -------
-    is_planar : bool
-        Is true if the graph is planar
-
-    certificate :
-        If the graph is planar this is a PlanarEmbedding.
-        If the graph is not planar and counterexample is true,
-        this is a Kuratowski subgraph.
+    tuple : (is_planar : bool , certificate)
+        is_planar is true if the graph is planar
+        If the graph is planar `certificate` is a PlanarEmbedding otherwise it is
+        a Kuratowski subgraph.
 
     Notes
     -----
@@ -65,10 +62,10 @@ def check_planarity(G, counterexample=False):
         return True, embedding
 
 
-# recursive version of check_planarity
 def check_planarity_recursive(G, counterexample=False):
     """Checks if a graph is planar and returns a counterexample or an embedding
-    This is the recursive version of check_planarity, refer to its documentation for further information.
+
+    This is the recursive version of :meth:`check_planarity`.
     """
     planarity_state = LRPlanarity(G)
     embedding = planarity_state.lr_planarity_recursive()
@@ -121,8 +118,10 @@ def get_counterexample(G):
     return subgraph
 
 
-# recursive version of get_counterexample
 def get_counterexample_recursive(G):
+    """Recursive version of :meth:`get_counterexample`.
+    """
+
     # copy graph
     G = nx.Graph(G)
 
@@ -282,7 +281,7 @@ class LRPlanarity(object):
         for v in self.DG:  # sort the adjacency lists by nesting depth
             # note: this sorting leads to non linear time
             self.ordered_adjs[v] = sorted(
-                self.DG[v], key=lambda w: self.nesting_depth[(v, w)])
+                self.DG[v], key=lambda x: self.nesting_depth[(v, x)])
         for v in self.roots:
             if not self.dfs_testing(v):
                 return None
@@ -301,7 +300,7 @@ class LRPlanarity(object):
         for v in self.DG:
             # sort the adjacency lists again
             self.ordered_adjs[v] = sorted(
-                self.DG[v], key=lambda w: self.nesting_depth[(v, w)])
+                self.DG[v], key=lambda x: self.nesting_depth[(v, x)])
             # initialize the embedding
             previous_node = None
             for w in self.ordered_adjs[v]:
@@ -327,8 +326,8 @@ class LRPlanarity(object):
 
         return self.embedding
 
-    # recursive version of lr_planarity
     def lr_planarity_recursive(self):
+        """Recursive version of :meth:`lr_planarity`."""
         if self.G.order() > 2 and self.G.size() > 3 * self.G.order() - 6:
             # graph is not planar
             return None
@@ -340,13 +339,14 @@ class LRPlanarity(object):
                 self.roots.append(v)
                 self.dfs_orientation_recursive(v)
 
-        self.G = None  # just unsetting this for correctness purposes
+        # Free no longer used variable
+        self.G = None
 
         # testing
         for v in self.DG:  # sort the adjacency lists by nesting depth
             # note: this sorting leads to non linear time
             self.ordered_adjs[v] = sorted(
-                self.DG[v], key=lambda w: self.nesting_depth[(v, w)])
+                self.DG[v], key=lambda x: self.nesting_depth[(v, x)])
         for v in self.roots:
             if not self.dfs_testing_recursive(v):
                 return None
@@ -358,7 +358,7 @@ class LRPlanarity(object):
         for v in self.DG:
             # sort the adjacency lists again
             self.ordered_adjs[v] = sorted(
-                self.DG[v], key=lambda w: self.nesting_depth[(v, w)])
+                self.DG[v], key=lambda x: self.nesting_depth[(v, x)])
             # initialize the embedding
             previous_node = None
             for w in self.ordered_adjs[v]:
@@ -371,8 +371,9 @@ class LRPlanarity(object):
 
         return self.embedding
 
-    # orient the graph by DFS-traversal, compute lowpoints and nesting order
     def dfs_orientation(self, v):
+        """Orient the graph by DFS-traversal, compute lowpoints and nesting order
+        """
         # the recursion stack
         dfs_stack = [v]
         # index of next edge to handle in adjacency list of each node
@@ -424,8 +425,8 @@ class LRPlanarity(object):
 
                 ind[v] += 1
 
-    # recursive version of dfs_orientation
     def dfs_orientation_recursive(self, v):
+        """Recursive version of :meth:`dfs_orientation`."""
         e = self.parent_edge[v]
         for w in self.G[v]:
             if (v, w) in self.DG.edges or (w, v) in self.DG.edges:
@@ -506,9 +507,8 @@ class LRPlanarity(object):
 
         return True
 
-    # recursive version of dfs_testing
     def dfs_testing_recursive(self, v):
-        """Recursively test for LR partition"""
+        """Recursive version of :meth:`dfs_testing`."""
         e = self.parent_edge[v]
         for w in self.ordered_adjs[v]:
             ei = (v, w)
@@ -617,8 +617,8 @@ class LRPlanarity(object):
             else:
                 self.ref[e] = hr
 
-    # complete the embedding
     def dfs_embedding(self, v):
+        """completes the embedding"""
         # the recursion stack
         dfs_stack = [v]
         # index of next edge to handle in adjacency list of each node
@@ -648,8 +648,8 @@ class LRPlanarity(object):
                         self.embedding.add_half_edge_ccw(w, v, self.left_ref[w])
                         self.left_ref[w] = v
 
-    # recursive version of dfs_embedding
     def dfs_embedding_recursive(self, v):
+        """Recursive version of :meth:`dfs_embedding`."""
         for w in self.ordered_adjs[v]:
             ei = (v, w)
             if ei == self.parent_edge[w]:  # tree edge
@@ -666,8 +666,8 @@ class LRPlanarity(object):
                     self.embedding.add_half_edge_ccw(w, v, self.left_ref[w])
                     self.left_ref[w] = v
 
-    # function to resolve the relative side of an edge to the absolute side
     def sign(self, e):
+        """Resolve the relative side of an edge to the absolute side."""
         # the recursion stack
         dfs_stack = [e]
         # dict to remember reference edges
@@ -686,8 +686,8 @@ class LRPlanarity(object):
 
         return self.side[e]
 
-    # recursive version of sign
     def sign_recursive(self, e):
+        """Recursive version of :meth:`sign`."""
         if self.ref[e] is not None:
             self.side[e] = self.side[e] * self.sign_recursive(self.ref[e])
             self.ref[e] = None
@@ -695,8 +695,7 @@ class LRPlanarity(object):
 
 
 class PlanarEmbedding(nx.DiGraph):
-    """
-    Represents a planar graph with its planar embedding.
+    """Represents a planar graph with its planar embedding.
 
     The planar embedding is given by a `combinatorial embedding
     <https://en.wikipedia.org/wiki/Graph_embedding#Combinatorial_embedding/>`_.
@@ -735,8 +734,8 @@ class PlanarEmbedding(nx.DiGraph):
 
     **Half edges:**
 
-    The naming scheme of methods like `add_half_edge_ccw` uses the term "half-edge",
-    which is a term that is used in `doubly connected edge lists
+    In methods like `add_half_edge_ccw` the term "half-edge" is used, which is a
+    term that is used in `doubly connected edge lists
     <https://en.wikipedia.org/wiki/Doubly_connected_edge_list/>`_. It is used to
     emphasize that the edge is only in one direction and there exists another
     half-edge in the opposite direction.
@@ -805,7 +804,7 @@ class PlanarEmbedding(nx.DiGraph):
         if len(self[v]) == 0:
             # v has no neighbors
             return
-        start_node = self.node[v]['first_nbr']
+        start_node = self.nodes[v]['first_nbr']
         yield start_node
         current_node = self[v][start_node]['cw']
         while start_node != current_node:
@@ -820,7 +819,7 @@ class PlanarEmbedding(nx.DiGraph):
         * Edges go in both directions (because the edge attributes differ)
         * Every edge has a 'cw' and 'ccw' attribute which corresponds to a
           correct planar embedding.
-        * A node with a degree larger than 0 must have a node attribute 'first_nbr'.
+        * A node with a degree larger than 0 has a node attribute 'first_nbr'.
 
         Running this method verifies that the underlying Graph must be planar.
 
@@ -891,7 +890,7 @@ class PlanarEmbedding(nx.DiGraph):
 
         Raises
         ------
-        nx.NetworkxException
+        nx.NetworkXException
             If the reference_neighbor does not exist
 
         See Also
@@ -932,7 +931,7 @@ class PlanarEmbedding(nx.DiGraph):
 
         Raises
         ------
-        nx.NetworkxException
+        nx.NetworkXException
             If the reference_neighbor does not exist
 
         See Also
