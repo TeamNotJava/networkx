@@ -204,7 +204,7 @@ def check_embedding(G, embedding):
             "Bad embedding. Not of type nx.PlanarEmbedding")
 
     # Check structure
-    assert_true(embedding.check_structure())
+    embedding.check_structure()
 
     # Check that graphs are equivalent
 

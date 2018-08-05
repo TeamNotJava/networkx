@@ -873,8 +873,6 @@ class PlanarEmbedding(nx.DiGraph):
                 # The result does not match Euler's formula
                 msg = "Bad embedding. The graph does not match Euler's formula"
                 raise nx.NetworkXException(msg)
-        # This object is a valid embedding
-        return True
 
     def add_half_edge_ccw(self, start_node, end_node, reference_neighbor):
         """Adds a half-edge from start_node to end_node.
