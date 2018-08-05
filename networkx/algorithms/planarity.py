@@ -724,7 +724,7 @@ class PlanarEmbedding(nx.DiGraph):
     As long as a PlanarEmbedding is invalid only the following methods should
     be called:
 
-    * :meth:`add_half_edge_ccw </reference/classes/graph>`
+    * :meth:`add_half_edge_ccw`
     * :meth:`add_half_edge_cw`
     * :meth:`connect_components`
     * :meth:`add_half_edge_first`
