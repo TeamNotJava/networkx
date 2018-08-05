@@ -31,7 +31,7 @@ def combinatorial_embedding_to_pos(embedding, fully_triangulate=False):
 
     # The following dicts map a node to another node
     # If a node is not in the key set it means that the node is not yet in G_k
-    # If a node maps to Nil then the corresponding subtree does not exist
+    # If a node maps to None then the corresponding subtree does not exist
     left_t_child = {}
     right_t_child = {}
 
@@ -49,17 +49,17 @@ def combinatorial_embedding_to_pos(embedding, fully_triangulate=False):
     delta_x[v1] = 0
     y_coordinate[v1] = 0
     right_t_child[v1] = v3
-    left_t_child[v1] = Nil
+    left_t_child[v1] = None
 
     delta_x[v2] = 1
     y_coordinate[v2] = 0
-    right_t_child[v2] = Nil
-    left_t_child[v2] = Nil
+    right_t_child[v2] = None
+    left_t_child[v2] = None
 
     delta_x[v3] = 1
     y_coordinate[v3] = 1
     right_t_child[v3] = v2
-    left_t_child[v3] = Nil
+    left_t_child[v3] = None
 
     for k in range(3, len(node_list)):
         vk, contour_neighbors = node_list[k]
@@ -88,9 +88,9 @@ def combinatorial_embedding_to_pos(embedding, fully_triangulate=False):
         right_t_child[vk] = wq
         if adds_mult_tri:
             left_t_child[vk] = wp1
-            right_t_child[wq1] = Nil
+            right_t_child[wq1] = None
         else:
-            left_t_child[vk] = Nil
+            left_t_child[vk] = None
 
     # 2. Phase Set absolute positions
     pos = dict()
@@ -111,7 +111,7 @@ def combinatorial_embedding_to_pos(embedding, fully_triangulate=False):
 def set_absolute_position(parent, tree, remaining_nodes, delta_x, y_coordinate, pos):
     child = tree[parent]
     parent_node_x = pos[parent][0]
-    if child is not Nil:
+    if child is not None:
         # Calculate pos of child
         child_x = parent_node_x + delta_x[child]
         pos[child] = (child_x, y_coordinate[child])
@@ -397,13 +397,6 @@ def make_bi_connected(embedding, starting_node, outgoing_node, edges_counted):
 
     return face_list
 
-
-class Nil:
-    """A class to represent that a node is not present
-
-    We cannot use None, because None might be a node in the graph.
-    """
-    pass
 
 
 def main():
