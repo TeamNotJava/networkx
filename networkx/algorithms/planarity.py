@@ -667,29 +667,83 @@ class LRPlanarity(object):
 
 
 class PlanarEmbedding(nx.DiGraph):
-    """ Represents a planar embedding.
+    """
+    Represents a planar graph with its planar embedding.
 
-    This class maintains an order on the outgoing edges for each node.
-    In order to represent a valid planar embedding of a Graph each edge of the
-    graph must be represented by two half edges in either direction.
+    The planar embedding is given by a `combinatorial embedding
+    <https://en.wikipedia.org/wiki/Graph_embedding#Combinatorial_embedding/>`_.
 
-    There are three different ways to add edges to the planar embedding:
-    - add_half_edge_{ccw,cw} : Inserts one half edge at a specific position.
-        This method takes constant amount of time.
-        The resulting embedding is not guaranteed to be valid.
+    **Neighbor ordering:**
 
-    - add_edge_{ccw,cw} : Inserts two half edges at a specific position.
-        This method cannot be used if the nodes are in different components
-        The method can takes more time for larger graphs.
-        If no exception is thrown the embedding stays valid afterwards.
+    In comparison to a usual graph structure, the embedding also stores the
+    order of all neighbors for every vertex.
+    The order of the neighbors can be given in clockwise (cw) direction or
+    counterclockwise (ccw) direction. This order is stored as edge attributes in
+    the underlying directed graph. For the edge (u, v) the edge attribute 'cw'
+    is set to the neighbor of u that follows immediately after v in clockwise
+    direction.
 
-    - add_edge : Adds two half edges between some random edges.
-        This method takes a constant amount of time.
-        The resulting embedding is only guaranteed to be valid, if the
-        connected nodes were contained in different graph components.
+    In order for a PlanarEmbedding to be valid it must fulfill multiple conditions.
+    It is possible to check if these conditions are fulfilled with the method:
+    :meth:`nx.PlanarEmbedding.check_structure`.
+    The conditions are:
+    - Edges must go in both directions (because the edge attributes differ)
+    - Every edge must have a 'cw' and 'ccw' attribute which corresponds to a
+        correct planar embedding.
+    - A node with a degree larger than 0 must have a node attribute 'first_nbr'.
+
+    While a PlanarEmbedding is invalid only the following methods should be called:
+    - :meth:`nx.PlanarEmbedding.add_half_edge_ccw`
+    - :meth:`nx.PlanarEmbedding.add_half_edge_cw`
+    - :meth:`nx.PlanarEmbedding.connect_components`
+    - :meth:`nx.PlanarEmbedding.add_half_edge_first`
+
+    Even though the graph is a subclass of nx.DiGraph, it can still be used
+    for algorithms that require undirected graphs, because the :meth:`is_directed`
+    method is overridden. This is possible, because a valid PlanarGraph must have
+    edges in both directions.
+
+    **Half edges:**
+    The naming scheme of methods like `add_half_edge_ccw` uses the term "half-edge",
+    which is a term that is used in `doubly connected edge lists
+    <https://en.wikipedia.org/wiki/Doubly_connected_edge_list/>`_. It is used to
+    emphasize that the edge is only in one direction and there exists another
+    half-edge in the opposite direction.
+    While conventional edges always have two faces (including outer face) next to
+    them, it is possible to assign each half-edge *exactly one* face.
+    When a half-edge (u, v) is placed in a plane such that u is below v then the
+    face that belongs to (u, v) is to the right of this half-edge.
 
 
-    Attention: Only instantiate with nx.Graph class with no self loops
+    Examples
+    --------
+
+    Create an embedding of a star graph (compare `nx.star_graph(3)`):
+
+    >>> G = nx.PlanarEmbedding()
+    >>> G.add_half_edge_cw(0, 1, None)
+    >>> G.add_half_edge_cw(0, 2, 1)
+    >>> G.add_half_edge_cw(0, 3, 2)
+    >>> G.add_half_edge_cw(1, 0, None)
+    >>> G.add_half_edge_cw(2, 0, None)
+    >>> G.add_half_edge_cw(3, 0, None)
+
+    Alternatively the same embedding can also be defined in counterclockwise
+    orientation. The following results in exactly the same PlanarEmbedding:
+
+    >>> G = nx.PlanarEmbedding()
+    >>> G.add_half_edge_ccw(0, 1, None)
+    >>> G.add_half_edge_ccw(0, 3, 1)
+    >>> G.add_half_edge_ccw(0, 2, 3)
+    >>> G.add_half_edge_ccw(1, 0, None)
+    >>> G.add_half_edge_ccw(2, 0, None)
+    >>> G.add_half_edge_ccw(3, 0, None)
+
+    After creating a graph it is possible to validate that the PlanarEmbedding
+    object is correct.
+
+    >>> G.check_structure()
+
     """
 
     def get_data(self):
