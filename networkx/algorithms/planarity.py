@@ -699,7 +699,7 @@ class PlanarEmbedding(nx.DiGraph):
     """Represents a planar graph with its planar embedding.
 
     The planar embedding is given by a `combinatorial embedding
-    <https://en.wikipedia.org/wiki/Graph_embedding#Combinatorial_embedding/>`_.
+    <https://en.wikipedia.org/wiki/Graph_embedding#Combinatorial_embedding>`_.
 
     **Neighbor ordering:**
 
@@ -738,7 +738,7 @@ class PlanarEmbedding(nx.DiGraph):
 
     In methods like `add_half_edge_ccw` the term "half-edge" is used, which is
     a term that is used in `doubly connected edge lists
-    <https://en.wikipedia.org/wiki/Doubly_connected_edge_list/>`_. It is used
+    <https://en.wikipedia.org/wiki/Doubly_connected_edge_list>`_. It is used
     to emphasize that the edge is only in one direction and there exists
     another half-edge in the opposite direction.
     While conventional edges always have two faces (including outer face) next
