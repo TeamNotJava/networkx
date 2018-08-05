@@ -204,6 +204,11 @@ def top_of_stack(l):
 
 class LRPlanarity(object):
     """A class to maintain the state during planarity check"""
+    __slots__ = [
+        'G', 'roots', 'height', 'lowpt', 'lowpt2', 'nesting_depth',
+        'parent_edge', 'DG', 'adjs', 'ordered_adjs', 'ref', 'side', 'S',
+        'stack_bottom', 'lowpt_edge', 'left_ref', 'right_ref', 'embedding'
+    ]
 
     def __init__(self, G):
         # copy G without adding self-loops
@@ -268,7 +273,10 @@ class LRPlanarity(object):
                 self.roots.append(v)
                 self.dfs_orientation(v)
 
-        self.G = None  # just unsetting this for correctness purposes
+        # Free no longer used variables
+        self.G = None
+        self.lowpt2 = None
+        self.adjs = None
 
         # testing
         for v in self.DG:  # sort the adjacency lists by nesting depth
@@ -278,6 +286,13 @@ class LRPlanarity(object):
         for v in self.roots:
             if not self.dfs_testing(v):
                 return None
+
+        # Free no longer used variables
+        self.height = None
+        self.lowpt = None
+        self.S = None
+        self.stack_bottom = None
+        self.lowpt_edge = None
 
         for e in self.DG.edges:
             self.nesting_depth[e] = self.sign(e) * self.nesting_depth[e]
@@ -293,9 +308,22 @@ class LRPlanarity(object):
                 self.embedding.add_half_edge_cw(v, w, previous_node)
                 previous_node = w
 
+        # Free no longer used variables
+        self.DG = None
+        self.nesting_depth = None
+        self.ref = None
+
         # compute the complete embedding
         for v in self.roots:
             self.dfs_embedding(v)
+
+        # Free no longer used variables
+        self.roots = None
+        self.parent_edge = None
+        self.ordered_adjs = None
+        self.left_ref = None
+        self.right_ref = None
+        self.side = None
 
         return self.embedding
 
