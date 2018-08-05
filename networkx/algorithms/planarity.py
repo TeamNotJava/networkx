@@ -770,7 +770,7 @@ class PlanarEmbedding(nx.DiGraph):
     >>> G.add_half_edge_ccw(2, 0, None)
     >>> G.add_half_edge_ccw(3, 0, None)
 
-    After creating a graph it is possible to validate that the PlanarEmbedding
+    After creating a graph, it is possible to validate that the PlanarEmbedding
     object is correct.
 
     >>> G.check_structure()
@@ -1000,8 +1000,6 @@ class PlanarEmbedding(nx.DiGraph):
         add_half_edge_ccw
         add_half_edge_cw
         connect_components
-        connect_components
-        add_half_edge_first
         """
         if start_node in self and 'first_nbr' in self.nodes[start_node]:
             reference = self.nodes[start_node]['first_nbr']
