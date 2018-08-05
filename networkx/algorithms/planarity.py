@@ -23,7 +23,7 @@ def check_planarity(G, counterexample=False):
         Is true if the graph is planar
 
     certificate :
-        If the graph is planar this is a planar embedding (dict).
+        If the graph is planar this is a PlanarEmbedding.
         If the graph is not planar and counterexample is true,
         this is a Kuratowski subgraph.
 
@@ -685,18 +685,20 @@ class PlanarEmbedding(nx.DiGraph):
 
     In order for a PlanarEmbedding to be valid it must fulfill multiple conditions.
     It is possible to check if these conditions are fulfilled with the method:
-    :meth:`nx.PlanarEmbedding.check_structure`.
+    :meth:`check_structure`.
     The conditions are:
-    - Edges must go in both directions (because the edge attributes differ)
-    - Every edge must have a 'cw' and 'ccw' attribute which corresponds to a
-        correct planar embedding.
-    - A node with a degree larger than 0 must have a node attribute 'first_nbr'.
+
+    * Edges must go in both directions (because the edge attributes differ)
+    * Every edge must have a 'cw' and 'ccw' attribute which corresponds to a
+      correct planar embedding.
+    * A node with a degree larger than 0 must have a node attribute 'first_nbr'.
 
     While a PlanarEmbedding is invalid only the following methods should be called:
-    - :meth:`nx.PlanarEmbedding.add_half_edge_ccw`
-    - :meth:`nx.PlanarEmbedding.add_half_edge_cw`
-    - :meth:`nx.PlanarEmbedding.connect_components`
-    - :meth:`nx.PlanarEmbedding.add_half_edge_first`
+
+    * :meth:`add_half_edge_ccw </reference/classes/graph>`
+    * :meth:`add_half_edge_cw`
+    * :meth:`connect_components`
+    * :meth:`add_half_edge_first`
 
     Even though the graph is a subclass of nx.DiGraph, it can still be used
     for algorithms that require undirected graphs, because the :meth:`is_directed`
@@ -704,6 +706,7 @@ class PlanarEmbedding(nx.DiGraph):
     edges in both directions.
 
     **Half edges:**
+
     The naming scheme of methods like `add_half_edge_ccw` uses the term "half-edge",
     which is a term that is used in `doubly connected edge lists
     <https://en.wikipedia.org/wiki/Doubly_connected_edge_list/>`_. It is used to
@@ -711,9 +714,8 @@ class PlanarEmbedding(nx.DiGraph):
     half-edge in the opposite direction.
     While conventional edges always have two faces (including outer face) next to
     them, it is possible to assign each half-edge *exactly one* face.
-    When a half-edge (u, v) is placed in a plane such that u is below v then the
+    For a half-edge (u, v) that is orientated such that u is below v then the
     face that belongs to (u, v) is to the right of this half-edge.
-
 
     Examples
     --------
@@ -785,11 +787,12 @@ class PlanarEmbedding(nx.DiGraph):
     def check_structure(self):
         """Runs without exceptions if this object is valid.
 
-        Checks:
-        - Edges go in both directions (because the edge attributes differ)
-        - Every edge has a 'cw' and 'ccw' attribute which corresponds to a
-            correct planar embedding.
-        - A node with a degree larger than 0 must have a node attribute 'first_nbr'.
+        Checks that the following properties are fulfilled:
+
+        * Edges go in both directions (because the edge attributes differ)
+        * Every edge has a 'cw' and 'ccw' attribute which corresponds to a
+          correct planar embedding.
+        * A node with a degree larger than 0 must have a node attribute 'first_nbr'.
 
         Running this method verifies that the underlying Graph must be planar.
 
@@ -1037,7 +1040,7 @@ class PlanarEmbedding(nx.DiGraph):
         return face_nodes
 
     def is_directed(self):
-        """The graph is undirected if it is valid.
+        """A valid PlanarEmbedding is undirected.
 
         All reverse edges are contained, i.e. for every existing half edge (v, w)
         the half edge in the opposite direction (w, v) is also contained.
