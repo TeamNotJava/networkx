@@ -5,7 +5,7 @@ __all__ = ["check_planarity", "PlanarEmbedding"]
 
 
 def check_planarity(G, counterexample=False):
-    """Checks if a graph is planar and returns a counterexample or an embedding
+    """Checks if a graph is planar and returns a counterexample or an embedding.
 
     A graph is planar iff it can be drawn in a plane without
     any edge intersections.
@@ -15,19 +15,19 @@ def check_planarity(G, counterexample=False):
     G : NetworkX graph
     counterexample : bool
         A Kuratowski subgraph (to proof non planarity) is only returned if set
-        to true
+        to true.
 
     Returns
     -------
-    (is_planar : bool , certificate) : tuple
-        is_planar is true if the graph is planar
+    (is_planar, certificate) : (bool, NetworkX graph) tuple
+        is_planar is true if the graph is planar.
         If the graph is planar `certificate` is a PlanarEmbedding
         otherwise it is a Kuratowski subgraph.
 
     Notes
     -----
     A (combinatorial) embedding consists of cyclic orderings of the incident
-    edges at each vertex, given such an embedding there are multiple approaches
+    edges at each vertex. Given such an embedding there are multiple approaches
     discussed in literature to drawing the graph (subject to various
     constraints, e.g. integer coordinates), see e.g. [2].
 
@@ -63,10 +63,7 @@ def check_planarity(G, counterexample=False):
 
 
 def check_planarity_recursive(G, counterexample=False):
-    """Checks if a graph is planar and returns a counterexample or an embedding
-
-    This is the recursive version of :meth:`check_planarity`.
-    """
+    """Recursive version of :meth:`check_planarity`."""
     planarity_state = LRPlanarity(G)
     embedding = planarity_state.lr_planarity_recursive()
     if embedding is None:
@@ -81,7 +78,7 @@ def check_planarity_recursive(G, counterexample=False):
 
 
 def get_counterexample(G):
-    """Obtains a Kuratowski subgraph
+    """Obtains a Kuratowski subgraph.
 
     Raises nx.NetworkXException if G is planar.
 
@@ -142,7 +139,7 @@ def get_counterexample_recursive(G):
 
 
 class Interval(object):
-    """Represents a set of return edges
+    """Represents a set of return edges.
 
     All return edges in an interval induce a same constraint on the contained
     edges, which means that all edges must either have a left orientation or
@@ -168,7 +165,7 @@ class Interval(object):
 
 
 class ConflictPair(object):
-    """Represents a different constraint between two intervals
+    """Represents a different constraint between two intervals.
 
     The edges in the left interval must have a different orientation than
     the one in the right interval.
@@ -202,7 +199,7 @@ def top_of_stack(l):
 
 
 class LRPlanarity(object):
-    """A class to maintain the state during planarity check"""
+    """A class to maintain the state during planarity check."""
     __slots__ = [
         'G', 'roots', 'height', 'lowpt', 'lowpt2', 'nesting_depth',
         'parent_edge', 'DG', 'adjs', 'ordered_adjs', 'ref', 'side', 'S',
@@ -250,7 +247,7 @@ class LRPlanarity(object):
         self.embedding = PlanarEmbedding()
 
     def lr_planarity(self):
-        """Execute the LR planarity test
+        """Execute the LR planarity test.
 
         Returns
         -------
@@ -373,7 +370,7 @@ class LRPlanarity(object):
         return self.embedding
 
     def dfs_orientation(self, v):
-        """Orient the graph by DFS-traversal, compute lowpoints and nesting order
+        """Orient the graph by DFS-traversal, compute lowpoints and nesting order.
         """
         # the recursion stack
         dfs_stack = [v]
@@ -460,7 +457,7 @@ class LRPlanarity(object):
                     self.lowpt2[e] = min(self.lowpt2[e], self.lowpt2[vw])
 
     def dfs_testing(self, v):
-        """Test for LR partition"""
+        """Test for LR partition."""
         # the recursion stack
         dfs_stack = [v]
         # index of next edge to handle in adjacency list of each node
@@ -619,7 +616,7 @@ class LRPlanarity(object):
                 self.ref[e] = hr
 
     def dfs_embedding(self, v):
-        """completes the embedding"""
+        """Completes the embedding."""
         # the recursion stack
         dfs_stack = [v]
         # index of next edge to handle in adjacency list of each node
@@ -771,7 +768,7 @@ class PlanarEmbedding(nx.DiGraph):
     >>> G.add_half_edge_ccw(3, 0, None)
 
     After creating a graph, it is possible to validate that the PlanarEmbedding
-    object is correct.
+    object is correct:
 
     >>> G.check_structure()
 
@@ -793,7 +790,7 @@ class PlanarEmbedding(nx.DiGraph):
         return embedding
 
     def neighbors_cw_order(self, v):
-        """Generator for the neighbors of v in clockwise order
+        """Generator for the neighbors of v in clockwise order.
 
         Parameters
         ----------
@@ -819,7 +816,7 @@ class PlanarEmbedding(nx.DiGraph):
 
         Checks that the following properties are fulfilled:
 
-        * Edges go in both directions (because the edge attributes differ)
+        * Edges go in both directions (because the edge attributes differ).
         * Every edge has a 'cw' and 'ccw' attribute which corresponds to a
           correct planar embedding.
         * A node with a degree larger than 0 has a node attribute 'first_nbr'.
@@ -883,16 +880,16 @@ class PlanarEmbedding(nx.DiGraph):
         Parameters
         ----------
         start_node : node
-            Start node of inserted edge
+            Start node of inserted edge.
         end_node : node
-            End node of inserted edge
+            End node of inserted edge.
         reference_neighbor: node
-            End node of reference edge
+            End node of reference edge.
 
         Raises
         ------
         nx.NetworkXException
-            If the reference_neighbor does not exist
+            If the reference_neighbor does not exist.
 
         See Also
         --------
@@ -925,16 +922,16 @@ class PlanarEmbedding(nx.DiGraph):
         Parameters
         ----------
         start_node : node
-            Start node of inserted edge
+            Start node of inserted edge.
         end_node : node
-            End node of inserted edge
+            End node of inserted edge.
         reference_neighbor: node
-            End node of reference edge
+            End node of reference edge.
 
         Raises
         ------
         nx.NetworkXException
-            If the reference_neighbor does not exist
+            If the reference_neighbor does not exist.
 
         See Also
         --------
@@ -968,7 +965,7 @@ class PlanarEmbedding(nx.DiGraph):
 
         This method should only be called if v and w are in different
         components, or it might break the embedding.
-        This especially meas that if `connect_components(v, w)` is called it is
+        This especially means that if `connect_components(v, w)` is called it is
         not allowed to call `connect_components(w, v)` afterwards.
         The neighbor orientations in both directions are all set correctly
         after the first call.
@@ -1008,7 +1005,7 @@ class PlanarEmbedding(nx.DiGraph):
         self.add_half_edge_ccw(start_node, end_node, reference)
 
     def next_face_half_edge(self, v, w):
-        """Returns the following half-edge left of a face
+        """Returns the following half-edge left of a face.
 
         Parameters
         ----------
@@ -1023,28 +1020,28 @@ class PlanarEmbedding(nx.DiGraph):
         return w, new_node
 
     def traverse_face(self, v, w, mark_half_edges=None):
-        """Returns nodes on the face that belong to the half-edge (v, w)
+        """Returns nodes on the face that belong to the half-edge (v, w).
 
         The face that is traversed lies to the right of the half-edge (in an
         orientation where v is below w).
 
-        Optionally it is possible to pass a set in which all encountered half
+        Optionally it is possible to pass a set to which all encountered half
         edges are added. Before calling this method, this set must not include
         any half-edges that belong to the face.
 
         Parameters
         ----------
         v : node
-            Start node of half-edge
+            Start node of half-edge.
         w : node
-            End node of half-edge
+            End node of half-edge.
         mark_half_edges: set, optional
-            Set to which all encountered half-edges are added
+            Set to which all encountered half-edges are added.
 
         Returns
         -------
         face : list
-            A list of nodes that lie on this face
+            A list of nodes that lie on this face.
         """
         if mark_half_edges is None:
             mark_half_edges = set()
