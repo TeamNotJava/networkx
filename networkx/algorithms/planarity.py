@@ -21,8 +21,8 @@ def check_planarity(G, counterexample=False):
     -------
     tuple : (is_planar : bool , certificate)
         is_planar is true if the graph is planar
-        If the graph is planar `certificate` is a PlanarEmbedding otherwise it is
-        a Kuratowski subgraph.
+        If the graph is planar `certificate` is a PlanarEmbedding
+        otherwise it is a Kuratowski subgraph.
 
     Notes
     -----
@@ -352,7 +352,8 @@ class LRPlanarity(object):
                 return None
 
         for e in self.DG.edges:
-            self.nesting_depth[e] = self.sign_recursive(e) * self.nesting_depth[e]
+            self.nesting_depth[e] = (self.sign_recursive(e) *
+                                     self.nesting_depth[e])
 
         self.embedding.add_nodes_from(self.DG.nodes)
         for v in self.DG:
@@ -641,11 +642,11 @@ class LRPlanarity(object):
                     break  # handle next node in dfs_stack (i.e. w)
                 else:  # back edge
                     if self.side[ei] == 1:
-                        # place v directly after right_ref[w] in embed. list of w
-                        self.embedding.add_half_edge_cw(w, v, self.right_ref[w])
+                        self.embedding.add_half_edge_cw(w, v,
+                                                        self.right_ref[w])
                     else:
-                        # place v directly before left_ref[w] in embed. list of w
-                        self.embedding.add_half_edge_ccw(w, v, self.left_ref[w])
+                        self.embedding.add_half_edge_ccw(w, v,
+                                                         self.left_ref[w])
                         self.left_ref[w] = v
 
     def dfs_embedding_recursive(self, v):
@@ -705,22 +706,23 @@ class PlanarEmbedding(nx.DiGraph):
     In comparison to a usual graph structure, the embedding also stores the
     order of all neighbors for every vertex.
     The order of the neighbors can be given in clockwise (cw) direction or
-    counterclockwise (ccw) direction. This order is stored as edge attributes in
-    the underlying directed graph. For the edge (u, v) the edge attribute 'cw'
-    is set to the neighbor of u that follows immediately after v in clockwise
-    direction.
+    counterclockwise (ccw) direction. This order is stored as edge attributes
+    in the underlying directed graph. For the edge (u, v) the edge attribute
+    'cw' is set to the neighbor of u that follows immediately after v in
+    clockwise direction.
 
-    In order for a PlanarEmbedding to be valid it must fulfill multiple conditions.
-    It is possible to check if these conditions are fulfilled with the method:
-    :meth:`check_structure`.
+    In order for a PlanarEmbedding to be valid it must fulfill multiple
+    conditions. It is possible to check if these conditions are fulfilled with
+    the method :meth:`check_structure`.
     The conditions are:
 
     * Edges must go in both directions (because the edge attributes differ)
     * Every edge must have a 'cw' and 'ccw' attribute which corresponds to a
       correct planar embedding.
-    * A node with a degree larger than 0 must have a node attribute 'first_nbr'.
+    * A node with non zero degree must have a node attribute 'first_nbr'.
 
-    While a PlanarEmbedding is invalid only the following methods should be called:
+    As long as a PlanarEmbedding is invalid only the following methods should
+    be called:
 
     * :meth:`add_half_edge_ccw </reference/classes/graph>`
     * :meth:`add_half_edge_cw`
@@ -728,19 +730,19 @@ class PlanarEmbedding(nx.DiGraph):
     * :meth:`add_half_edge_first`
 
     Even though the graph is a subclass of nx.DiGraph, it can still be used
-    for algorithms that require undirected graphs, because the :meth:`is_directed`
-    method is overridden. This is possible, because a valid PlanarGraph must have
-    edges in both directions.
+    for algorithms that require undirected graphs, because the method
+    :meth:`is_directed` is overridden. This is possible, because a valid
+    PlanarGraph must have edges in both directions.
 
     **Half edges:**
 
-    In methods like `add_half_edge_ccw` the term "half-edge" is used, which is a
-    term that is used in `doubly connected edge lists
-    <https://en.wikipedia.org/wiki/Doubly_connected_edge_list/>`_. It is used to
-    emphasize that the edge is only in one direction and there exists another
-    half-edge in the opposite direction.
-    While conventional edges always have two faces (including outer face) next to
-    them, it is possible to assign each half-edge *exactly one* face.
+    In methods like `add_half_edge_ccw` the term "half-edge" is used, which is
+    a term that is used in `doubly connected edge lists
+    <https://en.wikipedia.org/wiki/Doubly_connected_edge_list/>`_. It is used
+    to emphasize that the edge is only in one direction and there exists
+    another half-edge in the opposite direction.
+    While conventional edges always have two faces (including outer face) next
+    to them, it is possible to assign each half-edge *exactly one* face.
     For a half-edge (u, v) that is orientated such that u is below v then the
     face that belongs to (u, v) is to the right of this half-edge.
 
@@ -781,7 +783,8 @@ class PlanarEmbedding(nx.DiGraph):
         Returns
         -------
         embedding : dict
-            A dict mapping all nodes to neighbor lists sorted in clockwise order.
+            A dict mapping all nodes to a list of neighbors sorted in
+            clockwise order.
 
         """
         embedding = dict()
@@ -843,9 +846,9 @@ class PlanarEmbedding(nx.DiGraph):
                 msg = "Bad embedding. Edge orientations not set correctly."
                 raise nx.NetworkXException(msg)
             for w in self[v]:
-                # Check if opposite half edge exists
+                # Check if opposite half-edge exists
                 if not self.has_edge(w, v):
-                    msg = "Bad embedding. Opposite half edge is missing."
+                    msg = "Bad embedding. Opposite half-edge is missing."
                     raise nx.NetworkXException(msg)
 
         # Check planarity
@@ -863,7 +866,7 @@ class PlanarEmbedding(nx.DiGraph):
                     if (v, w) not in counted_half_edges:
                         # We encountered a new face
                         num_faces += 1
-                        # Mark all half edges belonging to this face
+                        # Mark all half-edges belonging to this face
                         self.traverse_face(v, w, counted_half_edges)
             num_edges = num_half_edges // 2  # num_half_edges is even
             if num_nodes - num_edges + num_faces != 2:
@@ -876,7 +879,7 @@ class PlanarEmbedding(nx.DiGraph):
     def add_half_edge_ccw(self, start_node, end_node, reference_neighbor):
         """Adds a half-edge from start_node to end_node.
 
-        The half edge is added counter clockwise next to the existing half edge
+        The half-edge is added counter clockwise next to the existing half-edge
         (start_node, reference_neighbor).
 
         Parameters
@@ -910,14 +913,15 @@ class PlanarEmbedding(nx.DiGraph):
             ccw_reference = self[start_node][reference_neighbor]['ccw']
             self.add_half_edge_cw(start_node, end_node, ccw_reference)
 
-            if reference_neighbor == self.nodes[start_node].get('first_nbr', None):
+            if reference_neighbor == self.nodes[start_node].get('first_nbr',
+                                                                None):
                 # Update first neighbor
                 self.nodes[start_node]['first_nbr'] = end_node
 
     def add_half_edge_cw(self, start_node, end_node, reference_neighbor):
-        """Adds a half edge from start_node to end_node.
+        """Adds a half-edge from start_node to end_node.
 
-        The half edge is added clockwise next to the existing half edge
+        The half-edge is added clockwise next to the existing half-edge
         (start_node, reference_neighbor).
 
         Parameters
@@ -953,9 +957,9 @@ class PlanarEmbedding(nx.DiGraph):
             raise nx.NetworkXException(
                 "Cannot add edge. Reference neighbor does not exist")
 
-        # Get half edge at the other side
+        # Get half-edge at the other side
         cw_reference = self[start_node][reference_neighbor]['cw']
-        # Alter half edge data structures
+        # Alter half-edge data structures
         self[start_node][reference_neighbor]['cw'] = end_node
         self[start_node][end_node]['cw'] = cw_reference
         self[start_node][cw_reference]['ccw'] = end_node
@@ -968,8 +972,8 @@ class PlanarEmbedding(nx.DiGraph):
         components, or it might break the embedding.
         This especially meas that if `connect_components(v, w)` is called it is
         not allowed to call `connect_components(w, v)` afterwards.
-        The neighbor orientations in both directions are all set correctly after
-        the first call.
+        The neighbor orientations in both directions are all set correctly
+        after the first call.
 
         Parameters
         ----------
@@ -1023,23 +1027,23 @@ class PlanarEmbedding(nx.DiGraph):
         return w, new_node
 
     def traverse_face(self, v, w, mark_half_edges=None):
-        """Returns nodes on the face that belong to the half edge (v, w)
+        """Returns nodes on the face that belong to the half-edge (v, w)
 
-        The face that is traversed lies to the right of the half edge (in an
+        The face that is traversed lies to the right of the half-edge (in an
         orientation where v is below w).
 
         Optionally it is possible to pass a set in which all encountered half
-        edges are added. Before calling this method, this set must not include any
-        half-edges that belong to the face.
+        edges are added. Before calling this method, this set must not include
+        any half-edges that belong to the face.
 
         Parameters
         ----------
         v : node
-            Start node of half edge
+            Start node of half-edge
         w : node
-            End node of half edge
+            End node of half-edge
         mark_half_edges: set, optional
-            Set to which all encountered half edges are added
+            Set to which all encountered half-edges are added
 
         Returns
         -------
@@ -1053,7 +1057,7 @@ class PlanarEmbedding(nx.DiGraph):
         mark_half_edges.add((v, w))
         prev_node = v
         cur_node = w
-        # Last half edge is (incoming_node, v)
+        # Last half-edge is (incoming_node, v)
         incoming_node = self[v][w]['cw']
 
         while cur_node != v or prev_node != incoming_node:
@@ -1069,7 +1073,8 @@ class PlanarEmbedding(nx.DiGraph):
     def is_directed(self):
         """A valid PlanarEmbedding is undirected.
 
-        All reverse edges are contained, i.e. for every existing half edge (v, w)
-        the half edge in the opposite direction (w, v) is also contained.
+        All reverse edges are contained, i.e. for every existing
+        half-edge (v, w) the half-edge in the opposite direction (w, v) is also
+        contained.
         """
         return False
