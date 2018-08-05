@@ -37,6 +37,7 @@ __all__ = ['bipartite_layout',
            'shell_layout',
            'spring_layout',
            'spectral_layout',
+           'planar_layout',
            'fruchterman_reingold_layout']
 
 
@@ -855,6 +856,40 @@ def _sparse_spectral(A, dim=2):
     eigenvalues, eigenvectors = eigsh(L, k, which='SM', ncv=ncv)
     index = np.argsort(eigenvalues)[1:k]  # 0 index is zero eigenvalue
     return np.real(eigenvectors[:, index])
+
+
+def planar_layout(G):
+    """Position nodes without edge intersections.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+        A position will be assigned to every node in G. If G is of type
+        PlanarEmbedding, the positions are selected accordingly.
+
+    Returns
+    -------
+    pos : dict
+        A dictionary of positions keyed by node
+
+    Raises
+    ------
+    nx.NetworkXException
+        If G is not planar
+
+    Examples
+    --------
+    >>> G = nx.path_graph(4)
+    >>> pos = nx.planar_layout(G)
+    """
+    if isinstance(G, nx.PlanarEmbedding):
+        embedding = G
+    else:
+        is_planar, embedding = nx.check_planarity(G)
+        if not is_planar:
+            raise nx.NetworkXException("G is not planar.")
+    pos = nx.combinatorial_embedding_to_pos(embedding)
+    return pos
 
 
 def rescale_layout(pos, scale=1):

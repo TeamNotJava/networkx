@@ -418,10 +418,9 @@ def main():
             is_planar, embedding = nx.check_planarity(G)
             p *= 0.99
         print("Embedding: ", embedding.get_data())
-        pos = combinatorial_embedding_to_pos(embedding, fully_triangulate=False)
         print("Displaying not fully triangulated drawing")
         plt.subplot(1, 2, 1)
-        nx.draw(G, pos, node_size=2)
+        nx.draw_planar(embedding, node_size=2)
 
 
         pos = combinatorial_embedding_to_pos(embedding, fully_triangulate=True)
