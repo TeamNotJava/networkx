@@ -789,6 +789,11 @@ class PlanarEmbedding(nx.DiGraph):
             embedding[v] = list(self.neighbors_cw_order(v))
         return embedding
 
+    def set_data(self, data):
+        for v in data:
+            for w in reversed(data[v]):
+                self.add_half_edge_first(v, w)
+
     def neighbors_cw_order(self, v):
         """Generator for the neighbors of v in clockwise order.
 

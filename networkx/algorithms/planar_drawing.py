@@ -40,7 +40,7 @@ def combinatorial_embedding_to_pos(embedding, fully_triangulate=False):
     y_coordinate = {}
 
     node_list = get_canonical_ordering(embedding, outer_face)
-    print("Canonical ordering: ", node_list)
+
     # 1. Phase
 
     # Initialization

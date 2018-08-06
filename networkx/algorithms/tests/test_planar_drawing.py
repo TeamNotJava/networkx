@@ -9,10 +9,10 @@ def test_graph1():
     embedding = nx.PlanarEmbedding()
     embedding.set_data(embedding_data)
     pos = nx.combinatorial_embedding_to_pos(embedding)
-    assert_true(is_planar_drawing_correct(G, pos),
-                "Planar drawing is not correct")
     assert_true(planar_drawing_conforms_to_embedding(embedding, pos),
                 "Planar drawing does not conform to the embedding")
+    assert_true(is_planar_drawing_correct(G, pos),
+                "Planar drawing is not correct")
 
 
 def is_planar_drawing_correct(G, pos):
@@ -52,23 +52,92 @@ def is_planar_drawing_correct(G, pos):
     return True
 
 
+class Vector:
+    """Comparable by their phi values without loss of precision
+    All vectors in direction [0, 1] are the smallest.
+    The vectors grow in clockwise direction.
+    """
+    __slots__ = ['x', 'y', 'node', 'quadrant']
+
+    def __init__(self, x, y, node):
+        self.x = x
+        self.y = y
+        self.node = node
+        if self.x >= 0 and self.y > 0:
+            self.quadrant = 1
+        elif self.x > 0 and self.y <= 0:
+            self.quadrant = 2
+        elif self.x <= 0 and self.y < 0:
+            self.quadrant = 3
+        else:
+            self.quadrant = 4
+
+    def __eq__(self, other):
+        return (self.quadrant == other.quadrant and
+                self.x * other.y == self.y * other.x)
+
+    def __lt__(self, other):
+        if self.quadrant < other.quadrant:
+            return True
+        elif self.quadrant > other.quadrant:
+            return False
+        else:
+            return self.x * other.y < self.y * other.x
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __le__(self, other):
+        return not other < self
+
+    def __gt__(self, other):
+        return other < self
+
+    def __ge__(self, other):
+        return not self < other
+
+
 def planar_drawing_conforms_to_embedding(embedding, pos):
     """Checks if pos conforms to the planar embedding
 
     Returns true iff the neighbors are actually oriented in the orientation
     specified of the embedding
     """
-    for _,nbrs in embedding:
-        if len(nbrs)>1:
-            for idx,n in nbrs:
-                x1,y1 = pos[n]
-                x2,y2 = pos[nbrs[(idx+1)%len(nbrs)]]
-                if x1==x2 and y1==y2 : # There should be no nodes mapped to identical positions
-                    return False
-                if x1 > x2:
-                    if y1 < y2: # If the point is right of its predecessor it also has to be lower
-                        return False
-                if x1 < x2:
-                    if y1 > y2:
-                        return False
+    for v in embedding:
+        nbr_vectors = []
+        v_pos = pos[v]
+        for nbr in embedding[v]:
+            new_vector = Vector(pos[nbr][0]-v_pos[0], pos[nbr][1]-v_pos[1], nbr)
+            nbr_vectors.append(new_vector)
+        # Sort neighbors according to their phi angle
+        nbr_vectors.sort()
+        for idx, nbr_vector in enumerate(nbr_vectors):
+            cw_vector = nbr_vectors[(idx + 1) % len(nbr_vectors)]
+            ccw_vector = nbr_vectors[idx - 1]
+            if (embedding[v][nbr_vector.node]['cw'] != cw_vector.node or
+                    embedding[v][nbr_vector.node]['ccw'] != ccw_vector.node):
+                return False
+            if cw_vector.node != nbr_vector.node and cw_vector == nbr_vector:
+                # Lines overlap
+                return False
+            if ccw_vector.node != nbr_vector.node and ccw_vector == nbr_vector:
+                # Lines overlap
+                return False
     return True
+
+
+# TODO: Remove random test in pull request
+def test_random():
+    for _ in range(10):
+        n = 50
+        p = 1.0
+        is_planar = False
+        while not is_planar:
+            G = nx.fast_gnp_random_graph(n, p)
+            is_planar, embedding = nx.check_planarity(G)
+            p *= 0.9
+        pos = nx.combinatorial_embedding_to_pos(embedding, fully_triangulate=False)
+        assert_true(planar_drawing_conforms_to_embedding(embedding, pos),
+                    "Planar drawing does not conform to the embedding")
+        assert_true(is_planar_drawing_correct(G, pos),
+                    "Planar drawing is not correct")
