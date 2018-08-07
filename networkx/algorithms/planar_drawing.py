@@ -168,7 +168,7 @@ def get_canonical_ordering(embedding, outer_face):
 
     # Initialize number of chords
     for v in outer_face:
-        for nbr in embedding.get_neighbors(v):
+        for nbr in embedding.neighbors_cw_order(v):
             if is_on_outer_face(nbr) and not is_outer_face_nbr(v, nbr):
                 chords[v] += 1
                 ready_to_pick.discard(v)
@@ -188,7 +188,7 @@ def get_canonical_ordering(embedding, outer_face):
         # v has exactly two neighbors on the outer face (wp and wq)
         wp = None
         wq = None
-        for nbr in embedding.get_neighbors(v):  # TODO: Break if wp and wq are found
+        for nbr in embedding.neighbors_cw_order(v):  # TODO: Break if wp and wq are found
             if nbr in marked_nodes:
                 # Only consider nodes that are not yet removed
                 continue
@@ -236,7 +236,7 @@ def get_canonical_ordering(embedding, outer_face):
             for w in new_face_nodes:
                 # If we do not find a chord for w later we can pick it next
                 ready_to_pick.add(w)
-                for nbr in embedding.get_neighbors(w):
+                for nbr in embedding.neighbors_cw_order(w):
                     if is_on_outer_face(nbr) and not is_outer_face_nbr(w, nbr):
                         # There is a chord involving w
                         chords[w] += 1
@@ -319,7 +319,7 @@ def triangulate_embedding(embedding, fully_triangulate=False):
     face_list = []
     edges_visited = set()
     for v in embedding.nodes():
-        for w in embedding.get_neighbors(v):
+        for w in embedding.neighbors_cw_order(v):
             new_face = make_bi_connected(embedding, v, w, edges_visited)
             if new_face:
                 # Found a new face
