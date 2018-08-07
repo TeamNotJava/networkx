@@ -277,11 +277,15 @@ def triangulate_embedding(embedding):
         add_half_edge(v1, v2, left_neighbor, right_neighbor)
         add_half_edge(v2, v1, left_neighbor, right_neighbor)
 
-    # 3. Calculate faces, ensure 2-connected and determine outer face
+    # 3. Calculate faces, and determine outer face
     outer_face = []  # A face with the most number of nodes
+    face_list = []
+
     # TODO
-    
-    # 4. Triangulate internal faces (in a zig-zag fashion)
+
+    # 4. Ensure 2-connectedness of outer face
+
+    # 5. Triangulate internal faces (in a zig-zag fashion)
     for face in face_list:
         i, j, it = 1, -1, 0
         while face[i] != face[j - 1]:
@@ -293,8 +297,7 @@ def triangulate_embedding(embedding):
                 j -= 1
             it = 1 - it
 
-
-    # 5. Transform embedding datastructure back
+    # 6. Transform embedding datastructure back
     new_embedding = dict()
     for v in embedding:
         start_node = next(iter(right_neighbor[v]))
@@ -305,7 +308,7 @@ def triangulate_embedding(embedding):
             current_node = right_neighbor[v][current_node]
         new_embedding[v] = neighbor_list
 
-    # 6. Choose start_triangle
+    # 7. Choose start_triangle
     v1 = outer_face[0]
     v2 = outer_face[1]
     v3 = left_neighbor[v1][v2]
@@ -326,6 +329,45 @@ def add_half_edge(v1, v2, left_neighbor, right_neighbor):
         right_neighbor[v1][v2] = v2
 
 
+def get_face_nodes(right_neighbor, starting_node, outgoing_node, edges_counted):
+    """
+    ----------
+    embedding: dict
+        The embedding that defines the faces
+    starting_node:
+        A node on the face
+    face_idx: int
+        Index of the half-edge in embedding[starting_node]
+    edges_counted: set
+        Set of all half-edges that belong to a face that has been counted
+    Returns
+    -------
+    face_nodes: list
+        A list of all nodes at the border of this face
+    """
+
+    # Check if the face has already been calculated
+    if (starting_node, outgoing_node) in edges_counted:
+        # This face was already counted
+        return []
+    edges_counted.add((starting_node, outgoing_node))
+
+    # Add all edges to edges_counted which have this face to their left
+    current_node = starting_node
+    next_node = outgoing_node
+    face = set([starting_node])
+    while next_node != starting_node or right_neighbor[current_node] != starting_node:
+        # cycle is not completed yet
+
+        # set next edge
+        current_node, next_node = next_node, right_neighbor[next_node][current_node]
+
+        # remember that this edge has been counted
+        edges_counted.add((current_node, next_node))
+
+    # 5. Count this face
+    return list(face)
+
 ContourNeighborData = namedtuple('ContourNeighborData',
                                  ['wp', 'wp1', 'wq1', 'wq', 'delta_x_wp_wq',
                                   'adds_mult_tri'])
@@ -339,7 +381,7 @@ class Nil:
     pass
 
 if __name__ == '__main__':
-    embedding = {
+    embeddingX = {
         1: [4, 3, 2],
         2: [1, 3, 5],
         3: [1, 4, 6, 5, 2],
@@ -347,4 +389,4 @@ if __name__ == '__main__':
         5: [2, 3, 6],
         6: [5, 3, 4],
     }
-    print(combinatorial_embedding_to_pos(embedding))
+    print(combinatorial_embedding_to_pos(embeddingX))
