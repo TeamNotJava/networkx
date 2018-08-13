@@ -1,5 +1,5 @@
 import networkx as nx
-from collections import namedtuple, defaultdict
+from collections import defaultdict
 
 
 __all__ = ["combinatorial_embedding_to_pos"]
@@ -11,8 +11,11 @@ def combinatorial_embedding_to_pos(embedding, fully_triangulate=False):
     Parameters
     ----------
     embedding : nx.PlanarEmbedding
-        A combinatorial embedding that maps each node to a list of nodes,
-        which defines the order of the outgoing edges (in clockwise order)
+        This defines the order of the edges
+
+    fully_triangulate : bool
+        If set to True the algorithm will adds edges to a copy of the input
+        graph such that it is chordal.
 
     Returns
     -------
@@ -41,7 +44,7 @@ def combinatorial_embedding_to_pos(embedding, fully_triangulate=False):
 
     node_list = get_canonical_ordering(embedding, outer_face)
 
-    # 1. Phase
+    # 1. Phase: Compute relative positions
 
     # Initialization
     v1, v2, v3 = node_list[0][0], node_list[1][0], node_list[2][0]
@@ -92,7 +95,7 @@ def combinatorial_embedding_to_pos(embedding, fully_triangulate=False):
         else:
             left_t_child[vk] = None
 
-    # 2. Phase Set absolute positions
+    # 2. Phase: Set absolute positions
     pos = dict()
     pos[v1] = (0, y_coordinate[v1])
     remaining_nodes = [v1]
@@ -100,15 +103,16 @@ def combinatorial_embedding_to_pos(embedding, fully_triangulate=False):
         parent_node = remaining_nodes.pop()
 
         # Calculate position for left child
-        set_absolute_position(parent_node, left_t_child,
-                              remaining_nodes, delta_x, y_coordinate, pos)
+        set_position(parent_node, left_t_child,
+                     remaining_nodes, delta_x, y_coordinate, pos)
         # Calculate position for right child
-        set_absolute_position(parent_node, right_t_child,
-                              remaining_nodes, delta_x, y_coordinate, pos)
+        set_position(parent_node, right_t_child,
+                     remaining_nodes, delta_x, y_coordinate, pos)
     return pos
 
 
-def set_absolute_position(parent, tree, remaining_nodes, delta_x, y_coordinate, pos):
+def set_position(parent, tree, remaining_nodes, delta_x, y_coordinate, pos):
+    """Helper method to calculate the absolute position of nodes."""
     child = tree[parent]
     parent_node_x = pos[parent][0]
     if child is not None:
@@ -125,14 +129,14 @@ def get_canonical_ordering(embedding, outer_face):
     Parameters
     ----------
     embedding : nx.PlanarEmbedding
-        The embedding is already fully triangulated
+        The embedding must be triangulated
     outer_face : list
         The nodes on the outer face of the graph
 
     Returns
     -------
     node_list : list
-        All nodes in the canonical ordering
+        All nodes ordered by the canonical ordering
     """
     v1 = outer_face[0]
     v2 = outer_face[1]
@@ -174,7 +178,7 @@ def get_canonical_ordering(embedding, outer_face):
                 ready_to_pick.discard(v)
 
     # Initialize canonical_ordering
-    canonical_ordering = [None]*len(embedding.nodes())  # type: object
+    canonical_ordering = [None] * len(embedding.nodes())  # type: list
     canonical_ordering[0] = (v1, [])
     canonical_ordering[1] = (v2, [])
     ready_to_pick.discard(v1)
@@ -253,7 +257,15 @@ def get_canonical_ordering(embedding, outer_face):
 
 
 def triangulate_face(embedding, v1, v2):
-    """Triangulates the face given by half edge (v, w)"""
+    """Triangulates the face given by half edge (v, w)
+
+    Parameters
+    ----------
+    embedding : nx.PlanarEmbedding
+    v1 : node
+        The half-edge (v1, v2) belongs to the face that gets triangulated
+    v2 : node
+    """
     _, v3 = embedding.next_face_half_edge(v1, v2)
     _, v4 = embedding.next_face_half_edge(v2, v3)
     if v1 == v2 or v1 == v3:
@@ -273,40 +285,40 @@ def triangulate_face(embedding, v1, v2):
         _, v4 = embedding.next_face_half_edge(v2, v3)
 
 
-def triangulate_embedding(embedding, fully_triangulate=False):
+def triangulate_embedding(embedding, fully_triangulate=True):
     """Triangulates the embedding.
 
-    Chooses the face that has the most vertices as the outer face. All other
-    faces are triangulated by adding edges in a zig-zag way to keep the maximum
-    degree low.
-
-    The triangulated graph is 2-connected. This means on a cycle on the outer face
-    a node cannot appear twice.
+    Traverses faces of the embedding and adds edges to a copy of the
+    embedding to triangulate it.
+    The method also ensures that the resulting graph is 2-connected by adding
+    edges if the same vertex is contained twice on a path around a face.
 
     Parameters
     ----------
     embedding : nx.PlanarEmbedding
-        Maps each node to a list of neighbors in clockwise orientation. The input
-        graph contains at least 3 nodes.
+        The input graph must contain at least 3 nodes.
+
+    fully_triangulate : bool
+        If set to False the face with the most nodes is chooses as outer face.
+        This outer face does not get triangulated.
 
     Returns
     -------
     embedding : nx.PlanarEmbedding
         A new embedding containing all edges from the input embedding and the
-        additional edges to internally triangulate the graph.
+        additional edges to triangulate the graph.
 
-    start_triangle : tuple
-        A tuple of 3 nodes (v1, v2, v3) that define a triangle in the graph.
-        The edge (v1,v2) must lie on the outer face. When viewed with the edge
-        (v1, v2) at the bottom, the node v1 lies to the left of v2.
-
+    outer_face : list
+        A list of nodes that lie on the outer face. If the graph is fully
+        triangulated these are three arbitrary connected nodes.
     """
     if len(embedding.nodes()) <= 1:
         return embedding
     embedding = nx.PlanarEmbedding(embedding)
 
     # Get a list with a node for each connected component
-    component_nodes = [next(iter(x)) for x in nx.connected_components(embedding)]
+    component_nodes = [next(iter(x)) for x in
+                       nx.connected_components(embedding)]
 
     # 1. Make graph a single component (add edge between components)
     for i in range(len(component_nodes)-1):
@@ -317,7 +329,7 @@ def triangulate_embedding(embedding, fully_triangulate=False):
     # 2. Calculate faces, ensure 2-connectedness and determine outer face
     outer_face = []  # A face with the most number of nodes
     face_list = []
-    edges_visited = set()
+    edges_visited = set()  # Used to keep track of already visited faces
     for v in embedding.nodes():
         for w in embedding.neighbors_cw_order(v):
             new_face = make_bi_connected(embedding, v, w, edges_visited)
@@ -325,14 +337,14 @@ def triangulate_embedding(embedding, fully_triangulate=False):
                 # Found a new face
                 face_list.append(new_face)
                 if len(new_face) > len(outer_face):
+                    # The face is a candidate to be the outer face
                     outer_face = new_face
 
-    # 3. Triangulate internal faces
+    # 3. Triangulate (internal) faces
     for face in face_list:
-        if face is outer_face and not fully_triangulate:
-            # Don't triangulate this face
-            continue
-        triangulate_face(embedding, face[0], face[1])
+        if face is not outer_face or fully_triangulate:
+            # Triangulate this face
+            triangulate_face(embedding, face[0], face[1])
 
     if fully_triangulate:
         v1 = outer_face[0]
@@ -344,7 +356,9 @@ def triangulate_embedding(embedding, fully_triangulate=False):
 
 
 def make_bi_connected(embedding, starting_node, outgoing_node, edges_counted):
-    """Makes the face given by (starting_node, outgoing_node) 2-connected
+    """Triangulate a face and make it 2-connected
+
+    This method also adds all edges on the face to `edges_counted`.
 
     Parameters
     ----------
@@ -356,7 +370,8 @@ def make_bi_connected(embedding, starting_node, outgoing_node, edges_counted):
         A node such that the half edge (starting_node, outgoing_node) belongs
         to the face
     edges_counted: set
-        Set of all half-edges that belong to a face that has been counted
+        Set of all half-edges that belong to a face that have been visited
+
     Returns
     -------
     face_nodes: list
@@ -372,22 +387,24 @@ def make_bi_connected(embedding, starting_node, outgoing_node, edges_counted):
     # Add all edges to edges_counted which have this face to their left
     v1 = starting_node
     v2 = outgoing_node
-    face_list = [starting_node]
-    face_set = set(face_list)
+    face_list = [starting_node]  # List of nodes around the face
+    face_set = set(face_list)  # Set for faster queries
     _, v3 = embedding.next_face_half_edge(v1, v2)
+
+    # Move the nodes v1, v2, v3 around the face:
     while v2 != starting_node or v3 != outgoing_node:
         # cycle is not completed yet
         if v2 in face_set:
+            # v2 encountered twice: Add edge to ensure 2-connectedness
             embedding.add_half_edge_cw(v1, v3, v2)
             embedding.add_half_edge_ccw(v3, v1, v2)
             edges_counted.add((v2, v3))
             edges_counted.add((v3, v1))
             v2 = v1
-
         else:
             face_set.add(v2)
             face_list.append(v2)
-        
+
         # set next edge
         v1 = v2
         v2, v3 = embedding.next_face_half_edge(v2, v3)
@@ -396,7 +413,6 @@ def make_bi_connected(embedding, starting_node, outgoing_node, edges_counted):
         edges_counted.add((v1, v2))
 
     return face_list
-
 
 
 def main():
@@ -414,7 +430,6 @@ def main():
         print("Displaying not fully triangulated drawing")
         plt.subplot(1, 2, 1)
         nx.draw_planar(embedding, node_size=2)
-
 
         pos = combinatorial_embedding_to_pos(embedding, fully_triangulate=True)
         print("Displaying fully triangulated drawing")

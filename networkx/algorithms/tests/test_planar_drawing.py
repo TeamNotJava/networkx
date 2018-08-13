@@ -52,7 +52,7 @@ def is_planar_drawing_correct(G, pos):
     return True
 
 
-class Vector:
+class Vector(object):
     """Comparable by their phi values without loss of precision
     All vectors in direction [0, 1] are the smallest.
     The vectors grow in clockwise direction.
@@ -107,7 +107,8 @@ def planar_drawing_conforms_to_embedding(embedding, pos):
         nbr_vectors = []
         v_pos = pos[v]
         for nbr in embedding[v]:
-            new_vector = Vector(pos[nbr][0]-v_pos[0], pos[nbr][1]-v_pos[1], nbr)
+            new_vector = Vector(pos[nbr][0] - v_pos[0], pos[nbr][1] - v_pos[1],
+                                nbr)
             nbr_vectors.append(new_vector)
         # Sort neighbors according to their phi angle
         nbr_vectors.sort()
@@ -136,7 +137,8 @@ def test_random():
             G = nx.fast_gnp_random_graph(n, p)
             is_planar, embedding = nx.check_planarity(G)
             p *= 0.9
-        pos = nx.combinatorial_embedding_to_pos(embedding, fully_triangulate=False)
+        pos = nx.combinatorial_embedding_to_pos(embedding,
+                                                fully_triangulate=False)
         assert_true(planar_drawing_conforms_to_embedding(embedding, pos),
                     "Planar drawing does not conform to the embedding")
         assert_true(is_planar_drawing_correct(G, pos),
