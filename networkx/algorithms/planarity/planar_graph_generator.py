@@ -12,11 +12,11 @@
 #           Rudi Floren <rudi.floren@gmail.com>
 #           Tobias Winkler <tobias.winkler1@rwth-aachen.de>
 
-from boltzmann_framework.evaluation_oracle import EvaluationOracle
-from boltzmann_framework.generic_samplers import BoltzmannSamplerBase
-from boltzmann_framework.generic_classes import SetClass
-from planar_graph_boltzmann_samplers.grammar.planar_graph_decomposition import  planar_graph_grammar, bij_connected_comps
-from planar_graph_boltzmann_samplers.evaluations_planar_graph import planar_graph_evals
+from .boltzmann_framework.evaluation_oracle import EvaluationOracle
+from .boltzmann_framework.generic_samplers import BoltzmannSamplerBase
+from .boltzmann_framework.generic_classes import SetClass
+from .planar_graph_boltzmann_samplers.grammar.planar_graph_decomposition import  planar_graph_grammar, bij_connected_comps
+from .planar_graph_boltzmann_samplers.evaluations_planar_graph import planar_graph_evals
 import networkx as nx
 
 class PlanarGraphGenerator:
