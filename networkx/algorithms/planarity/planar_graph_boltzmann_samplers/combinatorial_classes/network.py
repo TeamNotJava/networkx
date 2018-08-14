@@ -73,11 +73,11 @@ class Network(HalfEdgeGraph):
         return self._l_size
 
     def random_u_atom(self):
-        rand_index = rn.randrange(self.u_size()
+        rand_index = rn.randrange(self.u_size)
         return nth(self.u_atoms(), rand_index)
 
     def random_l_atom(self):
-        rand_index = rn.randrange(self.l_size())
+        rand_index = rn.randrange(self.l_size)
         return nth(self.l_atoms(), rand_index)
 
     def __str__(self):
