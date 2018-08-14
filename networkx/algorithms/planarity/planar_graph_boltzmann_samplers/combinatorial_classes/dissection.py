@@ -157,7 +157,8 @@ class IrreducibleDissection(HalfEdgeGraph):
 
     def to_networkx_graph(self, include_unpaired=None):
         """Converts to networkx graph, encodes hexagonal nodes with colors."""
-        from planar_graph_sampler.combinatorial_classes.half_edge_graph import color_scale
+        from .half_edge_graph import color_scale
+
         # Get dict of nodes.
         nodes = self.half_edge.node_dict()
         # Include the leaves as well.

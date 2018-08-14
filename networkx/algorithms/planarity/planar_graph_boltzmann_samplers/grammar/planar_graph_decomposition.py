@@ -71,31 +71,3 @@ def planar_graph_grammar():
 
     return grammar
 
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    from planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100, planar_graph_evals_n1000, \
-        reference_evals
-
-    BoltzmannSamplerBase.oracle = EvaluationOracle(planar_graph_evals_n100)
-    BoltzmannSamplerBase.debug_mode = False
-
-    grammar = planar_graph_grammar()
-    grammar.init()
-    symbolic_x = 'x'
-    symbolic_y = 'y'
-    sampled_class = 'G_dx_dx'
-    grammar.precompute_evals(sampled_class, symbolic_x, symbolic_y)
-
-    # random.seed(0)
-
-    while True:
-        try:
-            g = grammar.sample_iterative(sampled_class, symbolic_x, symbolic_y)
-            if g.l_size > 0:
-                print(g)
-                g = bij_connected_comps(g)
-                nx.draw(g, pos=nx.combinatorial_embedding_to_pos(g), node_size=10, use_planar_drawer=True)
-                plt.show()
-        except RecursionError:
-            print("Recursion error")

@@ -17,8 +17,8 @@ from ...boltzmann_framework.generic_samplers import *
 from ...boltzmann_framework.evaluation_oracle import EvaluationOracle
 from ...boltzmann_framework.generic_samplers import BoltzmannSamplerBase
 
-from .grammar.grammar_utils import to_l_derived_class, divide_by_2
-from .grammar.irreducible_dissection_decomposition import irreducible_dissection_grammar
+from .grammar_utils import to_l_derived_class, divide_by_2
+from .irreducible_dissection_decomposition import irreducible_dissection_grammar
 from ..bijections.primal_map import PrimalMap
 from ..combinatorial_classes.three_connected_graph import EdgeRootedThreeConnectedPlanarGraph
 
@@ -67,31 +67,4 @@ def three_connected_graph_grammar():
     }
 
     return grammar
-
-
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    from planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100, planar_graph_evals_n1000
-
-    BoltzmannSamplerBase.oracle = EvaluationOracle(planar_graph_evals_n100)
-
-    grammar = three_connected_graph_grammar()
-    grammar.init()
-    symbolic_x = 'x*G_1_dx(x,y)'
-    symbolic_y = 'D(x*G_1_dx(x,y),y)'
-    sampled_class = 'G_3_arrow_dy'
-    grammar.precompute_evals(sampled_class, symbolic_x, symbolic_y)
-
-    # random.seed(0)
-
-    while True:
-        try:
-            g = grammar.sample_iterative(sampled_class, symbolic_x, symbolic_y)
-            if g.l_size > 0:
-                print(g)
-                g = g.underive_all()
-                assert g.is_consistent
-                g.plot(node_size=25, use_planar_drawer=True)
-                plt.show()
-        except RecursionError:
-            print("Recursion error")
+    

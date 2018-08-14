@@ -162,30 +162,3 @@ def network_grammar():
 
     return grammar
 
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    from planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100, planar_graph_evals_n1000
-
-    BoltzmannSamplerBase.oracle = EvaluationOracle(planar_graph_evals_n1000)
-    BoltzmannSamplerBase.debug_mode = True
-
-    grammar = network_grammar()
-    grammar.init()
-    symbolic_x = 'x*G_1_dx(x,y)'
-    symbolic_y = 'y'
-    sampled_class = 'D_dx'
-    grammar.precompute_evals(sampled_class, symbolic_x, symbolic_y)
-
-    # random.seed(0)
-
-    while True:
-        try:
-            g = grammar.sample_iterative(sampled_class, symbolic_x, symbolic_y)
-            if g.l_size > 0:
-                print(g)
-                assert g.is_consistent
-                g.plot(with_labels=False, use_planar_drawer=False, node_size=25)
-                plt.show()
-        except RecursionError:
-            print("RecursionError")

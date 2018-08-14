@@ -19,7 +19,7 @@ from .decomposition_grammar import *
 from .evaluation_oracle import EvaluationOracle
 
 # TODO make some reasonable things here or delete
-from framework.generic_samplers import BoltzmannSamplerBase
+from .generic_samplers import BoltzmannSamplerBase
 
 
 def dummy_sampling():
