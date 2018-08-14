@@ -4,15 +4,18 @@ from nose.tools import assert_true
 
 
 def test_graph1():
-    G = nx.Graph([(0, 1), (1, 2), (2, 3), (3, 0), (0, 2)])
     embedding_data = {0: [1, 2, 3], 1: [2, 0], 2: [3, 0, 1], 3: [2, 0]}
+    check_embedding_data(embedding_data)
+
+
+def check_embedding_data(embedding_data):
     embedding = nx.PlanarEmbedding()
     embedding.set_data(embedding_data)
     pos = nx.combinatorial_embedding_to_pos(embedding)
     assert_true(planar_drawing_conforms_to_embedding(embedding, pos),
                 "Planar drawing does not conform to the embedding")
-    assert_true(is_planar_drawing_correct(G, pos),
-                "Planar drawing is not correct")
+    assert_true(is_planar_drawing_correct(embedding, pos),
+                "Intersection in planar drawing")
 
 
 def is_planar_drawing_correct(G, pos):
@@ -53,7 +56,8 @@ def is_planar_drawing_correct(G, pos):
 
 
 class Vector(object):
-    """Comparable by their phi values without loss of precision
+    """Compare vectors by their angle without loss of precision
+
     All vectors in direction [0, 1] are the smallest.
     The vectors grow in clockwise direction.
     """
@@ -127,19 +131,4 @@ def planar_drawing_conforms_to_embedding(embedding, pos):
     return True
 
 
-# TODO: Remove random test in pull request
-def test_random():
-    for _ in range(10):
-        n = 50
-        p = 1.0
-        is_planar = False
-        while not is_planar:
-            G = nx.fast_gnp_random_graph(n, p)
-            is_planar, embedding = nx.check_planarity(G)
-            p *= 0.9
-        pos = nx.combinatorial_embedding_to_pos(embedding,
-                                                fully_triangulate=False)
-        assert_true(planar_drawing_conforms_to_embedding(embedding, pos),
-                    "Planar drawing does not conform to the embedding")
-        assert_true(is_planar_drawing_correct(G, pos),
-                    "Planar drawing is not correct")
+

@@ -14,13 +14,20 @@ def combinatorial_embedding_to_pos(embedding, fully_triangulate=False):
         This defines the order of the edges
 
     fully_triangulate : bool
-        If set to True the algorithm will adds edges to a copy of the input
-        graph such that it is chordal.
+        If set to True the algorithm adds edges to a copy of the input
+        embedding and makes it chordal.
 
     Returns
     -------
     pos : dict
         Maps each node to a tuple that defines the (x, y) position
+
+    References
+    ----------
+    .. [1] M. Chrobak and T.H. Payne:
+        A Linear-time Algorithm for Drawing a Planar Graph on a Grid 1989
+        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.51.6677
+
     """
     if len(embedding.nodes()) < 4:
         # Position the node in any triangle
@@ -137,6 +144,12 @@ def get_canonical_ordering(embedding, outer_face):
     -------
     node_list : list
         All nodes ordered by the canonical ordering
+
+    References
+    ----------
+    .. [1] Steven Chaplick.
+        Canonical Orders of Planar Graphs and (some of) Their Applications 2015
+        https://wuecampus2.uni-wuerzburg.de/moodle/pluginfile.php/545727/mod_resource/content/0/vg-ss15-vl03-canonical-orders-druckversion.pdf
     """
     v1 = outer_face[0]
     v2 = outer_face[1]
@@ -413,31 +426,3 @@ def make_bi_connected(embedding, starting_node, outgoing_node, edges_counted):
         edges_counted.add((v1, v2))
 
     return face_list
-
-
-def main():
-    import matplotlib.pyplot as plt
-
-    while True:
-        n = 50
-        p = 1.0
-        is_planar = False
-        while not is_planar:
-            G = nx.fast_gnp_random_graph(n, p)
-            is_planar, embedding = nx.check_planarity(G)
-            p *= 0.99
-        print("Embedding: ", embedding.get_data())
-        print("Displaying not fully triangulated drawing")
-        plt.subplot(1, 2, 1)
-        nx.draw_planar(embedding, node_size=2)
-
-        pos = combinatorial_embedding_to_pos(embedding, fully_triangulate=True)
-        print("Displaying fully triangulated drawing")
-        plt.subplot(1, 2, 2)
-        nx.draw(G, pos, node_size=2)
-
-        plt.show()
-
-
-if __name__ == '__main__':
-    main()
