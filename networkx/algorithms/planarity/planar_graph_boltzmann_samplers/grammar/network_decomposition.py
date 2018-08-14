@@ -70,7 +70,6 @@ class PNetworkBuilder(NetworkBuilder):
             # An empty set is like a zero atom (it has size 0).
             # We use the generic zero atom here as a zero-atom-network cannot be defined.
             return ZeroAtomClass()
-        # TODO Without reversing the list of networks, weird things happen, find out why.
         networks.reverse()
         res = networks.pop()
         for nw in networks:

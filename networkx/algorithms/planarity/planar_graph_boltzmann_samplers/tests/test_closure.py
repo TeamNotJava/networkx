@@ -15,10 +15,6 @@
 from nose.tools import assert_false, assert_true
 from .mock_objects_creator import create_sample_binary_tree
 from ..bijections.closure import Closure
-# from framework.generic_samplers import BoltzmannSamplerBase
-# from framework.decomposition_grammar import AliasSampler, DecompositionGrammar
-# from planar_graph_sampler.grammar.binary_tree_decomposition import binary_tree_grammar
-# from planar_graph_sampler.evaluations_planar_graph import EvaluationOracle, planar_graph_evals_n100, planar_graph_evals_n1000
 
 
 class TestClosure(object):

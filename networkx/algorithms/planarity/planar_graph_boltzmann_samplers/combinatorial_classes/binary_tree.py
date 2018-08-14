@@ -55,7 +55,6 @@ class BinaryTree(HalfEdgeGraph):
 
     def flip(self):
         """Flips the children."""
-        # TODO needed?
         self.half_edge.invert()
         # Otherwise don't do anything.
         return self
@@ -65,15 +64,12 @@ class BinaryTree(HalfEdgeGraph):
 
         Only works if the tree does not have two children yet and the child root has the correct color.
         """
-        # assert self._half_edge.degree() < 3
         # Add new half edge to root.
         new = ClosureHalfEdge()
         new.color = self.half_edge.color
         new.node_nr = self.half_edge.node_nr
         self.half_edge.insert_after(new)
         if not other.is_leaf:
-            # assert other.half_edge.opposite is None
-            # assert other.half_edge.color is not self._half_edge.color
             new.opposite = other.half_edge
             other.half_edge.opposite = new
             self.black_nodes_count += other.black_nodes_count
@@ -113,18 +109,6 @@ class BinaryTree(HalfEdgeGraph):
     @property
     def is_black_rooted(self):
         return self.root_color is 'black'
-
-    # @property
-    # def black_nodes_count(self):
-    #     return self._black_nodes_count
-    #
-    # @property
-    # def white_nodes_count(self):
-    #     return self._white_nodes_count
-    #
-    # @property
-    # def leaves_count(self):
-    #     return self._leaves_count
 
     def set_root_node_nr(self, node_nr):
         for h in self.half_edge.incident():

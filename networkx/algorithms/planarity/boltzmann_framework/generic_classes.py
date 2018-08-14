@@ -414,7 +414,6 @@ class DerivedClass(CombinatorialClass):
     def marked_atom(self, atom):
         """Sets the marked atom."""
         if atom is not None:
-            # TODO is the check expensive?
             atoms = itertools.chain(self.base_class_object.l_atoms(), self.base_class_object.u_atoms())
             if self.marked_atom not in atoms:
                 raise BoltzmannFrameworkError("Given atom does not exist in base class object")

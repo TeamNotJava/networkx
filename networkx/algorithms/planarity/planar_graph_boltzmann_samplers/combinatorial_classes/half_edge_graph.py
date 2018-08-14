@@ -40,11 +40,6 @@ class HalfEdgeGraph(CombinatorialClass):
     def __init__(self, half_edge):
         self.half_edge = half_edge
 
-    # @property
-    # def half_edge(self):
-    #     """Returns the underlying half-edge for direct manipulation."""
-    #     return self._half_edge
-
     @property
     def number_of_nodes(self):
         """Number of nodes in the graph."""
@@ -72,8 +67,7 @@ class HalfEdgeGraph(CombinatorialClass):
     @property
     def is_consistent(self):
         """Checks invariants (for debugging)."""
-        return self._check_node_nr() #and self._check_no_double_edges()
-        # TODO make more checks here
+        return self._check_node_nr()
 
     def _check_node_nr(self, visited=None):
         """Checks node_nr consistency."""
@@ -91,7 +85,6 @@ class HalfEdgeGraph(CombinatorialClass):
         return True
 
     def _check_no_double_edges(self):
-        # TODO
         return True
 
     # CombinatorialClass interface.
@@ -111,7 +104,6 @@ class HalfEdgeGraph(CombinatorialClass):
         raise NotImplementedError
 
     def replace_u_atoms(self, sampler, x, y, exceptions=None):
-        """Maybe it's not so stupid to actually implement this here ... (same for l_subs)"""
         raise NotImplementedError
 
     def replace_l_atoms(self, sampler, x, y, exceptions=None):
@@ -144,7 +136,7 @@ class HalfEdgeGraph(CombinatorialClass):
         bool
             True iff the graph is k-connected.
         """
-        # TODO Check if this works the way intended.
+
         connectivity_dict = nx.k_components(self.to_networkx_graph())
         return len(connectivity_dict[k][0]) == self.number_of_nodes
 
@@ -196,7 +188,6 @@ class HalfEdgeGraph(CombinatorialClass):
                 G.add_edge(half_edge.node_nr, half_edge.opposite.node_nr)
             else:
                 G.add_edge(half_edge.node_nr, next(counter))
-        # G = nx.relabel.convert_node_labels_to_integers(G)
         return G
 
     def plot(self, **kwargs):

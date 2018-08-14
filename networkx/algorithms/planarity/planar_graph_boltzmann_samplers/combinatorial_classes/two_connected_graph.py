@@ -39,7 +39,6 @@ class TwoConnectedPlanarGraph(HalfEdgeGraph):
 
     def l_atoms(self):
         return iter([half_edge_list[0] for half_edge_list in self.half_edge.node_dict().values()])
-        # return iter(self.half_edge.get_node_list().keys())
 
     def replace_l_atoms(self, sampler, x, y, exceptions=None):
         nodes = self.half_edge.node_dict()

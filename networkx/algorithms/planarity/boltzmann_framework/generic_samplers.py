@@ -375,17 +375,6 @@ class BinarySampler(BoltzmannSamplerBase):
         self.rhs = rhs
         self._op_symbol = op_symbol
 
-    # TODO remove this because of performnance?
-    # @property
-    # def lhs(self):
-    #     """Returns the left argument of this sampler."""
-    #     return self._lhs
-    #
-    # @property
-    # def rhs(self):
-    #     """Returns the right argument of this sampler."""
-    #     return self._rhs
-
     @property
     def sampled_class(self):
         return "({}{}{})".format(self.lhs.sampled_class, self._op_symbol, self.rhs.sampled_class)
@@ -432,7 +421,6 @@ class ProdSampler(BinarySampler):
         super(ProdSampler, self).__init__(lhs, rhs, '*')
 
     def sample(self, x, y):
-        # todo
         return self._builder.product(self.lhs.sample(x, y), self.rhs.sample(x, y))
 
     @return_precomp
@@ -554,7 +542,6 @@ class SetSampler(UnarySampler):
         return pois(self._d, self._sampler.eval(x, y))
 
     def sample(self, x, y):
-        # todo
         k = self.draw_k(x, y)
         return self._builder.set([self._sampler.sample(x, y) for _ in range(k)])
 

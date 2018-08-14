@@ -106,7 +106,6 @@ class HalfEdge(object):
 
     def invert(self):
         """Inverts order."""
-        # TODO still needed?
         for h in self.incident_half_edges():
             # Swap pointers.
             h.next, h.prior = h.prior, h.next
@@ -142,7 +141,6 @@ class HalfEdge(object):
         for he in self.incident():
             he.node_nr = node_nr
 
-    # TODO hack hack
     def __str__(self):
         return self.__repr__()
 

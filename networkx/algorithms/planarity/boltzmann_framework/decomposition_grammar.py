@@ -100,10 +100,6 @@ class AliasSampler(BoltzmannSamplerBase):
             return self._referenced_sampler.oracle_query_string(x, y)
 
     def get_children(self):
-        # TODO removed due to measurable performance increase
-        # if self.grammar is None:
-        #    raise BoltzmannFrameworkError(self._grammar_not_initialized_error_msg())
-        # return [self._grammar[self._sampled_class]]
         return [self._referenced_sampler]
 
     def accept(self, visitor):
@@ -408,11 +404,9 @@ class DecompositionGrammar(object):
 
             def append(self, obj):
                 list.append(self, obj)
-                # self.l_size += obj.l_size
 
             def pop(self):
                 obj = list.pop(self)
-                # self.l_size -= obj.l_size
                 return obj
 
         def sample(self, x, y, max_size=1000000, abs_tolerance=0):
@@ -438,8 +432,6 @@ class DecompositionGrammar(object):
 
                 # Get top of stack.
                 curr = stack[-1]
-
-                # TODO find an optimal order of these if statements or, even better, refactor the code somehow so to not have this horrible case distinction
 
                 if isinstance(curr, AliasSampler):
                     if prev is None or curr in prev.get_children():
@@ -474,7 +466,7 @@ class DecompositionGrammar(object):
                         stack.append(curr.get_children().pop())
                     else:
                         obj_to_check = result_stack.pop()
-                        is_acceptable = curr.transformation  # This is kind of weird ...
+                        is_acceptable = curr.transformation
                         if is_acceptable(obj_to_check):
                             stack.pop()
                             result_stack.append(obj_to_check)
@@ -535,7 +527,6 @@ class DecompositionGrammar(object):
                     else:
                         obj_to_check = result_stack.pop()
 
-                        # TODO this code is duplicated in the recursive sampler
                         def is_acceptable(gamma):
                             return bern((1 / curr._alpha_u_l) * (gamma.u_size / (gamma.l_size + 1)))
 
@@ -574,7 +565,6 @@ class DecompositionGrammar(object):
 
                 else:
                     assert isinstance(curr, AtomSampler)
-                    # elif isinstance(curr, AtomSampler):
                     # Atom samplers are the leaves in the decomposition tree.
                     stack.pop()
                     result_stack.append(curr.sample(x, y))
