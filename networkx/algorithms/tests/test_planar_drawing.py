@@ -7,7 +7,6 @@ def test_graph1():
     embedding_data = {0: [1, 2, 3], 1: [2, 0], 2: [3, 0, 1], 3: [2, 0]}
     check_embedding_data(embedding_data)
 
-
 def check_embedding_data(embedding_data):
     embedding = nx.PlanarEmbedding()
     embedding.set_data(embedding_data)
@@ -17,6 +16,11 @@ def check_embedding_data(embedding_data):
     assert_true(is_planar_drawing_correct(embedding, pos),
                 "Intersection in planar drawing")
 
+
+def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
+    # Check if float numbers are basically equal, for python >=3.5 there is
+    # function for that in the standard library
+    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 def is_planar_drawing_correct(G, pos):
     """Checks if pos represents a planar drawing.
@@ -34,27 +38,28 @@ def is_planar_drawing_correct(G, pos):
     is_correct : bool
     """
     for (a, b) in G.edges():
-        for (c,d) in G.edges():
+        for (c, d) in G.edges():
             if(a != c) and (b != d) and (b != c) and (a != d):   # need to have different end points for conflict
                 x1, y1 = pos[a]
                 x2, y2 = pos[b]
                 x3, y3 = pos[c]
                 x4, y4 = pos[d]
                 determinant = (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)
-                if determinant != 0: # the lines are not parallel
+                if determinant != 0:  # the lines are not parallel
                     # calculate intersection point, see https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
-                    px = (x1*y2 - y1*x2)*(x3 - x4) - (x1-x2)*(x3*y4-y3*x4) / determinant
-                    py = (x1*y2 - y1*x2)*(y3 - y4) - (y1-y2)*(x3*y4-y3*x4) / determinant
+                    px = (x1*y2 - y1*x2)*(x3 - x4) - (x1-x2)*(x3*y4-y3*x4) / float(determinant)
+                    py = (x1*y2 - y1*x2)*(y3 - y4) - (y1-y2)*(x3*y4-y3*x4) / float(determinant)
+
                     # Check if intersection lies between the points
                     dist_a_b = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
                     dist_a_p = math.sqrt((x1 - px)**2 + (y1 - py)**2)
                     dist_b_p = math.sqrt((x2 - px)**2 + (y2 - py)**2)
-                    if dist_a_p + dist_b_p == dist_a_b:
+                    if is_close(dist_a_p+dist_b_p, dist_a_b):  # cant just use equal for floats
                         dist_c_d = math.sqrt((x3 - x4)**2 + (y3 - y4)**2)
                         dist_c_p = math.sqrt((x3 - px)**2 + (y3 - py)**2)
                         dist_d_p = math.sqrt((x4 - px)**2 + (y4 - py)**2)
-                        if dist_c_p + dist_d_p ==dist_c_d:
-                            print("There is an intersection at {},{}".format(px,py))
+                        if dist_c_p + dist_d_p == dist_c_d:
+                            print("There is an intersection at {},{}".format(px, py))
                             return False
     return True
 
