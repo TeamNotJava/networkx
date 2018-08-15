@@ -23,6 +23,11 @@ def test_small_graph():
     check_embedding_data(embedding_data)
 
 
+def test_multiple_component_graph():
+    embedding_data = {0: [], 1: []}
+    check_embedding_data(embedding_data)
+
+
 def check_embedding_data(embedding_data):
     """ Checks that the planar embedding of the input is correct
 
@@ -37,11 +42,21 @@ def check_embedding_data(embedding_data):
     else:
         embedding = nx.PlanarEmbedding()
         embedding.set_data(embedding_data)
-    pos = nx.combinatorial_embedding_to_pos(embedding)
-    assert_true(planar_drawing_conforms_to_embedding(embedding, pos),
-                "Planar drawing does not conform to the embedding")
-    assert_true(is_planar_drawing_correct(embedding, pos),
-                "Intersection in planar drawing")
+    pos_fully = nx.combinatorial_embedding_to_pos(embedding, False)
+    msg = "Planar drawing does not conform to the embedding (fully " \
+          "triangulation)"
+    assert_true(planar_drawing_conforms_to_embedding(embedding, pos_fully),
+                msg)
+    assert_true(is_planar_drawing_correct(embedding, pos_fully),
+                "Intersection in planar drawing (fully triangulation)")
+    pos_internally = nx.combinatorial_embedding_to_pos(embedding, True)
+    msg = "Planar drawing does not conform to the embedding (internal " \
+          "triangulation)"
+    assert_true(planar_drawing_conforms_to_embedding(embedding,
+                                                     pos_internally),
+                msg)
+    assert_true(is_planar_drawing_correct(embedding, pos_internally),
+                "Intersection in planar drawing (internal triangulation)")
 
 
 def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
