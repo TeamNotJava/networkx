@@ -7,6 +7,21 @@ def test_graph1():
     embedding_data = {0: [1, 2, 3], 1: [2, 0], 2: [3, 0, 1], 3: [2, 0]}
     check_embedding_data(embedding_data)
 
+def test_circle_graph():
+    g = nx.cycle_graph(50)
+    _, embedding=nx.check_planarity(g)
+    pos = nx.combinatorial_embedding_to_pos(embedding)
+    assert_true(planar_drawing_conforms_to_embedding(embedding, pos),
+                "Planar drawing does not conform to the embedding")
+
+def test_grid_graph():
+    g = nx.grid_graph(dim=[10,10])
+    _, embedding=nx.check_planarity(g)
+    pos = nx.combinatorial_embedding_to_pos(embedding)
+    assert_true(planar_drawing_conforms_to_embedding(embedding, pos),
+                "Planar drawing does not conform to the embedding")
+
+
 def check_embedding_data(embedding_data):
     embedding = nx.PlanarEmbedding()
     embedding.set_data(embedding_data)
