@@ -128,11 +128,13 @@ class TestLayout(object):
         if self.scipy is not None:
             sc(nx.kamada_kawai_layout(G), scale=1, center=c)
 
-    def test_circular_and_shell_dim_error(self):
+    def test_circular_planar_and_shell_dim_error(self):
         G = nx.path_graph(4)
         assert_raises(ValueError, nx.circular_layout, G, dim=1)
         assert_raises(ValueError, nx.shell_layout, G, dim=1)
         assert_raises(ValueError, nx.shell_layout, G, dim=3)
+        assert_raises(ValueError, nx.planar_layout, G, dim=1)
+        assert_raises(ValueError, nx.planar_layout, G, dim=3)
 
     def test_adjacency_interface_numpy(self):
         A = nx.to_numpy_array(self.Gs)
