@@ -1,6 +1,6 @@
 import networkx as nx
 import math
-from nose.tools import assert_true
+from nose.tools import assert_true, assert_false
 
 
 def test_graph1():
@@ -135,4 +135,14 @@ def planar_drawing_conforms_to_embedding(embedding, pos):
     return True
 
 
-
+def test_non_planar_positions():
+    G = nx.Graph()
+    G.add_edge(1, 2)
+    G.add_edge(3, 4)
+    pos = {
+        1: (0, 0),
+        2: (1, 1),
+        3: (0, 1),
+        4: (1, 0),
+    }
+    assert_false(is_planar_drawing_correct(G, pos))
