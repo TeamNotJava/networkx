@@ -325,8 +325,8 @@ def triangulate_embedding(embedding, fully_triangulate=True):
         A list of nodes that lie on the outer face. If the graph is fully
         triangulated these are three arbitrary connected nodes.
     """
-    if len(embedding.nodes()) <= 1:
-        return embedding
+    if len(embedding.nodes) <= 1:
+        return embedding, list(embedding.nodes)
     embedding = nx.PlanarEmbedding(embedding)
 
     # Get a list with a node for each connected component
