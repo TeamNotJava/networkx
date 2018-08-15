@@ -1,6 +1,7 @@
 import networkx as nx
+from networkx.algorithms.planar_drawing import triangulate_embedding
 import math
-from nose.tools import assert_true
+from nose.tools import assert_true, assert_equals
 
 
 def test_graph1():
@@ -62,6 +63,29 @@ def test_multiple_component_graph2():
         3: [4, 5], 4: [3, 5], 5: [3, 4]
     }
     check_embedding_data(embedding_data)
+
+
+def test_triangulate_embedding1():
+    embedding = nx.PlanarEmbedding()
+    embedding.add_node(1)
+    expected_embedding = {1: []}
+    check_triangulation(embedding, expected_embedding)
+
+
+def test_triangulate_embedding2():
+    embedding = nx.PlanarEmbedding()
+    embedding.connect_components(1, 2)
+    expected_embedding = {1: [2], 2: [1]}
+    check_triangulation(embedding, expected_embedding)
+
+
+def check_triangulation(embedding, expected_embedding):
+    res_embedding, _ = triangulate_embedding(embedding, True)
+    assert_equals(res_embedding.get_data(), expected_embedding,
+                  "Expected embedding incorrect")
+    res_embedding, _ = triangulate_embedding(embedding, False)
+    assert_equals(res_embedding.get_data(), expected_embedding,
+                  "Expected embedding incorrect")
 
 
 def check_embedding_data(embedding_data):
