@@ -8,14 +8,32 @@ def test_graph1():
     check_embedding_data(embedding_data)
 
 
+def test_graph2():
+    embedding_data = {
+        0: [8, 6], 1: [2, 6, 9], 2: [8, 1, 7, 9, 6, 4], 3: [9], 4: [2],
+        5: [6, 8], 6: [9, 1, 0, 5, 2], 7: [9, 2], 8: [0, 2, 5],
+        9: [1, 6, 2, 7, 3]
+    }
+    check_embedding_data(embedding_data)
+
+
 def test_circle_graph():
-    G = nx.cycle_graph(20)
-    check_embedding_data(G)
+    embedding = {
+        0: [1, 9], 1: [0, 2], 2: [1, 3], 3: [2, 4], 4: [3, 5],
+        5: [4, 6], 6: [5, 7], 7: [6, 8], 8: [7, 9], 9: [8, 0]
+    }
+    check_embedding_data(embedding)
 
 
 def test_grid_graph():
-    G = nx.grid_graph(dim=[5, 5])
-    check_embedding_data(G)
+    embedding = {
+        (0, 1): [(0, 0), (1, 1), (0, 2)], (1, 2): [(1, 1), (2, 2), (0, 2)],
+        (0, 0): [(0, 1), (1, 0)],  (2, 1): [(2, 0), (2, 2), (1, 1)],
+        (1, 1): [(2, 1), (1, 2), (0, 1), (1, 0)],
+        (2, 0): [(1, 0), (2, 1)], (2, 2): [(1, 2), (2, 1)],
+        (1, 0): [(0, 0), (2, 0), (1, 1)], (0, 2): [(1, 2), (0, 1)]
+    }
+    check_embedding_data(embedding)
 
 
 def test_small_graph():
@@ -29,19 +47,9 @@ def test_multiple_component_graph():
 
 
 def check_embedding_data(embedding_data):
-    """ Checks that the planar embedding of the input is correct
-
-    Parameters
-    ----------
-    embedding_data : NetworkX graph or dict of sorted adjacency lists
-
-    """
-    if isinstance(embedding_data, nx.Graph):
-        is_planar, embedding = nx.check_planarity(embedding_data)
-        assert_true(is_planar, "Graph is not planar")
-    else:
-        embedding = nx.PlanarEmbedding()
-        embedding.set_data(embedding_data)
+    """Checks that the planar embedding of the input is correct"""
+    embedding = nx.PlanarEmbedding()
+    embedding.set_data(embedding_data)
     pos_fully = nx.combinatorial_embedding_to_pos(embedding, False)
     msg = "Planar drawing does not conform to the embedding (fully " \
           "triangulation)"
