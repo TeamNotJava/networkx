@@ -1,35 +1,42 @@
 import networkx as nx
 import math
-from nose.tools import assert_true, assert_false
+from nose.tools import assert_true
 
 
 def test_graph1():
     embedding_data = {0: [1, 2, 3], 1: [2, 0], 2: [3, 0, 1], 3: [2, 0]}
     check_embedding_data(embedding_data)
 
+
 def test_circle_graph():
-    g = nx.cycle_graph(20)
-    _, embedding=nx.check_planarity(g)
-    pos = nx.combinatorial_embedding_to_pos(embedding)
-    assert_true(planar_drawing_conforms_to_embedding(embedding, pos),
-                "Planar drawing does not conform to the embedding")
-    assert_true(is_planar_drawing_correct(embedding, pos),
-                "Intersection in planar drawing")
+    G = nx.cycle_graph(20)
+    check_embedding_data(G)
 
 
 def test_grid_graph():
-    g = nx.grid_graph(dim=[5,5])
-    _, embedding=nx.check_planarity(g)
-    pos = nx.combinatorial_embedding_to_pos(embedding)
-    assert_true(planar_drawing_conforms_to_embedding(embedding, pos),
-                "Planar drawing does not conform to the embedding")
-    assert_true(is_planar_drawing_correct(embedding, pos),
-                "Intersection in planar drawing")
+    G = nx.grid_graph(dim=[5, 5])
+    check_embedding_data(G)
+
+
+def test_small_graph():
+    embedding_data = {0: [1], 1: [0]}
+    check_embedding_data(embedding_data)
 
 
 def check_embedding_data(embedding_data):
-    embedding = nx.PlanarEmbedding()
-    embedding.set_data(embedding_data)
+    """ Checks that the planar embedding of the input is correct
+
+    Parameters
+    ----------
+    embedding_data : NetworkX graph or dict of sorted adjacency lists
+
+    """
+    if isinstance(embedding_data, nx.Graph):
+        is_planar, embedding = nx.check_planarity(embedding_data)
+        assert_true(is_planar, "Graph is not planar")
+    else:
+        embedding = nx.PlanarEmbedding()
+        embedding.set_data(embedding_data)
     pos = nx.combinatorial_embedding_to_pos(embedding)
     assert_true(planar_drawing_conforms_to_embedding(embedding, pos),
                 "Planar drawing does not conform to the embedding")
@@ -173,5 +180,3 @@ def planar_drawing_conforms_to_embedding(embedding, pos):
                 # Lines overlap
                 return False
     return True
-
-
