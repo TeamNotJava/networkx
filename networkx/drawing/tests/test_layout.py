@@ -110,6 +110,11 @@ class TestLayout(object):
         G = nx.complete_graph(9)
         assert_raises(nx.NetworkXException, nx.planar_layout, G)
 
+    def test_smoke_planar_layout_embedding_input(self):
+        embedding = nx.PlanarEmbedding()
+        embedding.set_data({0: [1, 2], 1: [0, 2], 2: [0, 1]})
+        nx.planar_layout(embedding)
+
     def test_default_scale_and_center(self):
         sc = self.check_scale_and_center
         c = (0, 0)
