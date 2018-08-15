@@ -18,26 +18,36 @@ def test_graph2():
 
 
 def test_circle_graph():
-    embedding = {
+    embedding_data = {
         0: [1, 9], 1: [0, 2], 2: [1, 3], 3: [2, 4], 4: [3, 5],
         5: [4, 6], 6: [5, 7], 7: [6, 8], 8: [7, 9], 9: [8, 0]
     }
-    check_embedding_data(embedding)
+    check_embedding_data(embedding_data)
 
 
 def test_grid_graph():
-    embedding = {
+    embedding_data = {
         (0, 1): [(0, 0), (1, 1), (0, 2)], (1, 2): [(1, 1), (2, 2), (0, 2)],
         (0, 0): [(0, 1), (1, 0)],  (2, 1): [(2, 0), (2, 2), (1, 1)],
         (1, 1): [(2, 1), (1, 2), (0, 1), (1, 0)],
         (2, 0): [(1, 0), (2, 1)], (2, 2): [(1, 2), (2, 1)],
         (1, 0): [(0, 0), (2, 0), (1, 1)], (0, 2): [(1, 2), (0, 1)]
     }
-    check_embedding_data(embedding)
+    check_embedding_data(embedding_data)
 
 
-def test_small_graph():
+def test_one_node_graph():
+    embedding_data = {0: []}
+    check_embedding_data(embedding_data)
+
+
+def test_two_node_graph():
     embedding_data = {0: [1], 1: [0]}
+    check_embedding_data(embedding_data)
+
+
+def test_three_node_graph():
+    embedding_data = {0: [1, 2], 1: [0, 2], 2: [0, 1]}
     check_embedding_data(embedding_data)
 
 
