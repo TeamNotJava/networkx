@@ -8,18 +8,23 @@ def test_graph1():
     check_embedding_data(embedding_data)
 
 def test_circle_graph():
-    g = nx.cycle_graph(50)
+    g = nx.cycle_graph(20)
     _, embedding=nx.check_planarity(g)
     pos = nx.combinatorial_embedding_to_pos(embedding)
     assert_true(planar_drawing_conforms_to_embedding(embedding, pos),
                 "Planar drawing does not conform to the embedding")
+    assert_true(is_planar_drawing_correct(embedding, pos),
+                "Intersection in planar drawing")
+
 
 def test_grid_graph():
-    g = nx.grid_graph(dim=[10,10])
+    g = nx.grid_graph(dim=[5,5])
     _, embedding=nx.check_planarity(g)
     pos = nx.combinatorial_embedding_to_pos(embedding)
     assert_true(planar_drawing_conforms_to_embedding(embedding, pos),
                 "Planar drawing does not conform to the embedding")
+    assert_true(is_planar_drawing_correct(embedding, pos),
+                "Intersection in planar drawing")
 
 
 def check_embedding_data(embedding_data):
