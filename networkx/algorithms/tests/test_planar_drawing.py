@@ -146,3 +146,16 @@ def test_non_planar_positions():
         4: (1, 0),
     }
     assert_false(is_planar_drawing_correct(G, pos))
+
+
+def test_overlapping_edges():
+    G = nx.Graph()
+    G.add_edge(1, 2)
+    G.add_edge(3, 4)
+    pos = {
+        1: (0, 0),
+        2: (2, 2),
+        3: (1, 1),
+        4: (3, 3),
+    }
+    assert_false(is_planar_drawing_correct(G, pos))
