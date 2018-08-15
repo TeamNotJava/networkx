@@ -22,6 +22,16 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     # function for that in the standard library
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
+def point_inbetween(a,b,p):
+    # checks if p is on the line between a and b
+    x1, y1 = a
+    x2, y2 = b
+    px, py = p
+    dist_1_2 = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+    dist_1_p = math.sqrt((x1 - px)**2 + (y1 - py)**2)
+    dist_2_p = math.sqrt((x2 - px)**2 + (y2 - py)**2)
+    return is_close(dist_1_p+dist_2_p,dist_1_2)
+
 def is_planar_drawing_correct(G, pos):
     """Checks if pos represents a planar drawing.
 
@@ -51,16 +61,19 @@ def is_planar_drawing_correct(G, pos):
                     py = (x1*y2 - y1*x2)*(y3 - y4) - (y1-y2)*(x3*y4-y3*x4) / float(determinant)
 
                     # Check if intersection lies between the points
-                    dist_a_b = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
-                    dist_a_p = math.sqrt((x1 - px)**2 + (y1 - py)**2)
-                    dist_b_p = math.sqrt((x2 - px)**2 + (y2 - py)**2)
-                    if is_close(dist_a_p+dist_b_p, dist_a_b):  # cant just use equal for floats
-                        dist_c_d = math.sqrt((x3 - x4)**2 + (y3 - y4)**2)
-                        dist_c_p = math.sqrt((x3 - px)**2 + (y3 - py)**2)
-                        dist_d_p = math.sqrt((x4 - px)**2 + (y4 - py)**2)
-                        if dist_c_p + dist_d_p == dist_c_d:
-                            print("There is an intersection at {},{}".format(px, py))
-                            return False
+
+                    if point_inbetween(pos[a], pos[b], (px, py)) and point_inbetween(pos[c], pos[d], (px, py)):
+                        print("There is an intersection at {},{}".format(px, py))
+                        return False
+
+                #  Check overlap
+                if point_inbetween(pos[a], pos[b], pos[c]) or point_inbetween(pos[a], pos[b], pos[d]):
+                    print("A node lies directly on a edge connecting two other nodes")
+                    return False
+                if point_inbetween(pos[c], pos[d], pos[a]) or point_inbetween(pos[c], pos[d], pos[b]):
+                    print("A node lies directly on a edge connecting two other nodes")
+                    return False
+
     return True
 
 
