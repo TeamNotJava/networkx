@@ -33,12 +33,8 @@ def is_planar_drawing_correct(G, pos):
     -------
     is_correct : bool
     """
-    for (a,b) in G.edges():
-        print a,b
-        print pos[a],pos[b]
+    for (a, b) in G.edges():
         for (c,d) in G.edges():
-            print "\t",c,d
-            print "\t",pos[c],pos[d]
             if(a != c) and (b != d) and (b != c) and (a != d) : #need to have different end points for a chance of conflict
                 x1,y1 = pos[a]
                 x2,y2 = pos[b]
