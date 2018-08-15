@@ -35,25 +35,25 @@ def is_planar_drawing_correct(G, pos):
     """
     for (a, b) in G.edges():
         for (c,d) in G.edges():
-            if(a != c) and (b != d) and (b != c) and (a != d) : #need to have different end points for a chance of conflict
-                x1,y1 = pos[a]
-                x2,y2 = pos[b]
-                x3,y3 = pos[c]
-                x4,y4 = pos[d]
+            if(a != c) and (b != d) and (b != c) and (a != d):   # need to have different end points for conflict
+                x1, y1 = pos[a]
+                x2, y2 = pos[b]
+                x3, y3 = pos[c]
+                x4, y4 = pos[d]
                 determinant = (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)
-                if(determinant != 0): #the lines are not parallel
-                    #calculate intersection point, see https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
-                    px = (x1*y2 - y1*x2)*(x3 - x4) - (x1-x2)*(x3*y4-y3*x4) /determinant
+                if determinant != 0: # the lines are not parallel
+                    # calculate intersection point, see https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
+                    px = (x1*y2 - y1*x2)*(x3 - x4) - (x1-x2)*(x3*y4-y3*x4) / determinant
                     py = (x1*y2 - y1*x2)*(y3 - y4) - (y1-y2)*(x3*y4-y3*x4) / determinant
-                    #Check if intersection lies between the points
+                    # Check if intersection lies between the points
                     dist_a_b = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
-                    dist_a_p= math.sqrt((x1 - px)**2 + (y1 - py)**2)
-                    dist_b_p= math.sqrt((x2 - px)**2 + (y2 - py)**2)
-                    if(dist_a_p + dist_b_p ==dist_a_b ):
+                    dist_a_p = math.sqrt((x1 - px)**2 + (y1 - py)**2)
+                    dist_b_p = math.sqrt((x2 - px)**2 + (y2 - py)**2)
+                    if dist_a_p + dist_b_p == dist_a_b:
                         dist_c_d = math.sqrt((x3 - x4)**2 + (y3 - y4)**2)
-                        dist_c_p= math.sqrt((x3 - px)**2 + (y3 - py)**2)
-                        dist_d_p= math.sqrt((x4 - px)**2 + (y4 - py)**2)
-                        if(dist_c_p + dist_d_p ==dist_c_d ):
+                        dist_c_p = math.sqrt((x3 - px)**2 + (y3 - py)**2)
+                        dist_d_p = math.sqrt((x4 - px)**2 + (y4 - py)**2)
+                        if dist_c_p + dist_d_p ==dist_c_d:
                             print("There is an intersection at {},{}".format(px,py))
                             return False
     return True
