@@ -858,14 +858,29 @@ def _sparse_spectral(A, dim=2):
     return np.real(eigenvectors[:, index])
 
 
-def planar_layout(G):
+def planar_layout(G, scale=1, center=None, dim=2):
     """Position nodes without edge intersections.
 
     Parameters
     ----------
-    G : NetworkX graph
+    G : NetworkX graph or list of nodes
         A position will be assigned to every node in G. If G is of type
         PlanarEmbedding, the positions are selected accordingly.
+
+    Parameters
+    ----------
+    G : NetworkX graph or list of nodes
+        A position will be assigned to every node in G. If G is of type
+        nx.PlanarEmbedding, the positions are selected accordingly.
+
+    scale : number (default: 1)
+        Scale factor for positions.
+
+    center : array-like or None
+        Coordinate pair around which to center the layout.
+
+    dim : int
+        Dimension of layout.
 
     Returns
     -------
@@ -882,6 +897,16 @@ def planar_layout(G):
     >>> G = nx.path_graph(4)
     >>> pos = nx.planar_layout(G)
     """
+    import numpy as np
+
+    if dim != 2:
+        raise ValueError('can only handle 2 dimensions')
+
+    G, center = _process_params(G, center, dim)
+
+    if len(G) == 0:
+        return {}
+
     if isinstance(G, nx.PlanarEmbedding):
         embedding = G
     else:
@@ -889,7 +914,11 @@ def planar_layout(G):
         if not is_planar:
             raise nx.NetworkXException("G is not planar.")
     pos = nx.combinatorial_embedding_to_pos(embedding)
-    return pos
+    node_list = list(embedding)
+    pos = np.row_stack((pos[x] for x in node_list))
+    pos = pos.astype(np.float64)
+    pos = rescale_layout(pos, scale=scale) + center
+    return dict(zip(node_list, pos))
 
 
 def rescale_layout(pos, scale=1):
