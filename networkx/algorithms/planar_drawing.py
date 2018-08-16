@@ -205,7 +205,9 @@ def get_canonical_ordering(embedding, outer_face):
         # v has exactly two neighbors on the outer face (wp and wq)
         wp = None
         wq = None
-        for nbr in embedding.neighbors_cw_order(v):  # TODO: Break if wp and wq are found
+        nbr_iterator = iter(embedding.neighbors_cw_order(v))
+        while True:
+            nbr = next(nbr_iterator)
             if nbr in marked_nodes:
                 # Only consider nodes that are not yet removed
                 continue
