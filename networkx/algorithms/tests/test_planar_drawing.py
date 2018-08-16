@@ -133,9 +133,9 @@ def point_in_between(a, b, p):
 
 
 def check_edge_intersections(G, pos):
-    """Checks if pos represents a planar drawing.
+    """Check all edges in G for intersections.
 
-    Check all edges in G for intersections.
+    Raises an exception if an intersection is found.
 
     Parameters
     ----------
@@ -143,9 +143,6 @@ def check_edge_intersections(G, pos):
     pos : dict
         Maps every node to a tuple (x, y) representing its position
 
-    Returns
-    -------
-    is_correct : bool
     """
     for a, b in G.edges():
         for c, d in G.edges():
