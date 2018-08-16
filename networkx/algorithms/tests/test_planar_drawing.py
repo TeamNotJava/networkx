@@ -105,8 +105,7 @@ def check_embedding_data(embedding_data):
           "triangulation)"
     assert_true(planar_drawing_conforms_to_embedding(embedding, pos_fully),
                 msg)
-    assert_true(check_edge_intersections(embedding, pos_fully),
-                "Intersection in planar drawing (fully triangulation)")
+    check_edge_intersections(embedding, pos_fully)
     pos_internally = nx.combinatorial_embedding_to_pos(embedding, True)
     msg = "Planar drawing does not conform to the embedding (internal " \
           "triangulation)"
