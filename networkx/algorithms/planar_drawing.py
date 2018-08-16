@@ -8,6 +8,12 @@ __all__ = ["combinatorial_embedding_to_pos"]
 def combinatorial_embedding_to_pos(embedding, fully_triangulate=False):
     """Assigns every node a (x, y) position based on the given embedding
 
+    The algorithm iteratively inserts nodes of the input graph in a certain
+    order and rearranges previously inserted nodes so that the planar drawing
+    stays valid. This is done efficiently by only maintaining relative
+    positions during the node placements and calculating the absolute positions
+    at the end. For more information see [2]_.
+
     Parameters
     ----------
     embedding : nx.PlanarEmbedding
@@ -133,6 +139,25 @@ def set_position(parent, tree, remaining_nodes, delta_x, y_coordinate, pos):
 def get_canonical_ordering(embedding, outer_face):
     """Returns a canonical ordering of the nodes
 
+    The canonical ordering of nodes (v1, ..., vn) must fulfill the following
+    conditions:  (See Lemma 1 in [2]_)
+
+    1. For the subgraph G_k of the input graph induced by v1, ..., vk it holds:
+        - 2-connected
+        - internally triangulated
+        - the edge (v1, v2) is part of the outer face
+    2. For a node v(k+1) the following holds:
+        - The node v(k+1) is part of the outer face of G_k
+        - It has at least two neighbors in G_k
+        - All neighbors of v(k+1) in G_k lie consecutively on the outer face of
+          G_k (excluding the edge (v1, v2)).
+
+    The algorithm used here starts with G_n (containing all nodes). It first
+    selects the nodes v1 and v2. And then tries to find the order of the other
+    nodes by checking which node can be removed in order to fulfill the
+    conditions mentioned above. This is done by calculating the number of
+    chords of nodes on the outer face. For more information see [2]_.
+
     Parameters
     ----------
     embedding : nx.PlanarEmbedding
@@ -150,6 +175,10 @@ def get_canonical_ordering(embedding, outer_face):
     .. [1] Steven Chaplick.
         Canonical Orders of Planar Graphs and (some of) Their Applications 2015
         https://wuecampus2.uni-wuerzburg.de/moodle/pluginfile.php/545727/mod_resource/content/0/vg-ss15-vl03-canonical-orders-druckversion.pdf
+    .. [2] M. Chrobak and T.H. Payne:
+    A Linear-time Algorithm for Drawing a Planar Graph on a Grid 1989
+    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.51.6677
+
     """
     v1 = outer_face[0]
     v2 = outer_face[1]
@@ -172,16 +201,16 @@ def get_canonical_ordering(embedding, outer_face):
         outer_face_cw_nbr[prev_nbr] = outer_face[idx]
         prev_nbr = outer_face[idx]
 
-    def is_outer_face_nbr(v, w):
-        if v not in outer_face_ccw_nbr:
-            return outer_face_cw_nbr[v] == w
-        if v not in outer_face_cw_nbr:
-            return outer_face_ccw_nbr[v] == w
-        return outer_face_ccw_nbr[v] == w or outer_face_cw_nbr[v] == w
+    def is_outer_face_nbr(x, y):
+        if x not in outer_face_ccw_nbr:
+            return outer_face_cw_nbr[x] == y
+        if x not in outer_face_cw_nbr:
+            return outer_face_ccw_nbr[x] == y
+        return outer_face_ccw_nbr[x] == y or outer_face_cw_nbr[x] == y
 
     def is_on_outer_face(v):
         return v not in marked_nodes and (v in outer_face_ccw_nbr.keys() or
-                                          v == v1 or v == v2)  # TODO: We can remove the v1 or the v2 comparison check which
+                                          v == v1)
 
     # Initialize number of chords
     for v in outer_face:
@@ -205,6 +234,7 @@ def get_canonical_ordering(embedding, outer_face):
         # v has exactly two neighbors on the outer face (wp and wq)
         wp = None
         wq = None
+        # Iterate over neighbors of v to find wp and wq
         nbr_iterator = iter(embedding.neighbors_cw_order(v))
         while True:
             nbr = next(nbr_iterator)
@@ -232,7 +262,7 @@ def get_canonical_ordering(embedding, outer_face):
         wp_wq = [wp]
         nbr = wp
         while nbr != wq:
-            # Get next next neighbor (lies clockwise on the outer face)
+            # Get next next neighbor (clockwise on the outer face)
             next_nbr = embedding[v][nbr]['ccw']
             wp_wq.append(next_nbr)
             # Update outer face
