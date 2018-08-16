@@ -140,7 +140,8 @@ def get_canonical_ordering(embedding, outer_face):
     """Returns a canonical ordering of the nodes
 
     The canonical ordering of nodes (v1, ..., vn) must fulfill the following
-    conditions:  (See Lemma 1 in [2]_)
+    conditions:
+    (See Lemma 1 in [2]_)
 
     - For the subgraph G_k of the input graph induced by v1, ..., vk it holds:
         - 2-connected
@@ -210,9 +211,9 @@ def get_canonical_ordering(embedding, outer_face):
             return outer_face_ccw_nbr[x] == y
         return outer_face_ccw_nbr[x] == y or outer_face_cw_nbr[x] == y
 
-    def is_on_outer_face(v):
-        return v not in marked_nodes and (v in outer_face_ccw_nbr.keys() or
-                                          v == v1)
+    def is_on_outer_face(x):
+        return x not in marked_nodes and (x in outer_face_ccw_nbr.keys() or
+                                          x == v1)
 
     # Initialize number of chords
     for v in outer_face:

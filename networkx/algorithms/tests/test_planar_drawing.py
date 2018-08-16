@@ -105,7 +105,7 @@ def check_embedding_data(embedding_data):
           "triangulation)"
     assert_true(planar_drawing_conforms_to_embedding(embedding, pos_fully),
                 msg)
-    assert_true(is_planar_drawing_correct(embedding, pos_fully),
+    assert_true(check_edge_intersections(embedding, pos_fully),
                 "Intersection in planar drawing (fully triangulation)")
     pos_internally = nx.combinatorial_embedding_to_pos(embedding, True)
     msg = "Planar drawing does not conform to the embedding (internal " \
@@ -113,8 +113,7 @@ def check_embedding_data(embedding_data):
     assert_true(planar_drawing_conforms_to_embedding(embedding,
                                                      pos_internally),
                 msg)
-    assert_true(is_planar_drawing_correct(embedding, pos_internally),
-                "Intersection in planar drawing (internal triangulation)")
+    check_edge_intersections(embedding, pos_internally)
 
 
 def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
@@ -123,7 +122,7 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
-def point_inbetween(a, b, p):
+def point_in_between(a, b, p):
     # checks if p is on the line between a and b
     x1, y1 = a
     x2, y2 = b
@@ -134,7 +133,7 @@ def point_inbetween(a, b, p):
     return is_close(dist_1_p+dist_2_p, dist_1_2)
 
 
-def is_planar_drawing_correct(G, pos):
+def check_edge_intersections(G, pos):
     """Checks if pos represents a planar drawing.
 
     Check all edges in G for intersections.
@@ -149,34 +148,38 @@ def is_planar_drawing_correct(G, pos):
     -------
     is_correct : bool
     """
-    for (a, b) in G.edges():
-        for (c, d) in G.edges():
-            if(a != c) and (b != d) and (b != c) and (a != d):   # need to have different end points for conflict
+    for a, b in G.edges():
+        for c, d in G.edges():
+            # Check if end points are different
+            if a != c and b != d and b != c and a != d:
                 x1, y1 = pos[a]
                 x2, y2 = pos[b]
                 x3, y3 = pos[c]
                 x4, y4 = pos[d]
-                determinant = (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)
+                determinant = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
                 if determinant != 0:  # the lines are not parallel
-                    # calculate intersection point, see https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
-                    px = (x1*y2 - y1*x2)*(x3 - x4) - (x1-x2)*(x3*y4-y3*x4) / float(determinant)
-                    py = (x1*y2 - y1*x2)*(y3 - y4) - (y1-y2)*(x3*y4-y3*x4) / float(determinant)
+                    # calculate intersection point, see:
+                    # https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
+                    px = ((x1 * y2 - y1 * x2) * (x3 - x4) -
+                          (x1 - x2) * (x3 * y4 - y3 * x4) / float(determinant))
+                    py = ((x1 * y2 - y1 * x2) * (y3 - y4) -
+                          (y1 - y2) * (x3 * y4 - y3 * x4) / float(determinant))
 
                     # Check if intersection lies between the points
-
-                    if point_inbetween(pos[a], pos[b], (px, py)) and point_inbetween(pos[c], pos[d], (px, py)):
-                        print("There is an intersection at {},{}".format(px, py))
-                        return False
+                    if (point_in_between(pos[a], pos[b], (px, py)) and
+                            point_in_between(pos[c], pos[d], (px, py))):
+                        msg = "There is an intersection at {},{}".format(px,
+                                                                         py)
+                        raise nx.NetworkXException(msg)
 
                 #  Check overlap
-                if point_inbetween(pos[a], pos[b], pos[c]) or point_inbetween(pos[a], pos[b], pos[d]):
-                    print("A node lies directly on a edge connecting two other nodes")
-                    return False
-                if point_inbetween(pos[c], pos[d], pos[a]) or point_inbetween(pos[c], pos[d], pos[b]):
-                    print("A node lies directly on a edge connecting two other nodes")
-                    return False
-
-    return True
+                msg = "A node lies on a edge connecting two other nodes"
+                if (point_in_between(pos[a], pos[b], pos[c]) or
+                        point_in_between(pos[a], pos[b], pos[d]) or
+                        point_in_between(pos[c], pos[d], pos[a]) or
+                        point_in_between(pos[c], pos[d], pos[b])):
+                    raise nx.NetworkXException(msg)
+    # No edge intersection found
 
 
 class Vector(object):
