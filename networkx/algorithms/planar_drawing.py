@@ -12,7 +12,7 @@ def combinatorial_embedding_to_pos(embedding, fully_triangulate=False):
     order and rearranges previously inserted nodes so that the planar drawing
     stays valid. This is done efficiently by only maintaining relative
     positions during the node placements and calculating the absolute positions
-    at the end. For more information see [2]_.
+    at the end. For more information see [1]_.
 
     Parameters
     ----------
@@ -142,11 +142,11 @@ def get_canonical_ordering(embedding, outer_face):
     The canonical ordering of nodes (v1, ..., vn) must fulfill the following
     conditions:  (See Lemma 1 in [2]_)
 
-    1. For the subgraph G_k of the input graph induced by v1, ..., vk it holds:
+    - For the subgraph G_k of the input graph induced by v1, ..., vk it holds:
         - 2-connected
         - internally triangulated
         - the edge (v1, v2) is part of the outer face
-    2. For a node v(k+1) the following holds:
+    - For a node v(k+1) the following holds:
         - The node v(k+1) is part of the outer face of G_k
         - It has at least two neighbors in G_k
         - All neighbors of v(k+1) in G_k lie consecutively on the outer face of
@@ -156,7 +156,7 @@ def get_canonical_ordering(embedding, outer_face):
     selects the nodes v1 and v2. And then tries to find the order of the other
     nodes by checking which node can be removed in order to fulfill the
     conditions mentioned above. This is done by calculating the number of
-    chords of nodes on the outer face. For more information see [2]_.
+    chords of nodes on the outer face. For more information see [1]_.
 
     Parameters
     ----------
@@ -167,8 +167,10 @@ def get_canonical_ordering(embedding, outer_face):
 
     Returns
     -------
-    node_list : list
-        All nodes ordered by the canonical ordering
+    ordering : list
+        A list of tuples `(vk, wp_wq)`. Here `vk` is the node at this position
+        in the canonical ordering. The element `wp_wq` is a list of nodes that
+        make up the outer face of G_k.
 
     References
     ----------
@@ -176,8 +178,8 @@ def get_canonical_ordering(embedding, outer_face):
         Canonical Orders of Planar Graphs and (some of) Their Applications 2015
         https://wuecampus2.uni-wuerzburg.de/moodle/pluginfile.php/545727/mod_resource/content/0/vg-ss15-vl03-canonical-orders-druckversion.pdf
     .. [2] M. Chrobak and T.H. Payne:
-    A Linear-time Algorithm for Drawing a Planar Graph on a Grid 1989
-    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.51.6677
+        A Linear-time Algorithm for Drawing a Planar Graph on a Grid 1989
+        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.51.6677
 
     """
     v1 = outer_face[0]
@@ -349,13 +351,13 @@ def triangulate_embedding(embedding, fully_triangulate=True):
 
     Returns
     -------
-    embedding : nx.PlanarEmbedding
-        A new embedding containing all edges from the input embedding and the
-        additional edges to triangulate the graph.
+    (embedding, outer_face) : (nx.PlanarEmbedding, list) tuple
+        The element `embedding` is a new embedding containing all edges from
+        the input embedding and the additional edges to triangulate the graph.
+        The element `outer_face` is a list of nodes that lie on the outer face.
+        If the graph is fully triangulated these are three arbitrary connected
+        nodes.
 
-    outer_face : list
-        A list of nodes that lie on the outer face. If the graph is fully
-        triangulated these are three arbitrary connected nodes.
     """
     if len(embedding.nodes) <= 1:
         return embedding, list(embedding.nodes)
