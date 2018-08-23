@@ -46,4 +46,4 @@ networkx.egg-info/
 .spyderproject
 
 # PyCharm project file
-.idea
+.ipynb_checkpoints
