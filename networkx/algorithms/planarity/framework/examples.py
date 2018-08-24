@@ -15,11 +15,11 @@
 from __future__ import division, print_function
 import math
 
-from framework.decomposition_grammar import *
-from framework.evaluation_oracle import EvaluationOracle
+from networkx.algorithms.planarity.framework.decomposition_grammar import *
+from networkx.algorithms.planarity.framework.evaluation_oracle import EvaluationOracle
 
 # TODO make some reasonable things here or delete
-from framework.generic_samplers import BoltzmannSamplerBase
+from networkx.algorithms.planarity.framework.generic_samplers import BoltzmannSamplerBase
 
 
 def dummy_sampling():
@@ -257,6 +257,10 @@ def test_examples():
     examples = [
         natural_numbers,
         binary_trees,
+        # TODO Currently failing because of 
+        # File "/Users/valkum/git/networkx/networkx/algorithms/planarity/framework/generic_classes.py", line 348, in <listcomp>
+        #   return sum([elem.l_size for elem in self._elems])
+        # AttributeError: 'int' object has no attribute 'l_size
         integer_partitions,
         set_partitions,
         dummy_sampling

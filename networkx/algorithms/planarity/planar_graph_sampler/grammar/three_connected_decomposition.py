@@ -12,15 +12,15 @@
 #           Rudi Floren <rudi.floren@gmail.com>
 #           Tobias Winkler <tobias.winkler1@rwth-aachen.de>
 
-from framework.decomposition_grammar import DecompositionGrammar, AliasSampler
-from framework.generic_samplers import *
-from framework.evaluation_oracle import EvaluationOracle
-from framework.generic_samplers import BoltzmannSamplerBase
+from networkx.algorithms.planarity.framework.decomposition_grammar import DecompositionGrammar, AliasSampler
+from networkx.algorithms.planarity.framework.generic_samplers import *
+from networkx.algorithms.planarity.framework.evaluation_oracle import EvaluationOracle
+from networkx.algorithms.planarity.framework.generic_samplers import BoltzmannSamplerBase
 
-from planar_graph_sampler.grammar.grammar_utils import to_l_derived_class, divide_by_2
-from planar_graph_sampler.grammar.irreducible_dissection_decomposition import irreducible_dissection_grammar
-from planar_graph_sampler.bijections.primal_map import PrimalMap
-from planar_graph_sampler.combinatorial_classes.three_connected_graph import EdgeRootedThreeConnectedPlanarGraph
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.grammar_utils import to_l_derived_class, divide_by_2
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.irreducible_dissection_decomposition import irreducible_dissection_grammar
+from networkx.algorithms.planarity.planar_graph_sampler.bijections.primal_map import PrimalMap
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.three_connected_graph import EdgeRootedThreeConnectedPlanarGraph
 
 
 def primal_map(dissection):
@@ -71,7 +71,7 @@ def three_connected_graph_grammar():
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    from planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100, planar_graph_evals_n1000
+    from networkx.algorithms.planarity.planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100, planar_graph_evals_n1000
 
     BoltzmannSamplerBase.oracle = EvaluationOracle(planar_graph_evals_n100)
 

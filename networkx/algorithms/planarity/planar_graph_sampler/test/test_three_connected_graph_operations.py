@@ -13,10 +13,10 @@
 #           Tobias Winkler <tobias.winkler1@rwth-aachen.de>
 
 from nose.tools import assert_false, assert_true
-from planar_graph_sampler.bijections.primal_map import PrimalMap
-from planar_graph_sampler.combinatorial_classes.dissection import IrreducibleDissection
-from planar_graph_sampler.combinatorial_classes.three_connected_graph import EdgeRootedThreeConnectedPlanarGraph
-from planar_graph_sampler.test.mock_objects_creator import create_sample_closure_output, \
+from networkx.algorithms.planarity.planar_graph_sampler.bijections.primal_map import PrimalMap
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.dissection import IrreducibleDissection
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.three_connected_graph import EdgeRootedThreeConnectedPlanarGraph
+from networkx.algorithms.planarity.planar_graph_sampler.test.mock_objects_creator import create_sample_closure_output, \
     create_specific_closure_output_for_admissibility_check_test
 
 

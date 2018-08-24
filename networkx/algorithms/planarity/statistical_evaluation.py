@@ -24,10 +24,11 @@ import sys
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
 from networkx.algorithms import isomorphism
-from test_data_creation import create_data
-from planar_graph_sampler.combinatorial_classes.halfedge import HalfEdge
-from planar_graph_sampler.grammar.grammar_utils import Counter
-from planar_graph_sampler.grammar.planar_graph_decomposition import bij_connected_comps
+from networkx.algorithms.planarity.dummy_data_creation import create_data
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.halfedge import HalfEdge
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.grammar_utils import Counter
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.planar_graph_decomposition import bij_connected_comps
+
 counter = Counter()
 
 # Define colors for output

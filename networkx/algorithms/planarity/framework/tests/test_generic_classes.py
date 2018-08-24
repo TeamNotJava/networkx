@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from framework.generic_samplers import *
+from networkx.algorithms.planarity.framework.generic_samplers import *
 
 
 class TestGenericClasses(object):

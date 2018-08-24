@@ -14,14 +14,14 @@
 
 from timeit import default_timer as timer
 
-from framework.decomposition_grammar import DecompositionGrammar, AliasSampler
-from framework.generic_samplers import *
-from framework.generic_classes import DummyClass
-from framework.class_builder import DummyBuilder
-from framework.generic_samplers import BoltzmannSamplerBase
-from framework.utils import bern
+from networkx.algorithms.planarity.framework.decomposition_grammar import DecompositionGrammar, AliasSampler
+from networkx.algorithms.planarity.framework.generic_samplers import *
+from networkx.algorithms.planarity.framework.generic_classes import DummyClass
+from networkx.algorithms.planarity.framework.class_builder import DummyBuilder
+from networkx.algorithms.planarity.framework.generic_samplers import BoltzmannSamplerBase
+from networkx.algorithms.planarity.framework.utils import bern
 
-from planar_graph_sampler.evaluations_planar_graph import *
+from networkx.algorithms.planarity.planar_graph_sampler.evaluations_planar_graph import *
 
 # All references in comments in this file refer to:
 # "E. Fusy: Uniform Random Sampling of Planar Graphs in Linear Time"

@@ -14,8 +14,8 @@
 
 import warnings
 
-from framework.class_builder import DefaultBuilder, DummyBuilder
-from framework.generic_samplers import *
+from networkx.algorithms.planarity.framework.class_builder import DefaultBuilder, DummyBuilder
+from networkx.algorithms.planarity.framework.generic_samplers import *
 
 
 class AliasSampler(BoltzmannSamplerBase):

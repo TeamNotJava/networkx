@@ -13,10 +13,10 @@
 #           Tobias Winkler <tobias.winkler1@rwth-aachen.de>
 
 
-from planar_graph_sampler.combinatorial_classes.halfedge import ClosureHalfEdge
-from planar_graph_sampler.combinatorial_classes.dissection import \
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.halfedge import ClosureHalfEdge
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.dissection import \
     IrreducibleDissection
-from planar_graph_sampler.grammar.grammar_utils import Counter
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.grammar_utils import Counter
 
 counter = Counter()
 

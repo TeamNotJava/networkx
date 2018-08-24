@@ -13,11 +13,11 @@
 #           Tobias Winkler <tobias.winkler1@rwth-aachen.de>
 from numpy import diff
 
-from planar_graph_sampler.grammar.planar_graph_decomposition import  planar_graph_grammar, bij_connected_comps
-from framework.evaluation_oracle import EvaluationOracle
-from framework.generic_samplers import BoltzmannSamplerBase
-from framework.generic_classes import SetClass
-from planar_graph_sampler.evaluations_planar_graph import planar_graph_evals
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.planar_graph_decomposition import  planar_graph_grammar, bij_connected_comps
+from networkx.algorithms.planarity.framework.evaluation_oracle import EvaluationOracle
+from networkx.algorithms.planarity.framework.generic_samplers import BoltzmannSamplerBase
+from networkx.algorithms.planarity.framework.generic_classes import SetClass
+from networkx.algorithms.planarity.planar_graph_sampler.evaluations_planar_graph import planar_graph_evals
 import networkx as nx
 import datetime
 import multiprocessing as mp

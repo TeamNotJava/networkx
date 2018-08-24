@@ -14,8 +14,8 @@
 
 import random as rn
 
-from framework.utils import nth
-from planar_graph_sampler.combinatorial_classes.half_edge_graph import HalfEdgeGraph
+from networkx.algorithms.planarity.framework.utils import nth
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.half_edge_graph import HalfEdgeGraph
 
 
 class Network(HalfEdgeGraph):

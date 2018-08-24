@@ -2,7 +2,7 @@ from planar_graph_generator import PlanarGraphGenerator
 import networkx as nx
 import cProfile
 import time
-from planar_graph_sampler.evaluations_planar_graph import planar_graph_evals
+from networkx.algorithms.planarity.planar_graph_sampler.evaluations_planar_graph import planar_graph_evals
 
 def __time_statistics_for_different_graph_sizes():
     graphs_sizes = [30000, 40000, 50000, 75000, 100000]

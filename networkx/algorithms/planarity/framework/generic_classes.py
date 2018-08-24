@@ -14,8 +14,8 @@
 
 import random
 
-from framework.settings_global import Settings
-from framework.utils import *
+from networkx.algorithms.planarity.framework.settings_global import Settings
+from networkx.algorithms.planarity.framework.utils import *
 
 
 class BoltzmannFrameworkError(Exception):

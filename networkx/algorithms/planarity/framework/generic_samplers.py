@@ -14,9 +14,9 @@
 
 from __future__ import division
 
-from framework.class_builder import DefaultBuilder
-from framework.generic_classes import *
-from framework.utils import *
+from networkx.algorithms.planarity.framework.class_builder import DefaultBuilder
+from networkx.algorithms.planarity.framework.generic_classes import *
+from networkx.algorithms.planarity.framework.utils import *
 
 
 def return_precomp(func):

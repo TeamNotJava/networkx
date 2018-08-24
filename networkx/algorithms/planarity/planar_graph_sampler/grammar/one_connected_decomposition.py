@@ -12,14 +12,14 @@
 #           Rudi Floren <rudi.floren@gmail.com>
 #           Tobias Winkler <tobias.winkler1@rwth-aachen.de>
 
-from framework.evaluation_oracle import EvaluationOracle
-from framework.generic_samplers import *
-from framework.decomposition_grammar import AliasSampler, DecompositionGrammar
-from framework.generic_samplers import BoltzmannSamplerBase
+from networkx.algorithms.planarity.framework.evaluation_oracle import EvaluationOracle
+from networkx.algorithms.planarity.framework.generic_samplers import *
+from networkx.algorithms.planarity.framework.decomposition_grammar import AliasSampler, DecompositionGrammar
+from networkx.algorithms.planarity.framework.generic_samplers import BoltzmannSamplerBase
 
-from planar_graph_sampler.combinatorial_classes.one_connected_graph import OneConnectedPlanarGraph
-from planar_graph_sampler.grammar.grammar_utils import underive
-from planar_graph_sampler.grammar.two_connected_decomposition import two_connected_graph_grammar
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.one_connected_graph import OneConnectedPlanarGraph
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.grammar_utils import underive
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.two_connected_decomposition import two_connected_graph_grammar
 
 
 class Merger(DefaultBuilder):
@@ -107,7 +107,7 @@ def one_connected_graph_grammar():
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    from planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100, planar_graph_evals_n1000
+    from networkx.algorithms.planarity.planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100, planar_graph_evals_n1000
 
     BoltzmannSamplerBase.oracle = EvaluationOracle(planar_graph_evals_n100)
     BoltzmannSamplerBase.debug_mode = False

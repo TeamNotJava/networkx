@@ -16,10 +16,10 @@ import random
 
 import networkx as nx
 
-from framework.generic_classes import CombinatorialClass
+from networkx.algorithms.planarity.framework.generic_classes import CombinatorialClass
 
-from planar_graph_sampler.grammar.grammar_utils import Counter
-from planar_graph_sampler.combinatorial_classes.halfedge import HalfEdge
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.grammar_utils import Counter
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.halfedge import HalfEdge
 
 
 class HalfEdgeGraph(CombinatorialClass):

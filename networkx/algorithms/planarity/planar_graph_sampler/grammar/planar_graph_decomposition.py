@@ -14,11 +14,11 @@
 
 import networkx as nx
 
-from framework.evaluation_oracle import EvaluationOracle
-from framework.generic_samplers import *
-from framework.decomposition_grammar import AliasSampler, DecompositionGrammar
+from networkx.algorithms.planarity.framework.evaluation_oracle import EvaluationOracle
+from networkx.algorithms.planarity.framework.generic_samplers import *
+from networkx.algorithms.planarity.framework.decomposition_grammar import AliasSampler, DecompositionGrammar
 
-from planar_graph_sampler.grammar.one_connected_decomposition import one_connected_graph_grammar
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.one_connected_decomposition import one_connected_graph_grammar
 
 
 def bij_connected_comps(components):
@@ -74,7 +74,7 @@ def planar_graph_grammar():
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    from planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100, planar_graph_evals_n1000, \
+    from networkx.algorithms.planarity.planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100, planar_graph_evals_n1000, \
         reference_evals
 
     BoltzmannSamplerBase.oracle = EvaluationOracle(planar_graph_evals_n100)

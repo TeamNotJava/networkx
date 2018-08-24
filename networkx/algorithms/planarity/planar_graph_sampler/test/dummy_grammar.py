@@ -13,12 +13,12 @@
 #           Tobias Winkler <tobias.winkler1@rwth-aachen.de>
 
 
-from framework.decomposition_grammar import DecompositionGrammar, AliasSampler
-from framework.generic_samplers import *
-from framework.generic_samplers import BoltzmannSamplerBase
-from framework.utils import bern
+from networkx.algorithms.planarity.framework.decomposition_grammar import DecompositionGrammar, AliasSampler
+from networkx.algorithms.planarity.framework.generic_samplers import *
+from networkx.algorithms.planarity.framework.generic_samplers import BoltzmannSamplerBase
+from networkx.algorithms.planarity.framework.utils import bern
 
-from planar_graph_sampler.grammar.grammar_utils import underive, to_u_derived_class, divide_by_2, to_l_derived_class
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.grammar_utils import underive, to_u_derived_class, divide_by_2, to_l_derived_class
 
 
 def to_K_dy(dummy):

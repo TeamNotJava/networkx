@@ -12,7 +12,7 @@
 #           Rudi Floren <rudi.floren@gmail.com>
 #           Tobias Winkler <tobias.winkler1@rwth-aachen.de>
 
-from planar_graph_sampler.combinatorial_classes.network import Network
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.network import Network
 
 
 def merge_networks_in_series(network, network_for_plugging):

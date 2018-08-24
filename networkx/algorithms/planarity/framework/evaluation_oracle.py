@@ -15,7 +15,7 @@
 from __future__ import division
 import math
 
-from framework.generic_classes import BoltzmannFrameworkError
+from networkx.algorithms.planarity.framework.generic_classes import BoltzmannFrameworkError
 
 
 class EvaluationOracle(object):

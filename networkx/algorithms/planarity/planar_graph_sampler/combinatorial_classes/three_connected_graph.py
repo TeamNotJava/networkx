@@ -14,8 +14,8 @@
 
 import random as rnd
 
-from planar_graph_sampler.bijections.networks import substitute_edge_by_network
-from planar_graph_sampler.combinatorial_classes.half_edge_graph import HalfEdgeGraph
+from networkx.algorithms.planarity.planar_graph_sampler.bijections.networks import substitute_edge_by_network
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.half_edge_graph import HalfEdgeGraph
 
 
 class EdgeRootedThreeConnectedPlanarGraph(HalfEdgeGraph):

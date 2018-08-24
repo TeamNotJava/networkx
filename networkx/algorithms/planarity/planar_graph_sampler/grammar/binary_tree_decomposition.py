@@ -14,15 +14,14 @@
 
 from __future__ import division
 
-from framework.evaluation_oracle import EvaluationOracle
-from framework.decomposition_grammar import DecompositionGrammar, AliasSampler
-from framework.generic_samplers import *
-from framework.generic_samplers import BoltzmannSamplerBase
-from framework.utils import bern
+from networkx.algorithms.planarity.framework.evaluation_oracle import EvaluationOracle
+from networkx.algorithms.planarity.framework.decomposition_grammar import DecompositionGrammar, AliasSampler
+from networkx.algorithms.planarity.framework.generic_samplers import *
+from networkx.algorithms.planarity.framework.generic_samplers import BoltzmannSamplerBase
+from networkx.algorithms.planarity.framework.utils import bern
 
-from planar_graph_sampler.grammar.grammar_utils import underive, Counter
-from planar_graph_sampler.combinatorial_classes import BinaryTree
-from planar_graph_sampler.combinatorial_classes.binary_tree import Leaf
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.grammar_utils import underive, Counter
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.binary_tree import BinaryTree, Leaf
 
 
 class WhiteRootedBinaryTreeBuilder(DefaultBuilder):
@@ -147,7 +146,7 @@ def binary_tree_grammar():
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    from planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100, planar_graph_evals_n1000
+    from networkx.algorithms.planarity.planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100, planar_graph_evals_n1000
 
     BoltzmannSamplerBase.oracle = EvaluationOracle(planar_graph_evals_n100)
     BoltzmannSamplerBase.debug_mode = False

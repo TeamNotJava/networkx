@@ -12,9 +12,9 @@
 #           Rudi Floren <rudi.floren@gmail.com>
 #           Tobias Winkler <tobias.winkler1@rwth-aachen.de>
 
-from planar_graph_sampler.combinatorial_classes.halfedge import ClosureHalfEdge, HalfEdge
-from planar_graph_sampler.combinatorial_classes.network import Network
-from planar_graph_sampler.combinatorial_classes.three_connected_graph import EdgeRootedThreeConnectedPlanarGraph
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.halfedge import ClosureHalfEdge, HalfEdge
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.network import Network
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.three_connected_graph import EdgeRootedThreeConnectedPlanarGraph
 
 
 def create_sample_closure_output():

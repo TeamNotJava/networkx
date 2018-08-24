@@ -1,14 +1,15 @@
-from framework.evaluation_oracle import EvaluationOracle
-from framework.generic_samplers import BoltzmannSamplerBase
-from framework.generic_classes import BoltzmannFrameworkError
-from planar_graph_sampler.grammar.binary_tree_decomposition import binary_tree_grammar
+from networkx.algorithms.planarity.framework.evaluation_oracle import EvaluationOracle
+from networkx.algorithms.planarity.framework.generic_samplers import BoltzmannSamplerBase
+from networkx.algorithms.planarity.framework.generic_classes import BoltzmannFrameworkError
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.binary_tree_decomposition import binary_tree_grammar
 
-from planar_graph_sampler.grammar.planar_graph_decomposition import planar_graph_grammar
-from planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100, planar_graph_evals_n1000, reference_evals
-from planar_graph_sampler.grammar.three_connected_decomposition import three_connected_graph_grammar
-from planar_graph_sampler.test.dummy_grammar import dummy_sampling_grammar
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.planar_graph_decomposition import planar_graph_grammar
+from networkx.algorithms.planarity.planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100, planar_graph_evals_n1000, reference_evals
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.three_connected_decomposition import three_connected_graph_grammar
+from networkx.algorithms.planarity.planar_graph_sampler.test.dummy_grammar import dummy_sampling_grammar
+from nose.tools import nottest
 
-
+@nottest
 def test_sampled_sizes():
 
     all_evaluations = [reference_evals]

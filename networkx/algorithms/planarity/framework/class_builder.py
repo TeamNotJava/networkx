@@ -12,7 +12,7 @@
 #           Rudi Floren <rudi.floren@gmail.com>
 #           Tobias Winkler <tobias.winkler1@rwth-aachen.de>
 
-from framework.generic_classes import *
+from networkx.algorithms.planarity.framework.generic_classes import *
 
 
 class CombinatorialClassBuilder:

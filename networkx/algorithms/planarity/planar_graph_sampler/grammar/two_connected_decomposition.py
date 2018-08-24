@@ -14,16 +14,16 @@
 
 from __future__ import division
 
-from framework.evaluation_oracle import EvaluationOracle
-from framework.generic_samplers import *
-from framework.decomposition_grammar import DecompositionGrammar, AliasSampler
-from framework.generic_samplers import BoltzmannSamplerBase
+from networkx.algorithms.planarity.framework.evaluation_oracle import EvaluationOracle
+from networkx.algorithms.planarity.framework.generic_samplers import *
+from networkx.algorithms.planarity.framework.decomposition_grammar import DecompositionGrammar, AliasSampler
+from networkx.algorithms.planarity.framework.generic_samplers import BoltzmannSamplerBase
 
-from planar_graph_sampler.grammar.grammar_utils import Counter, divide_by_2, to_u_derived_class
-from planar_graph_sampler.combinatorial_classes.halfedge import HalfEdge
-from planar_graph_sampler.combinatorial_classes.two_connected_graph import EdgeRootedTwoConnectedPlanarGraph, \
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.grammar_utils import Counter, divide_by_2, to_u_derived_class
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.halfedge import HalfEdge
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes.two_connected_graph import EdgeRootedTwoConnectedPlanarGraph, \
     TwoConnectedPlanarGraph
-from planar_graph_sampler.grammar.network_decomposition import network_grammar
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.network_decomposition import network_grammar
 
 
 class ZeroAtomGraphBuilder(DefaultBuilder):
@@ -122,7 +122,7 @@ def two_connected_graph_grammar():
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    from planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100
+    from networkx.algorithms.planarity.planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100
 
     BoltzmannSamplerBase.oracle = EvaluationOracle(planar_graph_evals_n100)
     BoltzmannSamplerBase.debug_mode = True

@@ -1,8 +1,8 @@
 import networkx as nx
 from nose.tools import assert_equals, assert_true, raises
-from networkx.algorithms.planarity import get_counterexample
-from networkx.algorithms.planarity import get_counterexample_recursive
-from networkx.algorithms.planarity import check_planarity_recursive
+from networkx.algorithms.planarity.planar_checking import get_counterexample
+from networkx.algorithms.planarity.planar_checking import get_counterexample_recursive
+from networkx.algorithms.planarity.planar_checking import check_planarity_recursive
 
 
 class TestLRPlanarity:

@@ -1,18 +1,20 @@
 from __future__ import division
 import networkx as nx
 
-from framework.generic_classes import DerivedClass
-from framework.generic_samplers import BoltzmannSamplerBase
-from framework.evaluation_oracle import EvaluationOracle
+from networkx.algorithms.planarity.framework.generic_classes import DerivedClass
+from networkx.algorithms.planarity.framework.generic_samplers import BoltzmannSamplerBase
+from networkx.algorithms.planarity.framework.evaluation_oracle import EvaluationOracle
 
-from planar_graph_sampler.evaluations_planar_graph import \
+from networkx.algorithms.planarity.planar_graph_sampler.evaluations_planar_graph import \
     planar_graph_evals_n100, planar_graph_evals_n1000, reference_evals
-from planar_graph_sampler.grammar.binary_tree_decomposition import binary_tree_grammar
-from planar_graph_sampler.grammar.one_connected_decomposition import one_connected_graph_grammar
-from planar_graph_sampler.grammar.one_connected_decomposition import two_connected_graph_grammar
-from planar_graph_sampler.grammar.three_connected_decomposition import three_connected_graph_grammar
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.binary_tree_decomposition import binary_tree_grammar
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.one_connected_decomposition import one_connected_graph_grammar
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.one_connected_decomposition import two_connected_graph_grammar
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.three_connected_decomposition import three_connected_graph_grammar
+from nose import SkipTest
+from nose.tools import nottest
 
-
+@nottest
 def test_boltzmann_prob(grammar, sampled_class, x, y, l_size, num_graphs, num_samples=100, silent=False):
     oracle = BoltzmannSamplerBase.oracle
     assert oracle is not None
@@ -46,7 +48,7 @@ def test_boltzmann_prob(grammar, sampled_class, x, y, l_size, num_graphs, num_sa
 
     return error
 
-
+@nottest
 def test_distribution_for_l_size(grammar, sampled_class, x, y, l_size, graphs_labs_u_size, num_samples=100,
                                  silent=False):
     # for g_aut in graphs_labs_u_size:
@@ -58,9 +60,15 @@ def test_distribution_for_l_size(grammar, sampled_class, x, y, l_size, graphs_la
         for i, g_l_u in enumerate(graphs_labs_u_size):
             if nx.is_isomorphic(g, g_l_u[0]):
                 return i
-        import matplotlib.pyplot as plt
-        nx.draw(g, with_labels=True)
-        plt.show()
+        try:
+            import matplotlib.pyplot as plt
+            nx.draw(g, with_labels=True)
+            plt.show()
+        except ImportError:
+            print('not plotting. matplotlib not available.')
+        except RuntimeError:
+            print('not plotting. matplotlib not available.')
+            
         assert False
 
     for g1, _, _ in graphs_labs_u_size:

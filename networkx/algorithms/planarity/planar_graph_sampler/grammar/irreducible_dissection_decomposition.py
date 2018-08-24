@@ -12,14 +12,14 @@
 #           Rudi Floren <rudi.floren@gmail.com>
 #           Tobias Winkler <tobias.winkler1@rwth-aachen.de>
 
-from framework.generic_samplers import *
-from framework.decomposition_grammar import DecompositionGrammar, AliasSampler
-from framework.evaluation_oracle import EvaluationOracle
-from framework.generic_samplers import BoltzmannSamplerBase
+from networkx.algorithms.planarity.framework.generic_samplers import *
+from networkx.algorithms.planarity.framework.decomposition_grammar import DecompositionGrammar, AliasSampler
+from networkx.algorithms.planarity.framework.evaluation_oracle import EvaluationOracle
+from networkx.algorithms.planarity.framework.generic_samplers import BoltzmannSamplerBase
 
-from planar_graph_sampler.bijections.closure import Closure
-from planar_graph_sampler.combinatorial_classes import BinaryTree
-from planar_graph_sampler.grammar.binary_tree_decomposition import binary_tree_grammar
+from networkx.algorithms.planarity.planar_graph_sampler.bijections.closure import Closure
+from networkx.algorithms.planarity.planar_graph_sampler.combinatorial_classes import BinaryTree
+from networkx.algorithms.planarity.planar_graph_sampler.grammar.binary_tree_decomposition import binary_tree_grammar
 
 
 def closure(binary_tree):
@@ -96,7 +96,7 @@ def irreducible_dissection_grammar():
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    from planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100
+    from networkx.algorithms.planarity.planar_graph_sampler.evaluations_planar_graph import planar_graph_evals_n100
 
     BoltzmannSamplerBase.oracle = EvaluationOracle(planar_graph_evals_n100)
     BoltzmannSamplerBase.debug_mode = False

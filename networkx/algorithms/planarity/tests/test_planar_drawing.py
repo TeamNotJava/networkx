@@ -1,5 +1,5 @@
 import networkx as nx
-from networkx.algorithms.planar_drawing import triangulate_embedding
+from networkx.algorithms.planarity.planar_drawing import triangulate_embedding
 import math
 from nose.tools import assert_true, assert_equals, raises
 
